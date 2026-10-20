@@ -8,11 +8,13 @@
 - Agent 只能通过 `backend/tools/` 操作任务工作目录中的业务文件，不能直接调用 `open`、`subprocess` 等底层能力。
 - 时间字段在 Python 中使用带时区的 `datetime`，JSON 中序列化为 ISO 8601 字符串。
 - 标识符在模型中使用经过 UUID 校验的字符串，便于 JSON 和日志直接使用。
-- 模型禁止未知字段，字符串自动去除首尾空白；路径和输出大小仍必须由实际工具做运行时限制。
+- 模型禁止未知字段，描述和摘要等字符串自动去除首尾空白；`ToolResult.output` 完整保留原始字符串，工具名称也保留原文并拒绝空白名称。路径和输出大小仍必须由实际工具做运行时限制。
 
 ## 2. 公共枚举与错误码
 
 ### 2.1 工具名称
+
+`ToolName` 保留为已知工具枚举，并导出 `KNOWN_TOOL_NAMES: frozenset[str]`（由枚举值生成）作为工具调度白名单。它不再限制 `ToolCall.name` 和 `ToolResult.tool_name` 的可表示范围。
 
 ```python
 class ToolName(str, Enum):
@@ -71,18 +73,20 @@ pending ----------------> stopped
 ```python
 class ToolCall:
     id: str                    # UUID 字符串
-    name: ToolName
+    name: str                  # 非空且非纯空白，保留原始名称
     arguments: dict[str, Any] = {}
 ```
 
 未知工具、缺少参数或参数类型错误时不得执行，统一返回 `INVALID_TOOL_CALL`。
+
+如果 LLM 服务返回的工具调用 ID 不符合内部 UUID 格式，由 Agent 维护模型原始调用 ID 与内部 UUID 的映射。内部 `ToolCall.id`、`ToolResult.call_id` 继续使用 UUID；向 LLM 回传工具结果时必须使用对应的原始调用 ID，保证多轮协议关联正确。本轮仅约定映射责任，不实现映射逻辑。
 
 ### 3.2 `ToolResult`
 
 ```python
 class ToolResult:
     call_id: str
-    tool_name: ToolName
+    tool_name: str              # 与对应调用的原始名称按值相等
     success: bool
     output: str = ""
     error_code: ErrorCode | None = None
@@ -94,6 +98,8 @@ class ToolResult:
 - 失败结果必须同时包含 `error_code` 和 `error_message`。
 - `metadata` 可包含 `exit_code`、`duration_ms`、`truncated`、测试数量等机器可读信息。
 - 输出被截断时必须记录 `metadata["truncated"] = True`。
+- `output` 不裁剪首行缩进、末尾换行或纯空白内容，多行代码原样保留；原有输出长度限制继续生效。
+- 工具名称允许未知字符串，但不授予执行权限。`execute_tool` 必须按 `KNOWN_TOOL_NAMES` 精确匹配；未知名称返回 `INVALID_TOOL_CALL`，结果保留原始名称，不能动态解析为任意函数或 Shell 命令。
 
 ### 3.3 `ExperienceCreate` 与 `Experience`
 
@@ -136,7 +142,7 @@ class AgentResult:
     steps: list[ToolCall] = []
     tool_results: list[ToolResult] = []
     repair_succeeded: bool
-    tests_passed: bool
+    tests_passed: bool | None = None
     changed_files: list[str] = []
     experience_saved: bool | None = None
     experience_id: str | None = None
@@ -146,12 +152,15 @@ class AgentResult:
 
 状态约束：
 
-- `status="succeeded"`、`repair_succeeded=True` 和 `tests_passed=True` 必须同时成立。
-- `failed` 或 `stopped` 时两项成功标记均为 `False`。
-- `experience_saved=None` 表示没有尝试保存；仅用于未成功修复的任务。
+- `status="succeeded"` 必须满足 `repair_succeeded=True` 且 `tests_passed=True`。这是单向约束，不根据 `failed/stopped` 强制改写已经观察到的测试事实。
+- `tests_passed=None` 表示没有完成最终测试验证（包括未执行、超时或基础设施错误），`True` 表示最终测试通过，`False` 表示最终测试已执行且未通过。工具超时等原因仍记录于执行轨迹。
+- 任何任务状态下，`repair_succeeded=True` 都要求 `tests_passed=True`，并且轨迹中最近一次 `run_tests` 的对应 `ToolResult.success=True`；所有调用与结果继续保持一一对应。
+- 最近一次测试后出现 `write_file` 或 `run_command` 时，公共模型保守地认为代码可能变化，拒绝用旧测试证明修复成功，必须重新验证。只读 `list_files/read_file` 不使测试证据失效。模型只能验证记录的一致性；实际测试执行和工作目录完整性由 Agent/工具实现保证。
+- 达到最大模型决策步数后状态仍为 `stopped`，可以保留最终验证得到的 `tests_passed=True/False/None`；即使代码已验证修复，也不把终止原因改写为任务成功。
+- `experience_saved=None` 表示未尝试经验阶段；用于 `failed/stopped` 任务，这些任务不提取或保存成功经验。
 - `experience_saved=True` 时必须有真实的 `experience_id`，且不能有保存错误。
-- `experience_saved=False` 表示成功修复后的保存尝试失败；必须记录 `experience_save_error`，且 `experience_id` 必须为 `None`。
-- 经验保存失败不会改变 `succeeded`、`repair_succeeded` 或 `tests_passed`。
+- `experience_saved=False` 表示成功任务的经验提取、校验或保存失败；必须记录 `experience_save_error`，且 `experience_id` 必须为 `None`。提取失败时不得调用数据库保存虚假经验。
+- `succeeded` 任务必须报告经验阶段成功或失败；经验提取或保存失败不会改变 `succeeded`、`repair_succeeded` 或 `tests_passed`。
 - `changed_files` 使用工作目录内相对路径。
 
 ### 3.6 任务 API 模型
@@ -205,7 +214,7 @@ def execute_tool(workspace: Path, call: ToolCall) -> ToolResult:
 职责：
 
 1. 确认 `workspace` 是工具模块创建并仍受管理的任务目录。
-2. 校验工具名和参数；不合法时返回 `INVALID_TOOL_CALL`。
+2. 工具名按 `KNOWN_TOOL_NAMES` 精确匹配并校验参数；未知名称或不合法参数返回 `INVALID_TOOL_CALL`，保留 `call.name`，不执行任何文件、函数或命令操作。
 3. 根据 `call.name` 分派到对应实现。
 4. 捕获可预期错误并统一转换为与 `call.id` 对应的 `ToolResult`。
 5. 对输出应用长度限制并记录截断信息。
@@ -312,7 +321,7 @@ def list_experiences(
 - 第一版采用 SQLite 文本、标签和错误类型过滤，不承诺语义相似度。
 - `list_experiences` 按 `created_at` 倒序分页。
 - 校验问题使用 `EXPERIENCE_VALIDATION_ERROR`，数据库问题使用 `EXPERIENCE_STORAGE_ERROR`。
-- `save_experience` 失败时 Agent 返回成功的代码/测试状态、`experience_saved=False` 和安全错误消息，不伪造 ID，也不将修复改判为失败。
+- 经验提取、输入校验或 `save_experience` 失败时 Agent 返回成功的代码/测试状态、`experience_saved=False` 和安全错误消息，不伪造 ID，也不将修复改判为失败。
 
 ## 6. Agent 接口与步骤回调
 
@@ -339,6 +348,18 @@ def run_agent(
 省略 `on_step` 时与基础签名完全相同。每次 `execute_tool` 返回后，Agent 先形成不可变语义的已完成 `TaskStep`，再调用回调。回调不得执行慢速业务逻辑；API 层只将步骤追加到线程安全的任务存储。回调失败应记录为内部任务错误，不能悄悄丢失步骤。
 
 Agent 职责：检索经验、调用 LLM、生成 `ToolCall`、调用 `execute_tool`、记录结果、运行最终测试、形成 `AgentResult`，以及在成功后尝试保存经验。Agent 不负责创建/清理工作目录，也不直接操作业务文件。
+
+### 6.1 多轮结束与最终验证
+
+- 每轮模型响应及其工具调用、工具结果都加入下一轮上下文；工具失败作为结构化结果回传，Agent 可以在剩余预算内继续请求模型纠正。
+- `max_steps` 统计模型决策轮数（一次请求得到一个响应算一轮）；同一响应中的多个工具调用按顺序执行并分别记录步骤。
+- LLM 主动结束只表示请求结束，不代表任务成功。Agent 必须通过 `execute_tool(workspace, ToolCall(name="run_tests", ...))` 执行最终测试，才能确认修复成功。
+- 最终测试必须记录独立 UUID 的 `ToolCall` 和对应 `ToolResult`，加入 `AgentResult.steps/tool_results`；同时形成 `TaskStep`，通过 `on_step` 提供给 API。系统发起的最终验证无需模型原始调用 ID。
+- 最终测试不计入模型决策步数，但计入执行轨迹和 API 已完成步骤数；因此执行轨迹数量可以超过 `max_steps`。
+- 达到最大步数后停止继续调用模型，可以执行一次最终验证记录测试事实，任务状态仍为 `stopped`，不提取或保存成功经验。
+- 正常结束后，最终测试通过才能返回 `succeeded`；测试执行完成但未通过返回 `failed`。未完成验证时 `tests_passed=None`，不得宣称修复成功。
+- 最终测试后如果代码再次被修改，之前的结果不再是最终成功证据。必须对修改后的代码重新测试；不能复用修改前的通过结果。
+- 经验提取或保存位于成功验证之后，该阶段失败只更新经验状态和失败原因，不改变代码修复或测试结果。
 
 ## 7. HTTP API 契约
 

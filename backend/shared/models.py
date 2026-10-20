@@ -5,10 +5,17 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from .errors import ErrorCode
 
@@ -72,6 +79,18 @@ class ToolName(str, Enum):
     RUN_TESTS = "run_tests"
 
 
+KNOWN_TOOL_NAMES: frozenset[str] = frozenset(tool.value for tool in ToolName)
+ToolIdentifier = Annotated[
+    str, StringConstraints(strip_whitespace=False, min_length=1)
+]
+
+
+def _validate_tool_name(value: str) -> str:
+    if not value.strip():
+        raise ValueError("tool name must not be blank")
+    return value
+
+
 class TaskStatus(str, Enum):
     PENDING = "pending"
     RUNNING = "running"
@@ -82,22 +101,26 @@ class TaskStatus(str, Enum):
 
 class ToolCall(SharedModel):
     id: str
-    name: ToolName
+    name: ToolIdentifier
     arguments: dict[str, Any] = Field(default_factory=dict)
 
     _validate_id = field_validator("id")(_canonical_uuid)
+    _validate_name = field_validator("name")(_validate_tool_name)
 
 
 class ToolResult(SharedModel):
     call_id: str
-    tool_name: ToolName
+    tool_name: ToolIdentifier
     success: bool
-    output: str = Field(default="", max_length=MAX_OUTPUT_LENGTH)
+    output: Annotated[str, StringConstraints(strip_whitespace=False)] = Field(
+        default="", max_length=MAX_OUTPUT_LENGTH
+    )
     error_code: ErrorCode | None = None
     error_message: str | None = Field(default=None, min_length=1, max_length=2_000)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     _validate_call_id = field_validator("call_id")(_canonical_uuid)
+    _validate_name = field_validator("tool_name")(_validate_tool_name)
 
     @model_validator(mode="after")
     def validate_success_and_error(self) -> ToolResult:
@@ -159,7 +182,7 @@ class AgentResult(SharedModel):
     steps: list[ToolCall] = Field(default_factory=list)
     tool_results: list[ToolResult] = Field(default_factory=list)
     repair_succeeded: bool
-    tests_passed: bool
+    tests_passed: bool | None = None
     changed_files: list[str] = Field(default_factory=list)
     experience_saved: bool | None = None
     experience_id: str | None = None
@@ -184,10 +207,14 @@ class AgentResult(SharedModel):
             raise ValueError("AgentResult status must be terminal")
 
         succeeded = self.status is TaskStatus.SUCCEEDED
-        if succeeded != self.repair_succeeded or succeeded != self.tests_passed:
+        if succeeded and (
+            not self.repair_succeeded or self.tests_passed is not True
+        ):
             raise ValueError(
-                "succeeded status, repair_succeeded, and tests_passed must agree"
+                "succeeded status requires repair_succeeded and tests_passed=True"
             )
+        if self.repair_succeeded and self.tests_passed is not True:
+            raise ValueError("successful repairs require tests_passed=True")
 
         if succeeded and self.experience_saved is None:
             raise ValueError(
@@ -223,10 +250,33 @@ class AgentResult(SharedModel):
             raise ValueError("tool calls and results must have matching ids")
         call_names = {call.id: call.name for call in self.steps}
         if any(
-            call_names[result.call_id] is not result.tool_name
+            call_names[result.call_id] != result.tool_name
             for result in self.tool_results
         ):
             raise ValueError("tool calls and results must have matching names")
+        if self.repair_succeeded:
+            test_indexes = [
+                index for index, call in enumerate(self.steps)
+                if call.name == ToolName.RUN_TESTS.value
+            ]
+            final_index = test_indexes[-1] if test_indexes else None
+            results_by_id = {result.call_id: result for result in self.tool_results}
+            if (
+                final_index is None
+                or not results_by_id[self.steps[final_index].id].success
+            ):
+                raise ValueError(
+                    "successful repairs require a successful final run_tests "
+                    "call/result in the execution trace"
+                )
+            # Commands can mutate files, so they conservatively invalidate evidence.
+            if any(
+                call.name in {ToolName.WRITE_FILE.value, ToolName.RUN_COMMAND.value}
+                for call in self.steps[final_index + 1:]
+            ):
+                raise ValueError(
+                    "file writes or commands after final tests require re-verification"
+                )
         return self
 
 
@@ -246,7 +296,7 @@ class TaskStep(SharedModel):
     def validate_call_result_pair(self) -> TaskStep:
         if self.call.id != self.result.call_id:
             raise ValueError("step call and result ids must match")
-        if self.call.name is not self.result.tool_name:
+        if self.call.name != self.result.tool_name:
             raise ValueError("step call and result tool names must match")
         return self
 

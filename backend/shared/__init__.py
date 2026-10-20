@@ -2,6 +2,7 @@
 
 from .errors import ApplicationError, ErrorCode
 from .models import (
+    KNOWN_TOOL_NAMES,
     AgentRequest,
     AgentResult,
     Experience,
@@ -18,6 +19,7 @@ from .models import (
 )
 
 __all__ = [
+    "KNOWN_TOOL_NAMES",
     "AgentRequest",
     "AgentResult",
     "ApplicationError",
