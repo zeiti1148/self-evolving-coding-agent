@@ -55,6 +55,10 @@ frontend/dist/
 *.sqlite3
 data/
 
+# Agent runtime workspaces (default task root)
+runtime/workspaces/
+.agent-workspaces/
+
 # Logs, caches, and temporary files
 *.log
 logs/
@@ -82,3 +86,8 @@ temp/
 .nox/
 .hypothesis/
 .eslintcache
+
+# Java and Maven
+target/
+*.class
+.mvn/timing.properties
