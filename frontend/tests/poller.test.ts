@@ -93,7 +93,7 @@ it('publishes available results while the steps request is pending, then recover
   const poller = createTaskPoller(api, { onSnapshot: update, onError: error }, 100)
   poller.start('a')
   await vi.advanceTimersByTimeAsync(1000)
-  expect(update).toHaveBeenCalledWith(finished, [])
+  expect(update).toHaveBeenCalledWith(finished, [], false)
   expect(api.getTask).toHaveBeenCalledTimes(1)
   rejectSteps(new Error('steps temporarily unavailable'))
   await vi.advanceTimersByTimeAsync(0)

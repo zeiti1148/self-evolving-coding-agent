@@ -5,6 +5,10 @@ import NewTaskView from '../src/views/NewTaskView.vue'
 import ExperiencesView from '../src/views/ExperiencesView.vue'
 import ResultSummary from '../src/components/ResultSummary.vue'
 import App from '../src/App.vue'
+import TaskView from '../src/views/TaskView.vue'
+import { createHttpApi } from '../src/api/http'
+import { createMockApi } from '../src/api/mock'
+import { seedExperiences } from '../src/api/fixtures'
 import { apiContextKey } from '../src/api/context'
 import type { AgentApi, AgentResult, Experience } from '../src/api/contracts'
 
@@ -139,5 +143,58 @@ it('moves keyboard focus to the main content without changing the current route'
     await wrapper.get('.skip-link').trigger('click')
     expect(document.activeElement).toBe(wrapper.get('main').element)
     expect(router.currentRoute.value.path).toBe('/experiences')
+  } finally { wrapper.unmount() }
+})
+
+it('shows a readable contract error and recovers the experience page on retry', async () => {
+  const records = seedExperiences(Date.parse('2026-10-22T00:00:00Z'))
+  const fetcher = vi.fn()
+    .mockResolvedValueOnce(new Response(JSON.stringify({ items: records })))
+    .mockResolvedValueOnce(new Response(JSON.stringify(records.slice(0, 6))))
+  const { wrapper } = await setup(ExperiencesView, createHttpApi('', fetcher))
+  try {
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('接口约定')
+    expect(wrapper.text()).not.toContain('还没有经验记录')
+    expect(wrapper.text()).not.toContain('slice is not a function')
+    await wrapper.get('[data-testid="retry"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(wrapper.findAll('[data-testid="experience-item"]')).toHaveLength(5)
+    expect(wrapper.text()).toContain('为问候方法补充空值分支')
+  } finally { wrapper.unmount() }
+})
+
+it('keeps a verified result visible while HTTP step loading fails and recovers on retry', async () => {
+  let now = 100000
+  const demo = createMockApi({ now: () => now, stepMs: 1, storage: null })
+  const created = await demo.createTask({ task_description: 'fix', source_project: 'java-null-greeting', max_steps: 20 })
+  now += 100
+  const task = await demo.getTask(created.task_id)
+  const steps = await demo.getSteps(created.task_id)
+  let failSteps = true
+  const fetcher = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/steps')
+    ? failSteps ? new Response('private traceback', { status: 500 }) : new Response(JSON.stringify(steps))
+    : new Response(JSON.stringify(task))))
+  const router = createRouter({ history: createMemoryHistory(), routes: [
+    { path: '/tasks/:taskId', component: TaskView },
+    { path: '/', component: { template: '<div />' } },
+    { path: '/experiences', component: { template: '<div />' } },
+  ] })
+  await router.push(`/tasks/${created.task_id}`)
+  const wrapper = mount(TaskView, { global: { plugins: [router], provide: {
+    [apiContextKey as symbol]: { api: createHttpApi('', fetcher), mock: false },
+  } } })
+  try {
+    await flushPromises()
+    expect(wrapper.text()).toContain('修复成功')
+    expect(wrapper.text()).toContain('测试通过')
+    expect(wrapper.get('[role="alert"]').text()).toContain('服务暂时不可用')
+    expect(wrapper.text()).not.toContain('private traceback')
+    failSteps = false
+    await wrapper.get('[role="alert"] button').trigger('click')
+    await flushPromises()
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    expect(wrapper.findAll('.execution-list > li')).toHaveLength(5)
   } finally { wrapper.unmount() }
 })

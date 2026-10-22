@@ -1,4 +1,4 @@
-# M3：Vue 修复工作台
+# Vue 修复工作台：M3 与联调准备
 
 实现任务提交、执行过程、最终结果和经验记录展示。默认使用浏览器模拟数据，
 无需启动 Python、FastAPI、Java 或模型服务。所有本阶段代码均位于 `frontend/`。
@@ -59,6 +59,16 @@ Copy-Item .env.example .env.local
    页面没有横向溢出。代码输出块可以单独横向滚动。
 9. 使用 `Tab` 和 `Enter` 操作导航、表单、折叠详情；
    “跳到主要内容”应移动焦点，同时保留当前页面。
+10. 在执行过程的“步骤筛选”中选择“未成功”：成功场景只显示第 3 步的初始测试失败，
+    下方最终结果仍为修复成功。试用“展开全部 / 收起全部”，切回“全部步骤”。
+11. 选择“未成功”后点击“下载执行记录”，打开 JSON 文件：仍应包含全部 5 步，
+    `mock` 为 `true`、`complete_steps` 为 `true`，源代码缩进和换行保持不变。
+    执行中下载时 `complete_steps` 应为 `false`；日志请求失败或步骤未读全也不会标记完整。
+
+下载是本地 JSON 快照，包含当前任务状态、结果、已读取步骤和下载时间；
+不受页面筛选影响。`complete_steps` 只表示最终步骤是否已经读取完整，
+不表示修复成功，也不表示工具输出未经截断（截断信息仍在步骤的 `metadata` 中）。
+下载不会调用新接口，也不会上传文件。
 
 演示数据说明：
 
@@ -66,6 +76,8 @@ Copy-Item .env.example .env.local
 - 模拟任务和经验保存在当前标签页的 `sessionStorage`；刷新可以保留，
   关闭标签页后不保证保留。浏览器禁止存储时退化为内存演示。
 - 模拟进度随时间推进，不是实际后台 Agent。轮数小于 4 时演示停止场景。
+- 刷新时会校验演示缓存：异常或重复记录被跳过，其他有效任务与经验继续保留，
+  页面显示恢复提示。整个缓存格式无效时重建演示数据；这些处理不访问真实 SQLite。
 - 清除本站的会话存储并刷新，可重置演示数据。
 - “原始样例保持不变”描述的是接口约定的工作副本机制；
   模拟模式完全不会读取或修改 Java 项目，也不会写入 SQLite。
@@ -79,11 +91,12 @@ npm.cmd run build
 
 `test` 使用 Vitest + Vue Test Utils，覆盖接口请求字段、模拟生命周期、分页、
 提交校验与重复提交、结果三态、错误重试、超时取消、轮询去重与旧响应保护，
-以及状态已完成但步骤接口延迟/出错的情况。
+以及状态已完成但步骤接口延迟/出错、日志筛选/展开/导出和损坏演示缓存恢复。
 `build` 先执行 TypeScript/Vue 类型检查，再生成 `dist/`。
 
-本次验收（2026-10-20）：26 项测试全部通过，类型检查和生产构建通过。
-Edge 浏览器完成五种场景、刷新、分页、键盘和手机布局检查，无控制台错误/警告。
+最新验收（2026-10-22）：53 项测试全部通过，类型检查和生产构建通过。
+原 M3 验收已覆盖五种场景、刷新、分页、键盘和手机布局；本次另用 Edge 验证日志筛选、
+批量及键盘展开、真实文件下载、390px 布局、刷新恢复与部分缓存损坏，控制台无错误/警告。
 五种模拟场景导出的 66 个对象通过现有 Pydantic 公共模型校验。
 这些结果验证前端和模拟数据；真实 FastAPI、Agent 与 SQLite 闭环需后续联调。
 
@@ -99,13 +112,25 @@ npm.cmd run preview
 
 ```dotenv
 VITE_USE_MOCK=false
-VITE_API_BASE_URL=http://localhost:8000
+VITE_API_BASE_URL=
+API_PROXY_TARGET=http://127.0.0.1:8000
 VITE_SOURCE_PROJECT=由后端确认的已登记项目标识
 VITE_SOURCE_PROJECT_LABEL=Java 空指针修复样例
 ```
 
+开发时建议留空 `VITE_API_BASE_URL`，浏览器请求当前站点的 `/api`，
+Vite 将请求转发到 `API_PROXY_TARGET`。这样不需要为本地开发额外配置跨域。
+也可以把 `VITE_API_BASE_URL` 设为后端的完整地址，直接跨域访问。
+
+**该代理属于 Vite 本地开发/预览服务，不会打包进 `dist/`。** 部署时需由正式 Web 服务器将
+`/api` 转发给 FastAPI，或在构建前指定允许跨域访问的完整后端地址。
+`npm.cmd run preview` 仅预览静态产物，不能代替正式部署配置。
+
 只有字符串 `false` 会关闭模拟模式。真实模式连接失败时直接显示错误，
 不会自动切回模拟数据。`VITE_` 配置会进入浏览器，不能放密钥。
+任务、步骤和经验响应会进行运行时检查；字段类型不对、任务 ID 不匹配或
+步骤调用与结果不匹配时显示接口错误，避免空白页面或误报成功。
+检查保留日志原始空白，并为共享模型允许省略的可选字段补充默认值。
 
 调用严格依据 `../docs/interfaces.md`：
 
@@ -125,27 +150,66 @@ VITE_SOURCE_PROJECT_LABEL=Java 空指针修复样例
 以下公共接口事项留给团队确认，没有修改其他成员模块：
 
 1. `source_project` 的实际登记名称尚未约定；`java-null-greeting` 只是演示默认值。
-2. API 服务需允许前端实际访问地址的 CORS；默认开发来源为
-   `http://127.0.0.1:5173`。跨域 POST JSON 会预检。
+2. 使用完整后端地址直接跨域访问时，API 服务需允许前端来源的 CORS；
+   默认开发来源为 `http://127.0.0.1:5173`。跨域 POST JSON 会预检。
 3. 当前契约只有修改文件列表，没有 Diff 内容接口；M3 展示修改文件和工具轨迹，
    不伪造实际 Diff。任务取消、历史列表、经验全文搜索也未新增接口。
 4. 第一版后端内存任务在服务重启后丢失；持久化经验中的来源任务可能返回 404，
    前端会如实提示。前端不直接访问 SQLite。
+
+## 一条命令检查联调准备
+
+在 `frontend` 目录运行：
+
+```powershell
+npm.cmd run check:integration
+```
+
+需要已有 Python 测试环境及 `requirements-dev.txt` 依赖。脚本优先使用仓库中的
+`.venv`，没有时使用 PATH 中的 `python`，也可以指定解释器路径：
+
+```powershell
+$env:PYTHON = 'D:/你的环境/Scripts/python.exe'
+npm.cmd run check:integration
+```
+
+验收会自动完成：
+
+1. 从真实前端模拟适配器导出五种场景，用后端现有 Pydantic 模型检查 66 个对象。
+2. 在独立临时 SQLite 数据库中保存经验，重新打开数据库，验证检索和分页。
+3. 启动仅用于验收的本机 HTTP 服务，通过实际 Vite 代理和前端 HTTP 适配器
+   调用四个既有接口，检查 Python 序列化的真实经验记录能否被前端读取。
+4. 故意破坏任务状态、调用 ID 和测试结果，确认验收会拒绝错误数据；检查
+   HTTP 500 和格式错误不会被当成正常结果。
+
+成功显示两行 `PASS`，失败退出码非零。脚本不需要真实 API/Agent，
+不会访问业务 `app.db`，临时数据库和本机服务在结束时清理。
+**这是一套契约与联调基础设施验收，不代表真实 Agent 或 Java 修复已经跑通。**
+
+2026-10-22 的联调准备在 `integration-readiness` 分支，基于已合并经验模块和
+M3 前端的 `origin/main`（`89522a9`）。
+API、Agent、tools 在该基线仍未实现，需由对应成员提供真实服务后再验收完整闭环。
 
 ## 代码位置
 
 ```text
 src/api/contracts.ts       与共享模型对应的 TypeScript 类型
 src/api/http.ts            真实 HTTP 适配器
+src/api/validation.ts      进入页面前的响应检查
 src/api/mock.ts            模拟适配器及标签页存储
+src/api/mockStorage.ts     演示缓存校验与部分记录恢复
 src/api/fixtures.ts        演示经验、Java 代码与工具步骤
 src/features/taskPoller.ts 可取消的串行轮询
+src/features/taskExport.ts 本地执行记录下载与完整性标记
 src/views/                 提交、执行/结果、经验三个路由页面
-src/components/            状态标签、结果面板与图标
+src/components/            执行日志、状态标签、结果面板与图标
 src/App.vue                导航、模式提示与整体布局
 src/styles.css             桌面/手机样式
 tests/                     前端自动测试
+scripts/check-integration.mjs  HTTP/代理与跨语言验收入口
+scripts/check_contracts.py     Pydantic 与临时 SQLite 验收
 ```
 
 分支 `frontend-m3` 从 `origin/main` 的 `a5a58d4` 创建。
-经验后端仍保留在独立的 `codex/experience-store` 分支，本阶段不依赖其合并。
+经验后端分支已重命名为 `experience-store`。这两个原始功能分支后来均已由团队
+合并进 `main`；本次联调准备使用合并后的代码。

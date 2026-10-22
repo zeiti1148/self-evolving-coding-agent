@@ -112,6 +112,26 @@ Unicode、损坏数据、真实 SQLite 触发器导致的回滚和多线程独�
 
 ## 已报告的公共契约问题
 
+### 与前端的可重复验收（2026-10-22）
+
+在已经安装前端依赖的环境中，从仓库根目录运行：
+
+```powershell
+cd frontend
+npm.cmd run check:integration
+```
+
+脚本读取实际前端场景，使用现有公共模型校验，并调用 `ExperienceStore` 在独立
+临时数据库中验证保存、重新连接后读取、组合检索和分页。真实 SQLite 返回值按
+`model_dump(mode="json")` 序列化后，通过本机验收 HTTP 服务与 Vite 代理交给
+前端 HTTP 适配器检查。不会使用 `DATABASE_URL` 指向的业务数据库。
+
+此验收不实现生产 FastAPI 路由，也不执行真实 Agent、LLM 或 Maven。
+接口实现者应将 `Experience` 通过 Pydantic/FastAPI 标准 JSON 序列化，保留 UUID、
+带时区时间、标签数组以及可空的 `error_type`、`source_task_id`。
+
+### 仍需协调的事项
+
 1. 文档称“标签去除空值”，公共模型实际拒绝空白标签；本模块保持公共模型行为。
 2. 检索组合语义及配置注入细节未完全指定；本页记录实现选择，公共函数签名未变。
 3. 原有 `test_normal_models_are_created_with_defaults` 使用

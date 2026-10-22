@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createHttpApi } from '../src/api/http'
+import { createMockApi } from '../src/api/mock'
+
+const taskId = '11111111-1111-4111-8111-111111111111'
+const pending = { task_id: taskId, status: 'pending', created_at: '2026-10-20T00:00:00Z' }
 
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers() })
 
@@ -17,13 +21,15 @@ describe('HTTP contract', () => {
   })
 
   it('uses only the documented read endpoints and pagination parameters', async () => {
-    const fetcher = vi.fn().mockImplementation(() => Promise.resolve(new Response('[]')))
+    const fetcher = vi.fn().mockImplementation((url: string) => Promise.resolve(new Response(JSON.stringify(
+      url.includes('/experiences') ? [] : url.endsWith('/steps') ? { task_id: taskId, status: 'pending', steps: [] } : pending,
+    ))))
     const api = createHttpApi('', fetcher)
-    await api.getTask('task-id')
-    await api.getSteps('task-id')
+    await api.getTask(taskId)
+    await api.getSteps(taskId)
     await api.listExperiences(6, 5)
     expect(fetcher.mock.calls.map(call => call[0])).toEqual([
-      '/api/tasks/task-id', '/api/tasks/task-id/steps', '/api/experiences?limit=6&offset=5',
+      `/api/tasks/${taskId}`, `/api/tasks/${taskId}/steps`, '/api/experiences?limit=6&offset=5',
     ])
   })
 
@@ -60,5 +66,57 @@ describe('HTTP contract', () => {
     await vi.advanceTimersByTimeAsync(15000)
     await pending
     expect(fetcher.mock.calls[0]?.[1].signal.aborted).toBe(true)
+  })
+
+  it.each([null, {}, { items: [] }, [{ id: taskId }]])('rejects malformed experience data instead of displaying an empty library', async data => {
+    const api = createHttpApi('', vi.fn().mockResolvedValue(new Response(JSON.stringify(data))))
+    await expect(api.listExperiences()).rejects.toMatchObject({ status: 502, message: expect.stringContaining('接口') })
+  })
+
+  it('rejects a successful create response without a task identity', async () => {
+    const api = createHttpApi('', vi.fn().mockResolvedValue(new Response('{}', { status: 202 })))
+    await expect(api.createTask({ task_description: 'fix', source_project: 'java', max_steps: 20 })).rejects.toMatchObject({ status: 502 })
+  })
+
+  it.each([{ ...pending, status: 'unknown' }, { ...pending, status: ['pending'] }, { ...pending, task_id: '22222222-2222-4222-8222-222222222222' }])('rejects an incompatible task response', async data => {
+    const api = createHttpApi('', vi.fn().mockResolvedValue(new Response(JSON.stringify(data))))
+    await expect(api.getTask(taskId)).rejects.toMatchObject({ status: 502 })
+  })
+
+  it('preserves tool output and rejects a mismatched call/result pair', async () => {
+    let now = 100000
+    const demo = createMockApi({ now: () => now, stepMs: 1, storage: null })
+    const task = await demo.createTask({ task_description: 'fix', source_project: 'java-null-greeting', max_steps: 20 })
+    now += 100
+    const steps = await demo.getSteps(task.task_id)
+    steps.steps[0]!.result.output = '  <script>plain text</script>\n\n'
+    const fetcher = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify(steps))))
+    const api = createHttpApi('', fetcher)
+    expect((await api.getSteps(task.task_id)).steps[0]!.result.output).toBe('  <script>plain text</script>\n\n')
+    steps.steps[0]!.result.call_id = taskId
+    await expect(api.getSteps(task.task_id)).rejects.toMatchObject({ status: 502 })
+  })
+
+  it('explains a missing experience endpoint without blaming a lost task', async () => {
+    const api = createHttpApi('', vi.fn().mockResolvedValue(new Response('{}', { status: 404 })))
+    await expect(api.listExperiences()).rejects.toMatchObject({ status: 404, message: expect.stringContaining('经验接口') })
+  })
+
+  it.each(['no-test', 'failed-test', 'write-after-test'])('rejects claimed repair success with invalid final test evidence: %s', async mutation => {
+    let now = 100000
+    const demo = createMockApi({ now: () => now, stepMs: 1, storage: null })
+    const created = await demo.createTask({ task_description: 'fix', source_project: 'java-null-greeting', max_steps: 20 })
+    now += 100
+    const task = await demo.getTask(created.task_id)
+    const result = task.result!
+    if (mutation === 'no-test') { result.steps = []; result.tool_results = [] }
+    else if (mutation === 'failed-test') {
+      Object.assign(result.tool_results.at(-1)!, { success: false, error_code: 'TEST_FAILED', error_message: 'failed' })
+    } else {
+      result.steps.push({ id: taskId, name: 'write_file', arguments: { path: 'src/Test.java', content: 'changed again' } })
+      result.tool_results.push({ call_id: taskId, tool_name: 'write_file', success: true, output: '', error_code: null, error_message: null, metadata: {} })
+    }
+    const api = createHttpApi('', vi.fn().mockResolvedValue(new Response(JSON.stringify(task))))
+    await expect(api.getTask(created.task_id)).rejects.toMatchObject({ status: 502 })
   })
 })

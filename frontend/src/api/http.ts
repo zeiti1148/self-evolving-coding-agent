@@ -1,12 +1,15 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
+import { readCreatedTask, readExperiences, readSteps, readTask } from './validation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
 }
 
-function errorMessage(status: number, payload: unknown): string {
+function errorMessage(status: number, payload: unknown, path: string): string {
   if (status >= 500) return '服务暂时不可用，请稍后重试。'
-  if (status === 404) return '找不到这个任务。服务重启后，任务记录可能已失效。'
+  if (status === 404) return path.startsWith('/api/experiences')
+    ? '经验接口不存在，请确认后端地址和接口是否已实现。'
+    : '找不到这个任务。服务重启后，任务记录可能已失效。'
   if (payload && typeof payload === 'object' && 'detail' in payload) {
     const detail = payload.detail
     if (typeof detail === 'string') return detail
@@ -20,7 +23,7 @@ function errorMessage(status: number, payload: unknown): string {
 
 export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThis.fetch): AgentApi {
   const base = baseUrl.replace(/\/$/, '')
-  async function request<T>(path: string, method = 'GET', body?: TaskCreateRequest, signal?: AbortSignal): Promise<T> {
+  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: TaskCreateRequest, signal?: AbortSignal): Promise<T> {
     const controller = new AbortController()
     let timedOut = false
     const abort = () => controller.abort()
@@ -36,8 +39,8 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
       try { data = await response.json() } catch {
         if (response.ok) throw new ApiError(502, '服务返回了无法读取的数据，请稍后重试。')
       }
-      if (!response.ok) throw new ApiError(response.status, errorMessage(response.status, data))
-      return data as T
+      if (!response.ok) throw new ApiError(response.status, errorMessage(response.status, data, path))
+      try { return read(data) } catch { throw new ApiError(502, '服务返回的数据与接口约定不一致，请联系后端检查。') }
     } catch (error) {
       if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
       if (timedOut) throw new ApiError(0, '请求超时，请检查服务连接后重试。')
@@ -49,9 +52,9 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     }
   }
   return {
-    createTask: (body, signal) => request('/api/tasks', 'POST', body, signal),
-    getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, 'GET', undefined, signal),
-    getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, 'GET', undefined, signal),
-    listExperiences: (limit = 20, offset = 0, signal) => request(`/api/experiences?limit=${limit}&offset=${offset}`, 'GET', undefined, signal),
+    createTask: (body, signal) => request('/api/tasks', readCreatedTask, 'POST', body, signal),
+    getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
+    getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
+    listExperiences: (limit = 20, offset = 0, signal) => request(`/api/experiences?limit=${limit}&offset=${offset}`, readExperiences, 'GET', undefined, signal),
   }
 }

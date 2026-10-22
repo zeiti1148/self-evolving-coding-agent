@@ -1,7 +1,7 @@
 import type { AgentApi, TaskStatusResponse, TaskStep } from '../api/contracts'
 
 export function createTaskPoller(api: AgentApi, callbacks: {
-  onSnapshot(status: TaskStatusResponse, steps: TaskStep[]): void
+  onSnapshot(status: TaskStatusResponse, steps: TaskStep[], stepsLoaded: boolean): void
   onError(error: Error): void
 }, intervalMs = 1200) {
   let generation = 0
@@ -21,12 +21,12 @@ export function createTaskPoller(api: AgentApi, callbacks: {
     try {
       const status = await api.getTask(taskId, active.signal)
       if (version !== generation) return
-      callbacks.onSnapshot(status, [...collected.values()].sort((a, b) => a.sequence - b.sequence))
+      callbacks.onSnapshot(status, [...collected.values()].sort((a, b) => a.sequence - b.sequence), false)
       const response = await api.getSteps(taskId, active.signal)
       if (version !== generation) return
       response.steps.forEach(step => collected.set(step.sequence, step))
       const steps = [...collected.values()].sort((a, b) => a.sequence - b.sequence)
-      callbacks.onSnapshot(status, steps)
+      callbacks.onSnapshot(status, steps, true)
       again = ['pending', 'running'].includes(status.status)
         || ['pending', 'running'].includes(response.status) || steps.length < status.steps_completed
     } catch (error) {

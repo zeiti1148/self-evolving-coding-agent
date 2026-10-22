@@ -1,12 +1,10 @@
-import type { AgentApi, AgentResult, Experience, MockScenario, TaskCreateRequest, TaskStatusResponse, TaskStep } from './contracts'
+import type { AgentApi, AgentResult, MockScenario, TaskStatusResponse } from './contracts'
 import { ApiError } from './http'
 import { javaFile, makeSteps, seedExperiences } from './fixtures'
+import { restoreMockState, scenarios, type MockTask, type MockState } from './mockStorage'
 
 const KEY = 'coding-agent-demo-v1'
-const scenarios: MockScenario[] = ['success', 'tests-failed', 'stopped', 'save-failure', 'schedule-error']
-interface MockTask { id: string; request: TaskCreateRequest; createdAt: number; stepMs: number; scenario: MockScenario; steps: TaskStep[]; experienceId: string }
-interface State { version: 1; tasks: MockTask[]; experiences: Experience[] }
-export interface MockApi extends AgentApi { setScenario(scenario: MockScenario): void }
+export interface MockApi extends AgentApi { setScenario(scenario: MockScenario): void; readonly recoveryNotice: string | null }
 interface Options { now?: () => number; stepMs?: number; projectId?: string; storage?: Storage | null }
 
 export function createMockApi(options: Options = {}): MockApi {
@@ -15,11 +13,12 @@ export function createMockApi(options: Options = {}): MockApi {
   const projectId = options.projectId ?? 'java-null-greeting'
   let storage: Storage | null = null
   try { storage = options.storage === undefined ? sessionStorage : options.storage } catch { /* Private mode: in-memory demo. */ }
-  let state: State = { version: 1, tasks: [], experiences: seedExperiences(now()) }
+  let state: MockState = { version: 1, tasks: [], experiences: seedExperiences(now()) }
+  let recoveryNotice: string | null = null
   try {
-    const saved = JSON.parse(storage?.getItem(KEY) ?? 'null')
-    if (saved?.version === 1 && Array.isArray(saved.tasks) && Array.isArray(saved.experiences)) state = saved
-  } catch { /* Ignore an obsolete or malformed demo snapshot. */ }
+    const raw = storage?.getItem(KEY)
+    if (raw != null) ({ state, recoveryNotice } = restoreMockState(raw, state))
+  } catch { /* Storage is unavailable; continue in memory. */ }
   let scenario: MockScenario = 'success'
   const persist = () => { try { storage?.setItem(KEY, JSON.stringify(state)) } catch { /* Demo still works in memory. */ } }
   const checkAbort = (signal?: AbortSignal) => { if (signal?.aborted) throw new DOMException('Aborted', 'AbortError') }
@@ -66,6 +65,7 @@ export function createMockApi(options: Options = {}): MockApi {
       result, error_message: terminal && task.scenario === 'schedule-error' ? '演示工作副本创建失败，Agent 尚未开始执行。' : null }
   }
   return {
+    recoveryNotice,
     setScenario(value) { if (scenarios.includes(value)) scenario = value },
     async createTask(request, signal) {
       checkAbort(signal)
