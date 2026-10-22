@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
 import { useApiContext } from './api/context'
-const { mock } = useApiContext()
+const { mock, demoNotice } = useApiContext()
 const route = useRoute()
 const key = `coding-agent-last-task-${mock ? 'mock' : 'http'}`
 const lastTask = ref('')
@@ -31,6 +31,7 @@ watch(() => route.params.taskId, id => {
       <header class="topbar"><div class="breadcrumbs">工作台 <AppIcon name="chevron" :size="13" /><span>{{ route.meta.title }}</span></div><span class="mode-badge" :class="{ live: !mock }"><i></i>{{ mock ? '模拟演示' : '后端连接模式' }}</span></header>
       <main id="main-content" ref="mainContent" tabindex="-1">
         <div v-if="mock" class="demo-notice"><AppIcon name="code" :size="17" /><span>当前展示模拟执行过程与经验数据，不会实际调用模型或修改 Java 文件。</span></div>
+        <p v-if="mock && demoNotice" class="warning-notice" role="status">{{ demoNotice }}</p>
         <RouterView />
       </main>
       <footer class="workspace-footer"><span>Self-Evolving Coding Agent</span><span>任务执行 · 测试验证 · 经验积累</span></footer>

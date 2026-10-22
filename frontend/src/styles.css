@@ -140,6 +140,12 @@ details[open] > summary .step-outcome svg, details[open] > summary .expand-label
 .tool-output { background: #213747; color: #dce8ed; }
 .step-error { margin: 0 16px 15px; font-size: 12px; color: #b33d43; overflow-wrap: anywhere; }
 .step-detail .warning-notice { margin: 0 16px 15px; }
+.execution-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 20px 26px 10px; }
+.step-filter { display: flex; align-items: center; gap: 12px; color: #627486; font-size: 12px; }
+.step-filter select { width: auto; min-width: 150px; padding: 8px 30px 8px 10px; font-size: 12px; }
+.execution-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.execution-export-note { padding: 0 26px; color: #627486; font-size: 11px; line-height: 1.8; }
+.execution-panel > .error-notice { margin: 14px 26px 0; }
 .execution-footnote { padding: 0 26px 22px 69px; color: #748b99; font-size: 12px; display: flex; align-items: center; gap: 8px; line-height: 1.8; }
 .activity-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 .result-panel { margin-top: 24px; }

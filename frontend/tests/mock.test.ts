@@ -60,8 +60,42 @@ describe('mock lifecycle matches the shared models', () => {
     const api = createMockApi()
     const created = await api.createTask(request)
     const reloaded = createMockApi()
+    expect(reloaded.recoveryNotice).toBeNull()
     expect((await reloaded.getTask(created.task_id)).task_id).toBe(created.task_id)
     await expect(reloaded.getTask('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')).rejects.toMatchObject({ status: 404 })
+  })
+
+  it('skips damaged and duplicate records while preserving valid tasks and experiences', async () => {
+    const api = createMockApi({ now: () => 100000, stepMs: 1 })
+    const created = await api.createTask(request)
+    const saved = JSON.parse(sessionStorage.getItem('coding-agent-demo-v1')!)
+    saved.tasks.push(null, saved.tasks[0], { ...saved.tasks[0], id: '22222222-2222-4222-8222-222222222222', stepMs: 0 })
+    saved.experiences.push(null, { id: 'broken' }, saved.experiences[0])
+    sessionStorage.setItem('coding-agent-demo-v1', JSON.stringify(saved))
+    const restored = createMockApi({ now: () => 100000 })
+    expect(restored.recoveryNotice).toContain('异常记录')
+    expect((await restored.getTask(created.task_id)).task_id).toBe(created.task_id)
+    expect(await restored.listExperiences(100)).toHaveLength(7)
+    await expect(restored.getTask('22222222-2222-4222-8222-222222222222')).rejects.toMatchObject({ status: 404 })
+  })
+
+  it.each(['{invalid', 'null', '{"version":2,"tasks":[],"experiences":[]}'])('recovers a malformed root snapshot: %s', async raw => {
+    sessionStorage.setItem('coding-agent-demo-v1', raw)
+    const restored = createMockApi()
+    expect(restored.recoveryNotice).toContain('重建')
+    expect(await restored.listExperiences()).toHaveLength(7)
+    expect((await restored.createTask(request)).status).toBe('pending')
+  })
+
+  it('does not restore corrupted test evidence as a successful demo task', async () => {
+    const api = createMockApi({ now: () => 100000, stepMs: 1 })
+    const created = await api.createTask(request)
+    const saved = JSON.parse(sessionStorage.getItem('coding-agent-demo-v1')!)
+    saved.tasks[0].steps.pop()
+    sessionStorage.setItem('coding-agent-demo-v1', JSON.stringify(saved))
+    const restored = createMockApi({ now: () => 200000 })
+    await expect(restored.getTask(created.task_id)).rejects.toMatchObject({ status: 404 })
+    expect(restored.recoveryNotice).toBeTruthy()
   })
 
   it('paginates experience arrays and rejects unregistered projects', async () => {
