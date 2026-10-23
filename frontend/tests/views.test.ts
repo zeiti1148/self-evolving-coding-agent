@@ -146,6 +146,27 @@ it('moves keyboard focus to the main content without changing the current route'
   } finally { wrapper.unmount() }
 })
 
+it('switches themes using accessible buttons without navigating or losing form input', async () => {
+  localStorage.setItem('coding-agent-theme', 'light')
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: NewTaskView }] })
+  await router.push('/')
+  const wrapper = mount(App, { global: { plugins: [router], provide: {
+    [apiContextKey as symbol]: { api: api(), mock: true, projectId: 'java', projectLabel: 'Java 样例' },
+  } } })
+  try {
+    await wrapper.get('textarea').setValue('切换主题时保留这段任务描述')
+    const buttons = wrapper.findAll('.theme-picker button')
+    expect(buttons[0]!.attributes('aria-pressed')).toBe('true')
+    await buttons[1]!.trigger('click')
+    expect(buttons[1]!.attributes('aria-pressed')).toBe('true')
+    expect(buttons[0]!.attributes('aria-pressed')).toBe('false')
+    expect(document.documentElement.dataset.theme).toBe('dark')
+    expect((wrapper.get('textarea').element as HTMLTextAreaElement).value).toBe('切换主题时保留这段任务描述')
+    expect(router.currentRoute.value.path).toBe('/')
+    expect(localStorage.getItem('coding-agent-theme')).toBe('dark')
+  } finally { wrapper.unmount(); localStorage.removeItem('coding-agent-theme'); delete document.documentElement.dataset.theme }
+})
+
 it('shows a readable contract error and recovers the experience page on retry', async () => {
   const records = seedExperiences(Date.parse('2026-10-22T00:00:00Z'))
   const fetcher = vi.fn()
