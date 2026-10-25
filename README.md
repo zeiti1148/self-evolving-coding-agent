@@ -12,7 +12,7 @@
 
 ## 目录与分工
 
-本次新增两个中等难度演示案例：订单结算、库存转移，各含 3 个业务类与 12 项测试。真实模型修复后分别通过 12/12 测试，原始缺陷和验收测试保持不变。下载 [交互回放 HTML](docs/demo/recorded-demo.html)，用浏览器打开即可逐步播放、查看实际代码差异和终验结果；无需模型连接。它独立于上述 24 项对照实验。操作步骤及新一轮回归结果见 [回放说明](docs/demo/replay-guide.md) 与 [录制报告](docs/reports/visual-demo-2026-10-25.md)。
+本轮演示以经验闭环为主线：已有库存修复经验被新的积分转赠任务检索并携带到真实模型请求中，新任务 12 项测试全部通过，再保存新经验，工作库从 2 条增至 3 条。下载 [交互演示 HTML](docs/demo/recorded-demo.html)，默认依次展示字段设计、检索匹配、注入模型、新修复和继续积累；另可切换订单、库存的跨文件修复过程。三个案例各有 3 个业务类、12 项测试。机制详见 [项目核心与经验设计](docs/experience-loop.md)，证据见 [复用演示记录](docs/reports/experience-reuse-demo-2026-10-25.md)。原有 24 项对照保留独立统计。
 
 | 目录 | 内容 | 建议维护者 |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ npm.cmd run dev
 | GET | `/api/tasks/{task_id}/steps` | 运行中读取步骤 |
 | GET | `/api/experiences?limit=20&offset=0` | 经验分页 |
 
-六个正式评估项目为 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`，描述与测试数量见 `benchmarks/catalog.json`。另登记 `java-order-checkout`、`java-stock-transfer` 两个演示项目，见 `benchmarks/demo/catalog.json`。其他样例可通过脚本/API 提交，或修改前端项目配置后使用页面。
+六个正式评估项目为 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`，描述与测试数量见 `benchmarks/catalog.json`。另登记 `java-order-checkout`、`java-stock-transfer` 两个修复演示项目，见 `benchmarks/demo/catalog.json`；积分转赠 `java-points-gift` 用于后续经验复用，见 `benchmarks/reuse/catalog.json`。其他样例可通过脚本/API 提交，或修改前端项目配置后使用页面。
 
 ## 验证
 
