@@ -4,9 +4,11 @@
 
 ## 当前进度
 
-已实现同步 Agent 循环、受控工具、FastAPI 四个业务接口、SQLite 经验模块及 Vue 工作台。两个 Java 样例已用**测试专用脚本模型 + 真实 HTTP API、文件工具、Maven、SQLite**完成可重复验收。脚本模型只用于测试，不能证明真实大模型的修复能力。
+已实现同步 Agent 循环、受控工具、FastAPI 四个业务接口、SQLite 经验模块及 Vue 工作台。两个 Java 样例已通过脚本模型回归与真实模型 `deepseek-flash` 验收，均运行真实文件工具、Maven 和 SQLite。
 
-截至 2026-10-25，真实模型验收尚未执行：本地 LLM 配置仍为占位值。填写配置后执行下方 `--live` 验收，不把脚本模型结果写成真实模型实验结果。本轮基于 `main@5a09f3b`，经验模块和前端此前已通过 PR #2–#5 合并。
+2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。当前基于 `main@5a09f3b`，交付位于 PR #6；经验模块和前端此前已通过 PR #2–#5 合并。完整证据与对照实验结论见文末报告。
+
+第一轮正式对照完成 24 个真实任务，两组均 12/12 修复通过，经验开启组仅 8/12 实际收到参考。已修复异常名称长句导致的漏检，另以五个独立真实任务验证。当前没有证据证明经验提高成功率或效率；归一化后的完整对照复测留在下一阶段。本机回归 234 项后端、58 项前端测试通过，双平台 CI 已实际运行通过。
 
 ## 目录与分工
 
@@ -17,7 +19,7 @@
 | `backend/tools/` | 工作副本、文件工具、进程和 Maven | 成员二 |
 | `backend/experience/`、`frontend/` | SQLite 与 Vue 工作台 | 成员三 |
 | `backend/shared/` | 既有 Pydantic 公共契约 | 三方共同维护 |
-| `benchmarks/java/`、`benchmarks/java-profile/` | 两个故意保留缺陷的 Maven 项目 | 团队 |
+| `benchmarks/catalog.json`、`benchmarks/training/` | 六个评估案例与三个独立训练案例，均保留原始缺陷 | 团队 |
 | `scripts/`、`tests/` | 环境准备、闭环验收、测试专用模型 | 团队 |
 
 ## 本地准备
@@ -74,7 +76,7 @@ npm.cmd run dev
 | GET | `/api/tasks/{task_id}/steps` | 运行中读取步骤 |
 | GET | `/api/experiences?limit=20&offset=0` | 经验分页 |
 
-登记项目为 `java-null-greeting`（null 字符串）和 `java-null-profile`（对象及嵌套字段为 null）。第二个样例可通过验收脚本提交，或修改前端项目配置后使用页面。
+登记项目为 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`。案例描述、错误类型与预期测试数量见 `benchmarks/catalog.json`。其他样例可通过脚本/API 提交，或修改前端项目配置后使用页面。
 
 ## 验证
 
@@ -84,15 +86,21 @@ npm.cmd run dev
 .\.venv\Scripts\python.exe scripts/acceptance.py
 # 真实模型配置，独立执行两个样例
 .\.venv\Scripts\python.exe scripts/acceptance.py --live
+# 独立训练3任务 + 试运行4任务 + 正式对照24任务；会调用真实模型
+.\.venv\Scripts\python.exe scripts/experiment.py --live --stage all
+# 归一化后的定向验证：3训练 + 2目标任务，不代替完整对照
+.\.venv\Scripts\python.exe scripts/experiment.py --live --stage retrieval-check
 cd frontend
 npm.cmd test
 npm.cmd run build
 npm.cmd run check:integration
 ```
 
-闭环验收使用独立 SQLite 文件与工作目录。结果位于 `.cache/acceptance/<时间戳>/`，包含模型模式、任务结果、工具步骤和检索经验 ID。成功要求两次修复通过、经验持久化、第二次收到第一次的经验、运行中能读取步骤、原始样例未变化。脚本模型验收还要求观察到真实初始测试失败。
+闭环验收使用独立 SQLite 文件与工作目录。结果位于 `.cache/acceptance/<时间戳>/`，包含模型模式、任务结果、工具步骤和检索经验 ID。两种模式均先用独立副本复现原始失败，要求最终测试数量一致、两次修复通过、经验持久化、第二次收到第一次的经验、运行中能读取步骤、原始样例未变化。真实模型报告另含实际请求的经验 ID/内容哈希、返回模型、响应 ID 与提供商 token 用量；不记录密钥。
 
 `check:integration` 是已有前端契约检查，不执行 Agent 或 Maven。测试脚本模型位于 `tests/scripted_llm.py`，生产模块不导入它。浏览器验收专用入口为 `tests.ui_server:app`（建议 8001 端口），不得用于真实模型演示。
+
+`experiment.py` 不带 `--live` 时只打印执行规模。每次执行新建 `.cache/experiments/<时间戳及随机标识>/`，逐任务更新 JSON 记录，失败也纳入统计；不恢复旧任务、不自动重跑整项任务。正式两轮反转条件顺序。经验由三个独立训练项目生成后冻结，六个评估项目及试运行结果不会反馈到该库。查看 `comparison_valid`、提供商用量覆盖率与失败原因后再解读汇总，不能把注入成功直接视为效果提升。
 
 基准项目原始测试预期失败，修复只发生在工作副本。不要把原始样例的非零退出码当作系统回归。
 
@@ -103,7 +111,10 @@ npm.cmd run check:integration
 - 验收测试、pom.xml 和 Maven 配置只读。最终测试使用 clean test 和新报告；零测试、跳过测试、构建故障或超时不算通过。
 - 进程有超时与输出上限，截断标记为 metadata.truncated。Windows Job/POSIX 进程组清理子进程，Java/Maven 不继承模型密钥或自定义 JVM/Maven 参数。
 - 默认 20 轮模型决策。独立最终验证不占预算；耗尽预算保持 stopped，即使测试通过也不保存成功经验。成功后经验提取至多另调用模型一次。
+- `TASK_TIMEOUT_SECONDS` 默认 600 秒，协作式截止时间覆盖后续模型请求和工具执行；网络读等待还受 `LLM_TIMEOUT_SECONDS` 限制。连接建立失败最多尝试三次，读取超时不自动重发付费请求。
+- 上述任务预算不是操作系统级硬时限。同步 HTTPX 的读取超时衡量空闲间隔，持续缓慢到达的响应头、DNS 等底层操作仍可能延后退出；CI 另设 job/step 硬时限。本机原型暂未加入独立请求进程或自定义网络传输层。
 - 按 Java 标签与错误类型检索最多五条经验，内容与 ID 注入上下文。检索故障记录警告，保存失败不改变已验证的修复成功。
+- `USE_EXPERIENCE=false` 可关闭检索和注入；成功后的保存行为保持一致，便于公平对照。正式实验使用独立训练经验的冻结快照，不从评估结果继续学习。
 - 单 API 进程、内存任务，重启丢失状态；经验持久化。暂不实现任务恢复、取消、历史、Diff、向量检索或模型训练。
 - 默认保留 runtime/workspaces/<task UUID>；同根目录 .records 保存登记信息。开发人员使用 cleanup_workspace 校验后清理，禁止扩大删除范围。
 - 本轮 Starlette TestClient 对 HTTPX 发出弃用提示，当前测试通过；后续依赖升级需要复测。
@@ -114,5 +125,8 @@ npm.cmd run check:integration
 - [公共接口](docs/interfaces.md)
 - [开发协作](docs/development.md)
 - [本轮验收记录](docs/reports/mvp-2026-10-25.md)
+- [真实模型与对照实验](docs/reports/live-evaluation-2026-10-25.md)
+- [双平台持续集成](docs/reports/ci-validation.md)
+- [答辩演示操作说明](docs/demo.md)
 
 完整阶段报告和下一阶段目标另存于仓库同级的“项目阶段文档”，提供 Word 与 Markdown 两版。

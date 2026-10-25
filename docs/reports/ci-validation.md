@@ -2,6 +2,8 @@
 
 工作流：[`MVP regression`](../../.github/workflows/ci.yml)。每次 push、Pull Request 更新及手动触发时，分别在 GitHub 托管的 `ubuntu-latest` 和 `windows-latest` 上运行。两个平台独立报告，单个平台失败不会取消另一个平台。
 
+2026-10-25 已核对 `ffde38f4be6cac333c7dec8abec31d44501d885e` 的真实运行：[Actions 40163035088](https://github.com/zeiti1148/self-evolving-coding-agent/actions/runs/40163035088)。Windows 与 Ubuntu 的全部回归、前端构建、契约检查及脚本模型真实 Maven/SQLite 闭环均成功；逐步骤结果保存在 [ci-evidence.json](ci-evidence.json)。之后文档提交的最新状态以 PR #6 Checks 为准。
+
 ## 环境与检查范围
 
 运行环境固定为 Python 3.11、Eclipse Temurin JDK 17、Node.js 22；Maven 版本由 `scripts/setup_maven.py` 固定为 3.9.11，并校验官方 SHA-512 校验和。前端使用锁文件执行 `npm ci`。
