@@ -3,6 +3,8 @@
 Each invocation creates a new directory. It never resumes or retries whole tasks.
 all = 3 training tasks + 4 pilot tasks + 24 formal tasks. Formal repetitions
 reverse the condition order to reduce a simple execution-order confound.
+retrieval-check = 3 training tasks + 2 targeted checks after error-type
+normalization. This validation is separate from the formal comparison.
 """
 from __future__ import annotations
 
@@ -12,6 +14,7 @@ import json
 import math
 import os
 import sqlite3
+import subprocess
 import sys
 import time
 from collections import Counter
@@ -23,6 +26,11 @@ from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+RETRIEVAL_CHECK_IDS = {"java-range-end", "java-parse-count"}
+RETRIEVAL_CHECK_PURPOSE = (
+    "Targeted retrieval validation after error-type normalization; "
+    "not a second formal comparison and not a replacement for the original run."
+)
 
 from backend.agent.core import Agent
 from backend.agent.llm import ChatClient
@@ -39,6 +47,26 @@ from backend.tools.workspace import inventory
 
 def file_hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def code_provenance(root: Path = ROOT) -> dict:
+    """Capture startup code identity without retaining Git status file names."""
+    result = {"git_head": None, "git_dirty": None,
+              "source_sha256": {name: file_hash(root / name) for name in (
+                  "backend/agent/core.py", "backend/agent/llm.py", "scripts/experiment.py")}}
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
+                              text=True, timeout=5, check=False)
+        status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=normal"],
+                                cwd=root, capture_output=True, text=True, timeout=5, check=False)
+        if head.returncode == 0:
+            result["git_head"] = head.stdout.strip()
+        if status.returncode == 0:
+            result["git_dirty"] = bool(status.stdout.strip())
+    except (OSError, subprocess.TimeoutExpired):
+        # Missing Git metadata is explicit; no filesystem paths or status text leak.
+        pass
+    return result
 
 
 def write_json(path: Path, value: dict) -> None:
@@ -129,8 +157,8 @@ def load_catalog(path: Path) -> list[dict]:
 
 
 def build_plan(training: list[dict], evaluation: list[dict], stage: str) -> list[dict]:
-    if stage not in {"all", "pilot", "formal"}:
-        raise ValueError("stage must be all, pilot or formal.")
+    if stage not in {"all", "pilot", "formal", "retrieval-check"}:
+        raise ValueError("stage must be all, pilot, formal or retrieval-check.")
     plan = []
 
     def add(phase, cases, repetition, modes):
@@ -147,7 +175,29 @@ def build_plan(training: list[dict], evaluation: list[dict], stage: str) -> list
     if stage in {"all", "formal"}:
         add("formal", evaluation, 1, [False, True])
         add("formal", evaluation, 2, [True, False])
+    if stage == "retrieval-check":
+        selected = [case for case in evaluation if case["id"] in RETRIEVAL_CHECK_IDS]
+        if len(selected) != 2 or {case["error_type"] for case in selected} != {
+                "ArrayIndexOutOfBoundsException", "NumberFormatException"}:
+            raise ValueError("Retrieval check requires the two fixed non-NPE evaluation cases.")
+        add("retrieval-check", selected, 1, [True])
     return plan
+
+
+def experiment_passed(report: dict) -> bool:
+    """Targeted checks require successful repair and actual reference delivery."""
+    if report["mode"] == "dry-run":
+        return True
+    if not report.get("all_tasks_passed"):
+        return False
+    if report.get("stage") != "retrieval-check":
+        return True
+    records = report.get("tasks", [])
+    checks = [row for row in records if row.get("stage") == "retrieval-check"]
+    return (report.get("completed") is True and len(records) == 5 and len(checks) == 2 and
+            {row["project"] for row in checks} == RETRIEVAL_CHECK_IDS and
+            all(row.get("outcome") == "passed" for row in records) and
+            all(row.get("use_experience") is True and row.get("comparison_valid") is True for row in checks))
 
 
 def request_metrics(audit: dict) -> dict:
@@ -313,11 +363,17 @@ def run_experiment(*, live=False, stage="all", output_root: Path | None = None,
     plan = build_plan(training, evaluation, stage)
     counts = dict(Counter(row["stage"] for row in plan))
     print(f"Plan: training={counts.get('training', 0)}, pilot={counts.get('pilot', 0)}, "
-          f"formal={counts.get('formal', 0)}; total={len(plan)} independent tasks; no whole-task retries.", flush=True)
+          f"formal={counts.get('formal', 0)}, retrieval-check={counts.get('retrieval-check', 0)}; "
+          f"total={len(plan)} independent tasks; no whole-task retries.", flush=True)
+    purpose = RETRIEVAL_CHECK_PURPOSE if stage == "retrieval-check" else "Frozen-training experience ablation."
+    if stage == "retrieval-check":
+        print(purpose, flush=True)
     if not live:
         print("Dry run only. Pass --live to use the configured real model and Maven.", flush=True)
-        return {"mode": "dry-run", "planned_tasks": len(plan), "counts": counts, "plan": plan}
+        return {"mode": "dry-run", "stage": stage, "purpose": purpose,
+                "planned_tasks": len(plan), "counts": counts, "plan": plan}
 
+    provenance = code_provenance()
     settings = settings or Settings.from_env()
     if not all(math.isfinite(value) and value > 0 for value in (settings.task_timeout, settings.llm_timeout)):
         raise ValueError("Task and model timeouts must be finite positive seconds.")
@@ -330,7 +386,8 @@ def run_experiment(*, live=False, stage="all", output_root: Path | None = None,
     training_path, frozen_path, output_path = (directory / name for name in
                                              ("training.db", "frozen-training.db", "evaluation-output.db"))
     originals = {key: inventory(source) for key, source in settings.projects.items()}
-    report = {"mode": "live-model", "created_at": stamp, "directory": str(directory), "stage": stage,
+    report = {"mode": "live-model", "created_at": stamp, "directory": str(directory), "stage": stage, "purpose": purpose,
+              "code_version": provenance,
               "requested_model": settings.llm_model, "task_timeout_seconds": settings.task_timeout,
               "planned_tasks": len(plan), "counts": counts, "plan": plan, "tasks": [], "baselines": {},
               "original_hashes": originals, "training_database": str(training_path),
@@ -413,6 +470,8 @@ def run_experiment(*, live=False, stage="all", output_root: Path | None = None,
         report["finished_at"] = datetime.now(timezone.utc).isoformat()
         report["originals_unchanged"] = all(originals[key] == inventory(path) for key, path in settings.projects.items())
         report["all_tasks_passed"] = report["completed"] and all(row.get("outcome") == "passed" for row in report["tasks"])
+        if stage == "retrieval-check":
+            report["retrieval_check_passed"] = experiment_passed(report)
         persist()
         print(f"Report: {destination}", flush=True)
     return report
@@ -421,11 +480,11 @@ def run_experiment(*, live=False, stage="all", output_root: Path | None = None,
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--live", action="store_true", help="Explicitly enable real model requests.")
-    parser.add_argument("--stage", choices=("all", "pilot", "formal"), default="all")
+    parser.add_argument("--stage", choices=("all", "pilot", "formal", "retrieval-check"), default="all")
     parser.add_argument("--output-root", type=Path, help="Parent folder; each invocation gets a new child directory.")
     args = parser.parse_args(argv)
     report = run_experiment(live=args.live, stage=args.stage, output_root=args.output_root)
-    return 0 if report["mode"] == "dry-run" or report.get("all_tasks_passed") else 1
+    return 0 if experiment_passed(report) else 1
 
 
 if __name__ == "__main__":

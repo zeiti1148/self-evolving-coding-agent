@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -188,3 +189,87 @@ def test_environment_baseline_error_is_reported_once_and_skips_model_tasks(monke
     assert all(row["outcome"] == "baseline_invalid" for row in report["tasks"])
     assert all(row["error"] == "OSError" for row in report["baselines"].values())
     assert report["training_experiences"] == []
+
+
+def test_retrieval_check_plan_is_five_tasks_and_separate_from_formal(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(Settings, "from_env", lambda: pytest.fail("Dry run must not load credentials."))
+    report = experiment.run_experiment(stage="retrieval-check", output_root=tmp_path / "unused")
+    assert report["planned_tasks"] == 5
+    assert report["counts"] == {"training": 3, "retrieval-check": 2}
+    assert [row["use_experience"] for row in report["plan"]] == [False, False, False, True, True]
+    checks = report["plan"][3:]
+    assert {row["project"] for row in checks} == {"java-range-end", "java-parse-count"}
+    assert all(row["repetition"] == 1 for row in checks)
+    assert "not a second formal comparison" in report["purpose"]
+    assert "retrieval-check=2" in capsys.readouterr().out
+    assert not (tmp_path / "unused").exists()
+
+
+@pytest.mark.parametrize("reference_delivered", [True, False])
+def test_retrieval_check_reports_reference_delivery_and_controls_exit(monkeypatch, tmp_path, reference_delivered):
+    def fake_baseline(case, tools, original, source):
+        return {"valid": True, "original_unchanged": True}
+
+    def fake_trial(spec, case, settings, store, original, checkpoint):
+        if spec["stage"] == "training":
+            store.save_experience(experience_data(spec["project"], case["error_type"]))
+        else:
+            assert spec["use_experience"] is True
+            assert len(store.search_experiences("", error_type=case["error_type"])) == 1
+        row = {**spec, "outcome": "passed", "comparison_valid": reference_delivered,
+               "original_unchanged": True, "elapsed_ms": 1}
+        checkpoint(row)
+        return row
+
+    monkeypatch.setattr(experiment, "run_baseline", fake_baseline)
+    monkeypatch.setattr(experiment, "run_trial", fake_trial)
+    monkeypatch.setattr(experiment, "ChatClient", lambda _: pytest.fail("No real model is allowed in this test."))
+    report = experiment.run_experiment(live=True, stage="retrieval-check", settings=Settings(), output_root=tmp_path)
+    assert report["completed"] and report["all_tasks_passed"]
+    assert report["retrieval_check_passed"] is reference_delivered
+    assert len(report["tasks"]) == len(report["baselines"]) == 5
+    assert {row["stage"] for row in report["tasks"]} == {"training", "retrieval-check"}
+    saved = json.loads((Path(report["directory"]) / "report.json").read_text(encoding="utf-8"))
+    assert saved["retrieval_check_passed"] is reference_delivered
+    assert "not a replacement for the original run" in saved["purpose"]
+    monkeypatch.setattr(experiment, "run_experiment", lambda **kwargs: saved)
+    assert experiment.main(["--live", "--stage", "retrieval-check"]) == (0 if reference_delivered else 1)
+
+
+def test_retrieval_check_cannot_pass_with_failed_training_or_incomplete_checks():
+    training = [{"stage": "training", "project": f"train-{index}", "outcome": "passed"} for index in range(3)]
+    checks = [{"stage": "retrieval-check", "project": project, "outcome": "passed",
+               "use_experience": True, "comparison_valid": True} for project in experiment.RETRIEVAL_CHECK_IDS]
+    report = {"mode": "live-model", "stage": "retrieval-check", "completed": True,
+              "all_tasks_passed": True, "tasks": training + checks}
+    assert experiment.experiment_passed(report)
+    assert not experiment.experiment_passed({**report, "tasks": report["tasks"][:-1]})
+    training[0]["outcome"] = "failed"
+    assert not experiment.experiment_passed(report)
+    # Existing all-stage semantics still report repair success independently of retrieval validity.
+    assert experiment.experiment_passed({"mode": "live-model", "stage": "all", "all_tasks_passed": True})
+
+
+def test_code_provenance_records_hashes_and_boolean_without_git_status_paths(monkeypatch, tmp_path):
+    filenames = ("backend/agent/core.py", "backend/agent/llm.py", "scripts/experiment.py")
+    for name in filenames:
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(name, encoding="utf-8")
+
+    def fake_git(argv, **kwargs):
+        assert kwargs["cwd"] == tmp_path and kwargs["capture_output"]
+        return SimpleNamespace(returncode=0, stdout="a" * 40 if argv[1] == "rev-parse" else "?? private-file-name.txt\n")
+
+    monkeypatch.setattr(experiment.subprocess, "run", fake_git)
+    result = experiment.code_provenance(tmp_path)
+    assert result["git_head"] == "a" * 40 and result["git_dirty"] is True
+    assert result["source_sha256"] == {name: experiment.file_hash(tmp_path / name) for name in filenames}
+    assert "private-file-name" not in json.dumps(result)
+
+    def unavailable(*args, **kwargs):
+        raise OSError("Unavailable")
+    monkeypatch.setattr(experiment.subprocess, "run", unavailable)
+    missing = experiment.code_provenance(tmp_path)
+    assert missing["git_head"] is None and missing["git_dirty"] is None
+    assert missing["source_sha256"] == result["source_sha256"]
