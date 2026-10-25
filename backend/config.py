@@ -30,6 +30,8 @@ class Settings:
         "java-null-map": ROOT / "benchmarks/java-null-map",
         "java-range-end": ROOT / "benchmarks/java-range-end",
         "java-parse-count": ROOT / "benchmarks/java-parse-count",
+        "java-order-checkout": ROOT / "benchmarks/demo/order-checkout",
+        "java-stock-transfer": ROOT / "benchmarks/demo/stock-transfer",
     })
 
     def __post_init__(self) -> None:
