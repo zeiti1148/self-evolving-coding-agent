@@ -1,0 +1,5081 @@
+{
+  "date": "2026-10-25",
+  "run_label": "normalized-full-rerun",
+  "completed": true,
+  "run_status": "completed",
+  "all_tasks_passed": false,
+  "source_report": ".cache/experiments/20261025T050047126301Z-3835a710/report.json",
+  "source_report_sha256": "156cd2769df8a41b6df20973b388cbece139097d55d9a9eb7d29713fc66f6cad",
+  "code_version": {
+    "git_head": "a0754db392dc627912acc3cae4632c5dff8c59a9",
+    "git_dirty": false,
+    "source_sha256": {
+      "backend/agent/core.py": "25d77c91ee28f0304af67be13eaf5eb3ca8e4478581e33906f601b8a956b2f9e",
+      "backend/agent/llm.py": "ccfcf283843ac7a77d892ea6c3e6892025e14fc6f65339a63d709c07bb7b4e92",
+      "scripts/experiment.py": "1e8c11dffef4bbef217a0fb95a1d428ff716a75e49561b5fd868d64bf21a2ca2"
+    }
+  },
+  "created_at": "20261025T050047126301Z",
+  "finished_at": "2026-10-25T05:08:54.762134+00:00",
+  "requested_model": "deepseek-flash",
+  "task_timeout_seconds": 600.0,
+  "training_coverage": {
+    "NullPointerException": true,
+    "ArrayIndexOutOfBoundsException": true,
+    "NumberFormatException": true
+  },
+  "frozen_sha256": "f602b3accbb35722cb3253f3757194303a4be5cc8fc2765821aada53ba3373c9",
+  "originals_unchanged": true,
+  "training_experience_keys": [
+    {
+      "id": "47900419-a3ae-4be4-bb4d-e2659716b1d4",
+      "error_type": "NumberFormatException",
+      "source_task_id": "2789cf16-4fdc-4b06-8936-e37837f69444"
+    },
+    {
+      "id": "81ef2dd1-5c1e-4223-960c-83ba4a433e94",
+      "error_type": "ArrayIndexOutOfBoundsException",
+      "source_task_id": "23c4f976-3362-4333-83fd-49d4ca55b82c"
+    },
+    {
+      "id": "0b1918a4-1c82-4781-9eed-544ceed7f965",
+      "error_type": "NullPointerException",
+      "source_task_id": "e10fe365-e947-437e-9f3e-675ffdb2cd12"
+    }
+  ],
+  "group_statistics": {
+    "without-experience": {
+      "tasks": 12,
+      "repairs_passed": 11,
+      "outcomes": {
+        "passed": 11,
+        "failed": 1
+      },
+      "references_delivered": 0,
+      "retrieval_hits": 0,
+      "comparison_valid": 12,
+      "decisions": 59,
+      "tool_calls": 73,
+      "mean_elapsed_seconds": 17.132916666666667,
+      "median_elapsed_seconds": 16.217,
+      "elapsed_ms": 205595,
+      "phases": {
+        "decision": {
+          "requests": 64,
+          "successful_requests": 58,
+          "prompt_tokens": 123145,
+          "completion_tokens": 5606,
+          "total_tokens": 128751,
+          "total_token_coverage": 58
+        },
+        "extraction": {
+          "requests": 11,
+          "successful_requests": 11,
+          "prompt_tokens": 33995,
+          "completion_tokens": 5492,
+          "total_tokens": 39487,
+          "total_token_coverage": 11
+        }
+      },
+      "requests": 75,
+      "total_tokens": 168238,
+      "token_coverage": 69,
+      "request_errors": {
+        "ConnectError": 5,
+        "RemoteProtocolError": 1
+      },
+      "unsuccessful_request_ms": 26323,
+      "returned_models": [
+        "deepseek-flash"
+      ]
+    },
+    "with-experience": {
+      "tasks": 12,
+      "repairs_passed": 11,
+      "outcomes": {
+        "passed": 11,
+        "failed": 1
+      },
+      "references_delivered": 11,
+      "retrieval_hits": 12,
+      "comparison_valid": 11,
+      "decisions": 56,
+      "tool_calls": 69,
+      "mean_elapsed_seconds": 16.49683333333333,
+      "median_elapsed_seconds": 15.536,
+      "elapsed_ms": 197962,
+      "phases": {
+        "decision": {
+          "requests": 60,
+          "successful_requests": 55,
+          "prompt_tokens": 137616,
+          "completion_tokens": 5129,
+          "total_tokens": 142745,
+          "total_token_coverage": 55
+        },
+        "extraction": {
+          "requests": 11,
+          "successful_requests": 11,
+          "prompt_tokens": 35121,
+          "completion_tokens": 5535,
+          "total_tokens": 40656,
+          "total_token_coverage": 11
+        }
+      },
+      "requests": 71,
+      "total_tokens": 183401,
+      "token_coverage": 66,
+      "request_errors": {
+        "ConnectError": 5
+      },
+      "unsuccessful_request_ms": 26094,
+      "returned_models": [
+        "deepseek-flash"
+      ]
+    }
+  },
+  "paired_deltas": [
+    {
+      "project": "java-null-greeting",
+      "repetition": 1,
+      "off_id": "d734afa9-be91-4c8b-ad1b-ee5382337453",
+      "on_id": "9988fadf-dedd-47b6-b302-8b167b356b00",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -363,
+      "token_delta_on_minus_off": 1972,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-greeting",
+      "repetition": 2,
+      "off_id": "9dcddf2e-2130-426b-9102-6829a0de8ef2",
+      "on_id": "164b462c-9db4-4f0b-88b7-9bef469908d0",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 5201,
+      "token_delta_on_minus_off": 9316,
+      "tool_delta_on_minus_off": 1
+    },
+    {
+      "project": "java-null-profile",
+      "repetition": 1,
+      "off_id": "9db71bc6-a4db-48fc-8daa-560fa2322505",
+      "on_id": "d94cd4c7-b2d2-4a62-8eeb-c66c6b8e56fd",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -933,
+      "token_delta_on_minus_off": -6833,
+      "tool_delta_on_minus_off": -1
+    },
+    {
+      "project": "java-null-profile",
+      "repetition": 2,
+      "off_id": "ecbf04ea-917f-4678-b10b-f71c27ec2788",
+      "on_id": "a9ca7855-3bad-4858-aa24-74803643eafd",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -4300,
+      "token_delta_on_minus_off": 2017,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-list",
+      "repetition": 1,
+      "off_id": "a3fa6659-7aaf-44b5-8d6b-3966518d4f9c",
+      "on_id": "e8740f67-74ed-4f73-b8ab-409f9477defb",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 2086,
+      "token_delta_on_minus_off": 2137,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-list",
+      "repetition": 2,
+      "off_id": "65784c1d-4581-4b1b-a35d-bccd6cf249a3",
+      "on_id": "96ad6408-0f79-495f-a5c7-dc9cb7eff3f3",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -395,
+      "token_delta_on_minus_off": 2348,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-map",
+      "repetition": 1,
+      "off_id": "72a6e0c0-73af-45c0-8074-a5af8c66a0dc",
+      "on_id": "7f6672bf-8f48-4822-96d3-9de7ce187450",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -2331,
+      "token_delta_on_minus_off": 1240,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-map",
+      "repetition": 2,
+      "off_id": "97147bf3-21e5-4518-bc64-8e7baac0ece2",
+      "on_id": "782ceabe-2f41-4a8f-b5f0-5fb57a4e7084",
+      "off_outcome": "passed",
+      "on_outcome": "failed",
+      "elapsed_ms_delta_on_minus_off": 1572,
+      "token_delta_on_minus_off": -14228,
+      "tool_delta_on_minus_off": -6
+    },
+    {
+      "project": "java-range-end",
+      "repetition": 1,
+      "off_id": "3dc2e045-0a0c-4a52-b58b-e2be68f633e9",
+      "on_id": "7ead8d6c-3e86-47ee-b3c8-9ff4494a927a",
+      "off_outcome": "failed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 1019,
+      "token_delta_on_minus_off": 11185,
+      "tool_delta_on_minus_off": 2
+    },
+    {
+      "project": "java-range-end",
+      "repetition": 2,
+      "off_id": "a3f53d95-946d-4109-9eeb-13a8282158bc",
+      "on_id": "a767f57a-c358-4586-923a-356966127f92",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -606,
+      "token_delta_on_minus_off": 2203,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-parse-count",
+      "repetition": 1,
+      "off_id": "f33e3c5c-64cd-45c4-876c-e4081c9b362b",
+      "on_id": "8d582863-bfc1-4451-bfe0-ed6fd88035c8",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 1741,
+      "token_delta_on_minus_off": 1140,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-parse-count",
+      "repetition": 2,
+      "off_id": "91ef6148-dcf9-4ebd-b684-2604c0bb17e8",
+      "on_id": "48b3c92c-0288-4003-b199-88ddf3011f50",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -10324,
+      "token_delta_on_minus_off": 2666,
+      "tool_delta_on_minus_off": 0
+    }
+  ],
+  "both_passed_pairs": [
+    {
+      "project": "java-null-greeting",
+      "repetition": 1,
+      "off_id": "d734afa9-be91-4c8b-ad1b-ee5382337453",
+      "on_id": "9988fadf-dedd-47b6-b302-8b167b356b00",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -363,
+      "token_delta_on_minus_off": 1972,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-greeting",
+      "repetition": 2,
+      "off_id": "9dcddf2e-2130-426b-9102-6829a0de8ef2",
+      "on_id": "164b462c-9db4-4f0b-88b7-9bef469908d0",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 5201,
+      "token_delta_on_minus_off": 9316,
+      "tool_delta_on_minus_off": 1
+    },
+    {
+      "project": "java-null-profile",
+      "repetition": 1,
+      "off_id": "9db71bc6-a4db-48fc-8daa-560fa2322505",
+      "on_id": "d94cd4c7-b2d2-4a62-8eeb-c66c6b8e56fd",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -933,
+      "token_delta_on_minus_off": -6833,
+      "tool_delta_on_minus_off": -1
+    },
+    {
+      "project": "java-null-profile",
+      "repetition": 2,
+      "off_id": "ecbf04ea-917f-4678-b10b-f71c27ec2788",
+      "on_id": "a9ca7855-3bad-4858-aa24-74803643eafd",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -4300,
+      "token_delta_on_minus_off": 2017,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-list",
+      "repetition": 1,
+      "off_id": "a3fa6659-7aaf-44b5-8d6b-3966518d4f9c",
+      "on_id": "e8740f67-74ed-4f73-b8ab-409f9477defb",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 2086,
+      "token_delta_on_minus_off": 2137,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-list",
+      "repetition": 2,
+      "off_id": "65784c1d-4581-4b1b-a35d-bccd6cf249a3",
+      "on_id": "96ad6408-0f79-495f-a5c7-dc9cb7eff3f3",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -395,
+      "token_delta_on_minus_off": 2348,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-null-map",
+      "repetition": 1,
+      "off_id": "72a6e0c0-73af-45c0-8074-a5af8c66a0dc",
+      "on_id": "7f6672bf-8f48-4822-96d3-9de7ce187450",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -2331,
+      "token_delta_on_minus_off": 1240,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-range-end",
+      "repetition": 2,
+      "off_id": "a3f53d95-946d-4109-9eeb-13a8282158bc",
+      "on_id": "a767f57a-c358-4586-923a-356966127f92",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -606,
+      "token_delta_on_minus_off": 2203,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-parse-count",
+      "repetition": 1,
+      "off_id": "f33e3c5c-64cd-45c4-876c-e4081c9b362b",
+      "on_id": "8d582863-bfc1-4451-bfe0-ed6fd88035c8",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": 1741,
+      "token_delta_on_minus_off": 1140,
+      "tool_delta_on_minus_off": 0
+    },
+    {
+      "project": "java-parse-count",
+      "repetition": 2,
+      "off_id": "91ef6148-dcf9-4ebd-b684-2604c0bb17e8",
+      "on_id": "48b3c92c-0288-4003-b199-88ddf3011f50",
+      "off_outcome": "passed",
+      "on_outcome": "passed",
+      "elapsed_ms_delta_on_minus_off": -10324,
+      "token_delta_on_minus_off": 2666,
+      "tool_delta_on_minus_off": 0
+    }
+  ],
+  "both_passed_pair_statistics": {
+    "without-experience": {
+      "tasks": 10,
+      "repairs_passed": 10,
+      "outcomes": {
+        "passed": 10
+      },
+      "references_delivered": 0,
+      "retrieval_hits": 0,
+      "comparison_valid": 10,
+      "decisions": 50,
+      "tool_calls": 63,
+      "mean_elapsed_seconds": 17.7879,
+      "median_elapsed_seconds": 17.587,
+      "elapsed_ms": 177879,
+      "phases": {
+        "decision": {
+          "requests": 54,
+          "successful_requests": 50,
+          "prompt_tokens": 108105,
+          "completion_tokens": 4783,
+          "total_tokens": 112888,
+          "total_token_coverage": 50
+        },
+        "extraction": {
+          "requests": 10,
+          "successful_requests": 10,
+          "prompt_tokens": 31041,
+          "completion_tokens": 5081,
+          "total_tokens": 36122,
+          "total_token_coverage": 10
+        }
+      },
+      "requests": 64,
+      "total_tokens": 149010,
+      "token_coverage": 60,
+      "request_errors": {
+        "ConnectError": 4
+      },
+      "unsuccessful_request_ms": 21053,
+      "returned_models": [
+        "deepseek-flash"
+      ]
+    },
+    "with-experience": {
+      "tasks": 10,
+      "repairs_passed": 10,
+      "outcomes": {
+        "passed": 10
+      },
+      "references_delivered": 10,
+      "retrieval_hits": 10,
+      "comparison_valid": 10,
+      "decisions": 50,
+      "tool_calls": 63,
+      "mean_elapsed_seconds": 16.7655,
+      "median_elapsed_seconds": 15.536,
+      "elapsed_ms": 167655,
+      "phases": {
+        "decision": {
+          "requests": 52,
+          "successful_requests": 50,
+          "prompt_tokens": 125501,
+          "completion_tokens": 4674,
+          "total_tokens": 130175,
+          "total_token_coverage": 50
+        },
+        "extraction": {
+          "requests": 10,
+          "successful_requests": 10,
+          "prompt_tokens": 32005,
+          "completion_tokens": 5036,
+          "total_tokens": 37041,
+          "total_token_coverage": 10
+        }
+      },
+      "requests": 62,
+      "total_tokens": 167216,
+      "token_coverage": 60,
+      "request_errors": {
+        "ConnectError": 2
+      },
+      "unsuccessful_request_ms": 10427,
+      "returned_models": [
+        "deepseek-flash"
+      ]
+    }
+  },
+  "tasks": [
+    {
+      "trial_id": "training-train-postal-label-without-experience-r1",
+      "stage": "training",
+      "project": "train-postal-label",
+      "task_id": "e10fe365-e947-437e-9f3e-675ffdb2cd12",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 20444,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/AddressLabel.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "0b1918a4-1c82-4781-9eed-544ceed7f965",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": null,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13527,
+          "completion_tokens": 911,
+          "total_tokens": 14438
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 7
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "e10fe365-e947-437e-9f3e-675ffdb2cd12",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 7,
+        "elapsed_ms": 20252,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "bb0a08dd-0d3d-4c95-82a7-9a8b9c7d6f3a",
+            "usage": {
+              "prompt_tokens": 1185,
+              "completion_tokens": 60,
+              "total_tokens": 1245
+            },
+            "duration_ms": 6154
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "072d755d-6b83-46a9-bc55-c3aa4ed9bb86",
+            "usage": {
+              "prompt_tokens": 1456,
+              "completion_tokens": 136,
+              "total_tokens": 1592
+            },
+            "duration_ms": 1268
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "1a20dcb3-3a18-4cc2-a337-2c77153e7f3f",
+            "usage": {
+              "prompt_tokens": 2143,
+              "completion_tokens": 128,
+              "total_tokens": 2271
+            },
+            "duration_ms": 1245
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "3f334348-c484-497f-a6f0-d14073e56f48",
+            "usage": {
+              "prompt_tokens": 2390,
+              "completion_tokens": 23,
+              "total_tokens": 2413
+            },
+            "duration_ms": 828
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "c60e2fa3-8cea-41cf-94dd-a107ccc2626e",
+            "usage": {
+              "prompt_tokens": 3305,
+              "completion_tokens": 81,
+              "total_tokens": 3386
+            },
+            "duration_ms": 1117
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "c572dd80-b2e5-4abb-9cfb-b1c383265982",
+            "usage": {
+              "prompt_tokens": 3048,
+              "completion_tokens": 483,
+              "total_tokens": 3531
+            },
+            "duration_ms": 3188
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "training-train-tail-picker-without-experience-r1",
+      "stage": "training",
+      "project": "train-tail-picker",
+      "task_id": "23c4f976-3362-4333-83fd-49d4ca55b82c",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 15863,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/TailPicker.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "81ef2dd1-5c1e-4223-960c-83ba4a433e94",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": null,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13197,
+          "completion_tokens": 965,
+          "total_tokens": 14162
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "23c4f976-3362-4333-83fd-49d4ca55b82c",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 15723,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "9ec6ee97-d3b8-4f1e-befe-c2f8e15bc35e",
+            "usage": {
+              "prompt_tokens": 1177,
+              "completion_tokens": 86,
+              "total_tokens": 1263
+            },
+            "duration_ms": 1124
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "bbda63f7-1c9d-495d-ac93-17b95d266823",
+            "usage": {
+              "prompt_tokens": 1454,
+              "completion_tokens": 95,
+              "total_tokens": 1549
+            },
+            "duration_ms": 1044
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "19ab2f48-5413-4dd7-9982-fb75f79524a3",
+            "usage": {
+              "prompt_tokens": 2001,
+              "completion_tokens": 212,
+              "total_tokens": 2213
+            },
+            "duration_ms": 1405
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "ef38b985-8dea-4251-851d-5a4985ee2b0a",
+            "usage": {
+              "prompt_tokens": 2336,
+              "completion_tokens": 58,
+              "total_tokens": 2394
+            },
+            "duration_ms": 1379
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "66d433a8-f344-4fe2-b20f-c86a5db31177",
+            "usage": {
+              "prompt_tokens": 3289,
+              "completion_tokens": 91,
+              "total_tokens": 3380
+            },
+            "duration_ms": 1561
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "493ab0a4-d6d1-49e0-8cc3-373444d44053",
+            "usage": {
+              "prompt_tokens": 2940,
+              "completion_tokens": 423,
+              "total_tokens": 3363
+            },
+            "duration_ms": 2724
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "training-train-port-parser-without-experience-r1",
+      "stage": "training",
+      "project": "train-port-parser",
+      "task_id": "2789cf16-4fdc-4b06-8936-e37837f69444",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 18008,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/PortParser.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "47900419-a3ae-4be4-bb4d-e2659716b1d4",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": null,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13616,
+          "completion_tokens": 1403,
+          "total_tokens": 15019
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "2789cf16-4fdc-4b06-8936-e37837f69444",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 17901,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "c2b831a6-c5ab-4acd-97a5-5bc278e63a70",
+            "usage": {
+              "prompt_tokens": 1192,
+              "completion_tokens": 51,
+              "total_tokens": 1243
+            },
+            "duration_ms": 898
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "17c2c0dd-2228-46a3-bda0-e5393cbcf04f",
+            "usage": {
+              "prompt_tokens": 1436,
+              "completion_tokens": 95,
+              "total_tokens": 1531
+            },
+            "duration_ms": 803
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "3911c0e9-20b7-47d9-b7e7-f680e18dd121",
+            "usage": {
+              "prompt_tokens": 2102,
+              "completion_tokens": 242,
+              "total_tokens": 2344
+            },
+            "duration_ms": 1205
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "59a3e755-36bf-4dd6-bab2-f4705e78dca1",
+            "usage": {
+              "prompt_tokens": 2465,
+              "completion_tokens": 23,
+              "total_tokens": 2488
+            },
+            "duration_ms": 845
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "64496d46-6e46-4462-9c1d-17b2b637514a",
+            "usage": {
+              "prompt_tokens": 3382,
+              "completion_tokens": 67,
+              "total_tokens": 3449
+            },
+            "duration_ms": 1962
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "dc9032d8-dfd4-4b1d-a17d-c384d348b1d6",
+            "usage": {
+              "prompt_tokens": 3039,
+              "completion_tokens": 925,
+              "total_tokens": 3964
+            },
+            "duration_ms": 5227
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-greeting-without-experience-r1",
+      "stage": "formal",
+      "project": "java-null-greeting",
+      "task_id": "d734afa9-be91-4c8b-ad1b-ee5382337453",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 14496,
+      "test_counts": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/GreetingService.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "c06daeb7-f272-4522-813e-fa07da20bb24",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 12565,
+          "completion_tokens": 737,
+          "total_tokens": 13302
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "d734afa9-be91-4c8b-ad1b-ee5382337453",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14388,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "371f86f4-0685-4162-8345-c8fd0330ebe4",
+            "usage": {
+              "prompt_tokens": 1165,
+              "completion_tokens": 60,
+              "total_tokens": 1225
+            },
+            "duration_ms": 759
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "29d9923b-4aba-4e56-97d4-49bbff351327",
+            "usage": {
+              "prompt_tokens": 1422,
+              "completion_tokens": 97,
+              "total_tokens": 1519
+            },
+            "duration_ms": 1159
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "d51e07a8-8835-4a10-bc60-859febe4f62d",
+            "usage": {
+              "prompt_tokens": 1894,
+              "completion_tokens": 150,
+              "total_tokens": 2044
+            },
+            "duration_ms": 1283
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "b7612a00-fda4-4206-aa2f-e9698fbe8025",
+            "usage": {
+              "prompt_tokens": 2167,
+              "completion_tokens": 58,
+              "total_tokens": 2225
+            },
+            "duration_ms": 1082
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "b54c1d20-80a7-48bf-ad2b-f24f11395ef1",
+            "usage": {
+              "prompt_tokens": 3115,
+              "completion_tokens": 52,
+              "total_tokens": 3167
+            },
+            "duration_ms": 755
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "1cd2da4e-1208-4fca-9c88-429468adf926",
+            "usage": {
+              "prompt_tokens": 2802,
+              "completion_tokens": 320,
+              "total_tokens": 3122
+            },
+            "duration_ms": 2089
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-greeting-with-experience-r1",
+      "stage": "formal",
+      "project": "java-null-greeting",
+      "task_id": "9988fadf-dedd-47b6-b302-8b167b356b00",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 1,
+      "elapsed_ms": 14133,
+      "test_counts": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/GreetingService.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "4150a4f2-3cf3-4095-ad2f-f17e52cc238d",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 14407,
+          "completion_tokens": 867,
+          "total_tokens": 15274
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "9988fadf-dedd-47b6-b302-8b167b356b00",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14053,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "c8d4cd69-4361-4bc4-91cd-35626fda112d",
+            "usage": {
+              "prompt_tokens": 1451,
+              "completion_tokens": 39,
+              "total_tokens": 1490
+            },
+            "duration_ms": 697
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "77d39f3a-225c-4dbf-bc8c-6c138c974be6",
+            "usage": {
+              "prompt_tokens": 1713,
+              "completion_tokens": 97,
+              "total_tokens": 1810
+            },
+            "duration_ms": 926
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "b3a0470e-2948-4082-abee-2747cb26e205",
+            "usage": {
+              "prompt_tokens": 2233,
+              "completion_tokens": 178,
+              "total_tokens": 2411
+            },
+            "duration_ms": 1483
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7941a2d1-58b3-411f-885d-8e7a61b910af",
+            "usage": {
+              "prompt_tokens": 2557,
+              "completion_tokens": 23,
+              "total_tokens": 2580
+            },
+            "duration_ms": 527
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "7d230345-c53f-43a3-89db-827856b4c526",
+            "usage": {
+              "prompt_tokens": 3496,
+              "completion_tokens": 51,
+              "total_tokens": 3547
+            },
+            "duration_ms": 1056
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "3b5d156a-a3b1-4c3e-ae84-c01bee36dd7a",
+            "usage": {
+              "prompt_tokens": 2957,
+              "completion_tokens": 479,
+              "total_tokens": 3436
+            },
+            "duration_ms": 2522
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-profile-without-experience-r1",
+      "stage": "formal",
+      "project": "java-null-profile",
+      "task_id": "9db71bc6-a4db-48fc-8daa-560fa2322505",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 19361,
+      "test_counts": {
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ProfileFormatter.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "7b8c57a1-41c3-4ecb-801a-680cc1832764",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 21690,
+          "completion_tokens": 1058,
+          "total_tokens": 22748
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 8
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "9db71bc6-a4db-48fc-8daa-560fa2322505",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 8,
+        "elapsed_ms": 19217,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "f4712fda-0810-4d9b-a917-da3ae1167cbe",
+            "usage": {
+              "prompt_tokens": 1167,
+              "completion_tokens": 133,
+              "total_tokens": 1300
+            },
+            "duration_ms": 1304
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "37ee85a8-7ebe-4627-bac9-6c8082e93fa0",
+            "usage": {
+              "prompt_tokens": 3118,
+              "completion_tokens": 137,
+              "total_tokens": 3255
+            },
+            "duration_ms": 932
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "b3d2bfe8-30d9-4094-a8db-d571c32f8606",
+            "usage": {
+              "prompt_tokens": 3726,
+              "completion_tokens": 168,
+              "total_tokens": 3894
+            },
+            "duration_ms": 1622
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7006617d-ac95-43a0-9ead-ccf026c81789",
+            "usage": {
+              "prompt_tokens": 4017,
+              "completion_tokens": 58,
+              "total_tokens": 4075
+            },
+            "duration_ms": 1187
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "6b4d0c74-e27d-4dac-99fa-16cc24d68340",
+            "usage": {
+              "prompt_tokens": 5019,
+              "completion_tokens": 115,
+              "total_tokens": 5134
+            },
+            "duration_ms": 1427
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "e8d61d40-92ad-48db-ba2e-f011663e0ba3",
+            "usage": {
+              "prompt_tokens": 4643,
+              "completion_tokens": 447,
+              "total_tokens": 5090
+            },
+            "duration_ms": 2716
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-profile-with-experience-r1",
+      "stage": "formal",
+      "project": "java-null-profile",
+      "task_id": "d94cd4c7-b2d2-4a62-8eeb-c66c6b8e56fd",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 1,
+      "elapsed_ms": 18428,
+      "test_counts": {
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ProfileFormatter.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "d47b9ed1-bf00-4ebb-a877-61799008c049",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15073,
+          "completion_tokens": 842,
+          "total_tokens": 15915
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 7
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "d94cd4c7-b2d2-4a62-8eeb-c66c6b8e56fd",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 7,
+        "elapsed_ms": 18348,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "c767eb48-9ed8-40cb-b007-fa25d8a8d110",
+            "usage": {
+              "prompt_tokens": 1453,
+              "completion_tokens": 67,
+              "total_tokens": 1520
+            },
+            "duration_ms": 5389
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "ec4e5dfc-15ea-4136-9be9-0ab343bad6aa",
+            "usage": {
+              "prompt_tokens": 1754,
+              "completion_tokens": 137,
+              "total_tokens": 1891
+            },
+            "duration_ms": 1362
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "2cf089d6-7306-41be-a9ff-f8775bd18e66",
+            "usage": {
+              "prompt_tokens": 2432,
+              "completion_tokens": 134,
+              "total_tokens": 2566
+            },
+            "duration_ms": 986
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "fe8b3820-31f6-4136-89f6-33cb2d831fdb",
+            "usage": {
+              "prompt_tokens": 2711,
+              "completion_tokens": 23,
+              "total_tokens": 2734
+            },
+            "duration_ms": 967
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "f4416740-c81e-4474-b3c9-36a26c311c88",
+            "usage": {
+              "prompt_tokens": 3644,
+              "completion_tokens": 56,
+              "total_tokens": 3700
+            },
+            "duration_ms": 888
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "c1ba2d72-f122-459f-8728-4c4e048dd91f",
+            "usage": {
+              "prompt_tokens": 3079,
+              "completion_tokens": 425,
+              "total_tokens": 3504
+            },
+            "duration_ms": 2254
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-list-without-experience-r1",
+      "stage": "formal",
+      "project": "java-null-list",
+      "task_id": "a3fa6659-7aaf-44b5-8d6b-3966518d4f9c",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 14835,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ScoreSummary.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "255ca5f7-dd0f-4f50-8bff-246047d3892d",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13095,
+          "completion_tokens": 869,
+          "total_tokens": 13964
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "a3fa6659-7aaf-44b5-8d6b-3966518d4f9c",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14766,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "0df3cb7d-c117-415f-8a67-92adba7a616c",
+            "usage": {
+              "prompt_tokens": 1169,
+              "completion_tokens": 62,
+              "total_tokens": 1231
+            },
+            "duration_ms": 1262
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "81ca9c3d-50e2-418d-b944-b20cba4e70a4",
+            "usage": {
+              "prompt_tokens": 1426,
+              "completion_tokens": 95,
+              "total_tokens": 1521
+            },
+            "duration_ms": 1113
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7fc96006-f9d8-42e8-8f12-3e1b40d70b6e",
+            "usage": {
+              "prompt_tokens": 1998,
+              "completion_tokens": 162,
+              "total_tokens": 2160
+            },
+            "duration_ms": 1311
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "8963940d-e3f8-4a8c-82f7-46ed10b4e90e",
+            "usage": {
+              "prompt_tokens": 2284,
+              "completion_tokens": 58,
+              "total_tokens": 2342
+            },
+            "duration_ms": 637
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "e54737c2-13f8-4c19-9d06-1686b94a9a24",
+            "usage": {
+              "prompt_tokens": 3229,
+              "completion_tokens": 121,
+              "total_tokens": 3350
+            },
+            "duration_ms": 1143
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "aa6ef342-0fc4-411d-a702-48e3da8a6c8a",
+            "usage": {
+              "prompt_tokens": 2989,
+              "completion_tokens": 371,
+              "total_tokens": 3360
+            },
+            "duration_ms": 2624
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-list-with-experience-r1",
+      "stage": "formal",
+      "project": "java-null-list",
+      "task_id": "e8740f67-74ed-4f73-b8ab-409f9477defb",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 1,
+      "elapsed_ms": 16921,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ScoreSummary.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "1cc544d5-803a-42c3-aedd-5f05af8ad470",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15062,
+          "completion_tokens": 1039,
+          "total_tokens": 16101
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "e8740f67-74ed-4f73-b8ab-409f9477defb",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 16845,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "e469e1fb-438c-4af5-9935-c7e126ce7e5b",
+            "usage": {
+              "prompt_tokens": 1455,
+              "completion_tokens": 87,
+              "total_tokens": 1542
+            },
+            "duration_ms": 1754
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "8966a179-d72a-47f0-b597-46140183c235",
+            "usage": {
+              "prompt_tokens": 1761,
+              "completion_tokens": 95,
+              "total_tokens": 1856
+            },
+            "duration_ms": 971
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "f13aaeba-27e8-4aef-afe7-767d74caa6ef",
+            "usage": {
+              "prompt_tokens": 2372,
+              "completion_tokens": 207,
+              "total_tokens": 2579
+            },
+            "duration_ms": 1208
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "47978fc9-249a-42b3-aae5-34f7fc6d571a",
+            "usage": {
+              "prompt_tokens": 2724,
+              "completion_tokens": 65,
+              "total_tokens": 2789
+            },
+            "duration_ms": 776
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "e1dd7233-f2f5-42c7-a8c2-2a98dc4a8840",
+            "usage": {
+              "prompt_tokens": 3689,
+              "completion_tokens": 95,
+              "total_tokens": 3784
+            },
+            "duration_ms": 1676
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "392bf021-000f-438a-9713-d6d6c8cd1d38",
+            "usage": {
+              "prompt_tokens": 3061,
+              "completion_tokens": 490,
+              "total_tokens": 3551
+            },
+            "duration_ms": 3261
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-map-without-experience-r1",
+      "stage": "formal",
+      "project": "java-null-map",
+      "task_id": "72a6e0c0-73af-45c0-8074-a5af8c66a0dc",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 17021,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/SettingsReader.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "34c81013-e617-4f26-805c-3ced8cd244f1",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13524,
+          "completion_tokens": 1194,
+          "total_tokens": 14718
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "72a6e0c0-73af-45c0-8074-a5af8c66a0dc",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 16836,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "33694ce4-072e-4a0d-b399-dbd081c18299",
+            "usage": {
+              "prompt_tokens": 1176,
+              "completion_tokens": 62,
+              "total_tokens": 1238
+            },
+            "duration_ms": 1358
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "c6b9fba0-2281-4645-be23-f1ce51705f83",
+            "usage": {
+              "prompt_tokens": 1430,
+              "completion_tokens": 95,
+              "total_tokens": 1525
+            },
+            "duration_ms": 925
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "8d7621a8-2ee9-46c2-9452-4763d8c9a7da",
+            "usage": {
+              "prompt_tokens": 2044,
+              "completion_tokens": 306,
+              "total_tokens": 2350
+            },
+            "duration_ms": 2391
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "cded03f3-c11e-4d0f-ae99-cb3180326441",
+            "usage": {
+              "prompt_tokens": 2470,
+              "completion_tokens": 39,
+              "total_tokens": 2509
+            },
+            "duration_ms": 600
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "6c23a8d0-14c6-4358-92ca-fbd9a65d3bb8",
+            "usage": {
+              "prompt_tokens": 3394,
+              "completion_tokens": 116,
+              "total_tokens": 3510
+            },
+            "duration_ms": 1020
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "4b5b1fad-334f-4ed8-b5c1-17b762c8d3f5",
+            "usage": {
+              "prompt_tokens": 3010,
+              "completion_tokens": 576,
+              "total_tokens": 3586
+            },
+            "duration_ms": 3342
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-map-with-experience-r1",
+      "stage": "formal",
+      "project": "java-null-map",
+      "task_id": "7f6672bf-8f48-4822-96d3-9de7ce187450",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 1,
+      "elapsed_ms": 14690,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/SettingsReader.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "fb966f76-64f1-4c2c-bbc4-3a43b0f595c5",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15091,
+          "completion_tokens": 867,
+          "total_tokens": 15958
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "7f6672bf-8f48-4822-96d3-9de7ce187450",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14526,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "b6ca95c7-c064-4822-8b1a-76303203e049",
+            "usage": {
+              "prompt_tokens": 1462,
+              "completion_tokens": 54,
+              "total_tokens": 1516
+            },
+            "duration_ms": 1022
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "1a0cb254-cc4f-4adc-a256-4e730459b0c2",
+            "usage": {
+              "prompt_tokens": 1733,
+              "completion_tokens": 95,
+              "total_tokens": 1828
+            },
+            "duration_ms": 1001
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "277fbd5b-f4d4-4211-9f00-b5cea744ad4b",
+            "usage": {
+              "prompt_tokens": 2392,
+              "completion_tokens": 189,
+              "total_tokens": 2581
+            },
+            "duration_ms": 1467
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "d367efab-a371-4dd1-8314-fc3b83b003d7",
+            "usage": {
+              "prompt_tokens": 2726,
+              "completion_tokens": 58,
+              "total_tokens": 2784
+            },
+            "duration_ms": 916
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "1694328f-e9e4-4934-8753-f8d838d4310c",
+            "usage": {
+              "prompt_tokens": 3687,
+              "completion_tokens": 72,
+              "total_tokens": 3759
+            },
+            "duration_ms": 959
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "9be5f220-1224-4ad6-85a5-c706eb8cd500",
+            "usage": {
+              "prompt_tokens": 3091,
+              "completion_tokens": 399,
+              "total_tokens": 3490
+            },
+            "duration_ms": 2520
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-range-end-without-experience-r1",
+      "stage": "formal",
+      "project": "java-range-end",
+      "task_id": "3dc2e045-0a0c-4a52-b58b-e2be68f633e9",
+      "outcome": "failed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 13181,
+      "test_counts": {
+        "tests": null,
+        "failures": null,
+        "errors": null,
+        "skipped": null
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/RangeLabels.java"
+      ],
+      "experience_saved": null,
+      "experience_id": null,
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 5,
+        "successful_model_requests": 3,
+        "reported_tokens": {
+          "prompt_tokens": 4683,
+          "completion_tokens": 317,
+          "total_tokens": 5000
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 3,
+          "completion_tokens": 3,
+          "total_tokens": 3
+        },
+        "decision_rounds": 4,
+        "tool_calls": 4
+      },
+      "tests_passed": null,
+      "error_message": "Model request failed, timed out or returned an invalid response.",
+      "audit": {
+        "task_id": "3dc2e045-0a0c-4a52-b58b-e2be68f633e9",
+        "experience_enabled": false,
+        "decision_rounds": 4,
+        "tool_calls": 4,
+        "elapsed_ms": 12985,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "error_type": "ConnectError",
+            "duration_ms": 5203
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "8ab79a16-fd72-49b2-90da-89ea809ee6b4",
+            "usage": {
+              "prompt_tokens": 1187,
+              "completion_tokens": 62,
+              "total_tokens": 1249
+            },
+            "duration_ms": 5294
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "9d08d213-30fb-4015-8c14-8e76b7637505",
+            "usage": {
+              "prompt_tokens": 1445,
+              "completion_tokens": 95,
+              "total_tokens": 1540
+            },
+            "duration_ms": 908
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "e7f014a4-2f32-45a3-b2ac-93b6b987a48e",
+            "usage": {
+              "prompt_tokens": 2051,
+              "completion_tokens": 160,
+              "total_tokens": 2211
+            },
+            "duration_ms": 1242
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "error_type": "RemoteProtocolError",
+            "duration_ms": 67
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-range-end-with-experience-r1",
+      "stage": "formal",
+      "project": "java-range-end",
+      "task_id": "7ead8d6c-3e86-47ee-b3c8-9ff4494a927a",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 1,
+      "elapsed_ms": 14200,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/RangeLabels.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "7e50cd8f-304d-4104-afec-18bc3456856c",
+      "expected_reference_ids": [
+        "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15231,
+          "completion_tokens": 954,
+          "total_tokens": 16185
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "7ead8d6c-3e86-47ee-b3c8-9ff4494a927a",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14091,
+        "retrieved_experience_ids": [
+          "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "a00cef93-e364-450b-b38e-78a80cd900e0",
+            "usage": {
+              "prompt_tokens": 1492,
+              "completion_tokens": 54,
+              "total_tokens": 1546
+            },
+            "duration_ms": 860
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "75cfef16-94e1-4e8a-a501-ce2045dfb5eb",
+            "usage": {
+              "prompt_tokens": 1764,
+              "completion_tokens": 95,
+              "total_tokens": 1859
+            },
+            "duration_ms": 1100
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "d0366709-456e-4704-af68-93ecdf3ae00b",
+            "usage": {
+              "prompt_tokens": 2420,
+              "completion_tokens": 172,
+              "total_tokens": 2592
+            },
+            "duration_ms": 1054
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "5938c295-49e6-4742-b82d-ba99eff9500f",
+            "usage": {
+              "prompt_tokens": 2738,
+              "completion_tokens": 58,
+              "total_tokens": 2796
+            },
+            "duration_ms": 953
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "92ca62df-6631-4f38-8adc-5f8ebc18c920",
+            "usage": {
+              "prompt_tokens": 3701,
+              "completion_tokens": 76,
+              "total_tokens": 3777
+            },
+            "duration_ms": 728
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "0c1c3347-b01c-467e-bbd7-57b47ecf97fe",
+            "usage": {
+              "prompt_tokens": 3116,
+              "completion_tokens": 499,
+              "total_tokens": 3615
+            },
+            "duration_ms": 2989
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-parse-count-without-experience-r1",
+      "stage": "formal",
+      "project": "java-parse-count",
+      "task_id": "f33e3c5c-64cd-45c4-876c-e4081c9b362b",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 1,
+      "elapsed_ms": 18153,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/CountParser.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "f92a67ec-3039-4688-8a82-9ce79d6685b6",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13556,
+          "completion_tokens": 1711,
+          "total_tokens": 15267
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "f33e3c5c-64cd-45c4-876c-e4081c9b362b",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 18084,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "4d4b512c-4aa3-4976-b851-18267775f0da",
+            "usage": {
+              "prompt_tokens": 1178,
+              "completion_tokens": 87,
+              "total_tokens": 1265
+            },
+            "duration_ms": 1207
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "5afeaaa5-a3a8-44c9-9aa4-5bb8624fe4be",
+            "usage": {
+              "prompt_tokens": 1460,
+              "completion_tokens": 95,
+              "total_tokens": 1555
+            },
+            "duration_ms": 886
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "bd1cfc6b-13c6-4dfc-ad88-37e3eedfd791",
+            "usage": {
+              "prompt_tokens": 2063,
+              "completion_tokens": 244,
+              "total_tokens": 2307
+            },
+            "duration_ms": 1591
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "67ba52a3-0f63-443d-9d1f-8652c799c7ce",
+            "usage": {
+              "prompt_tokens": 2433,
+              "completion_tokens": 58,
+              "total_tokens": 2491
+            },
+            "duration_ms": 821
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "981dd9f2-a915-4632-889f-c1552d7feaa2",
+            "usage": {
+              "prompt_tokens": 3370,
+              "completion_tokens": 163,
+              "total_tokens": 3533
+            },
+            "duration_ms": 1308
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "d15ea4b6-fbd1-4ead-8db8-64d57a1301bd",
+            "usage": {
+              "prompt_tokens": 3052,
+              "completion_tokens": 1064,
+              "total_tokens": 4116
+            },
+            "duration_ms": 5801
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-parse-count-with-experience-r1",
+      "stage": "formal",
+      "project": "java-parse-count",
+      "task_id": "8d582863-bfc1-4451-bfe0-ed6fd88035c8",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 1,
+      "elapsed_ms": 19894,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/CountParser.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "387a377f-ab6d-40d7-909e-d79aa0ff6ea0",
+      "expected_reference_ids": [
+        "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 7,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15334,
+          "completion_tokens": 1073,
+          "total_tokens": 16407
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "8d582863-bfc1-4451-bfe0-ed6fd88035c8",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 19804,
+        "retrieved_experience_ids": [
+          "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "error_type": "ConnectError",
+            "duration_ms": 5224
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "75b16fc2-0307-407e-a64f-228b679c9546",
+            "usage": {
+              "prompt_tokens": 1522,
+              "completion_tokens": 45,
+              "total_tokens": 1567
+            },
+            "duration_ms": 1061
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7eff6ae0-529d-42ad-bb90-bdb560aa6b51",
+            "usage": {
+              "prompt_tokens": 1782,
+              "completion_tokens": 95,
+              "total_tokens": 1877
+            },
+            "duration_ms": 815
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "bbe1bba4-9c04-4272-8eef-37c278465d9d",
+            "usage": {
+              "prompt_tokens": 2431,
+              "completion_tokens": 227,
+              "total_tokens": 2658
+            },
+            "duration_ms": 1258
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "6b7d8008-86fd-473f-9671-36358ce1ff35",
+            "usage": {
+              "prompt_tokens": 2801,
+              "completion_tokens": 23,
+              "total_tokens": 2824
+            },
+            "duration_ms": 896
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "8584ab55-56fe-4f4d-9f9b-6a2970dcb0f7",
+            "usage": {
+              "prompt_tokens": 3718,
+              "completion_tokens": 89,
+              "total_tokens": 3807
+            },
+            "duration_ms": 701
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "cc95d076-7b14-4b56-bf50-9983c32dd52e",
+            "usage": {
+              "prompt_tokens": 3080,
+              "completion_tokens": 594,
+              "total_tokens": 3674
+            },
+            "duration_ms": 3420
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-greeting-with-experience-r2",
+      "stage": "formal",
+      "project": "java-null-greeting",
+      "task_id": "164b462c-9db4-4f0b-88b7-9bef469908d0",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 2,
+      "elapsed_ms": 23539,
+      "test_counts": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/GreetingService.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "2431c90b-a3ec-4dca-b1d9-ed3ad6b5e620",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 7,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 21587,
+          "completion_tokens": 897,
+          "total_tokens": 22484
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 7
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "164b462c-9db4-4f0b-88b7-9bef469908d0",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 7,
+        "elapsed_ms": 23370,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "error_type": "ConnectError",
+            "duration_ms": 5203
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "9121f712-dea4-473b-8da8-b62d7d3bda4d",
+            "usage": {
+              "prompt_tokens": 1451,
+              "completion_tokens": 52,
+              "total_tokens": 1503
+            },
+            "duration_ms": 876
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "e19ec039-8205-4013-bf08-c5bc8d5a9d18",
+            "usage": {
+              "prompt_tokens": 3132,
+              "completion_tokens": 97,
+              "total_tokens": 3229
+            },
+            "duration_ms": 957
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "4abb98ff-1c2e-4690-9359-ee7f5d6314d9",
+            "usage": {
+              "prompt_tokens": 3656,
+              "completion_tokens": 127,
+              "total_tokens": 3783
+            },
+            "duration_ms": 1024
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "f6defb62-4596-42b1-af3c-835037ba01cf",
+            "usage": {
+              "prompt_tokens": 3931,
+              "completion_tokens": 23,
+              "total_tokens": 3954
+            },
+            "duration_ms": 910
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "d75b45e9-9bd1-4899-a5b6-98814bd8b82d",
+            "usage": {
+              "prompt_tokens": 4947,
+              "completion_tokens": 54,
+              "total_tokens": 5001
+            },
+            "duration_ms": 1308
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "8f72b987-db08-4a1e-9850-19afb2ee13ff",
+            "usage": {
+              "prompt_tokens": 4470,
+              "completion_tokens": 544,
+              "total_tokens": 5014
+            },
+            "duration_ms": 3562
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-greeting-without-experience-r2",
+      "stage": "formal",
+      "project": "java-null-greeting",
+      "task_id": "9dcddf2e-2130-426b-9102-6829a0de8ef2",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 2,
+      "elapsed_ms": 18338,
+      "test_counts": {
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/GreetingService.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "b7418e51-f4dc-4626-9fa0-afb570f0db9b",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 7,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 12493,
+          "completion_tokens": 675,
+          "total_tokens": 13168
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "9dcddf2e-2130-426b-9102-6829a0de8ef2",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 18145,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "error_type": "ConnectError",
+            "duration_ms": 5202
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "82f1df61-a7e9-4bb7-9b8d-01e4a5ce4fb0",
+            "usage": {
+              "prompt_tokens": 1165,
+              "completion_tokens": 39,
+              "total_tokens": 1204
+            },
+            "duration_ms": 1145
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "b31ab7e9-d0e2-475d-a3b8-0f55e14f4edd",
+            "usage": {
+              "prompt_tokens": 1404,
+              "completion_tokens": 97,
+              "total_tokens": 1501
+            },
+            "duration_ms": 979
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "0bb1aff7-e88b-49b8-8011-72067657bed9",
+            "usage": {
+              "prompt_tokens": 1881,
+              "completion_tokens": 132,
+              "total_tokens": 2013
+            },
+            "duration_ms": 1049
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "8269fe1b-039a-44d6-9af7-5076e3b68ff0",
+            "usage": {
+              "prompt_tokens": 2139,
+              "completion_tokens": 23,
+              "total_tokens": 2162
+            },
+            "duration_ms": 516
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "a0a04db2-5e18-4d1c-b1d4-e7156decd42d",
+            "usage": {
+              "prompt_tokens": 3063,
+              "completion_tokens": 54,
+              "total_tokens": 3117
+            },
+            "duration_ms": 847
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "5d5b52dc-5712-4b8e-81f4-4b632260ff24",
+            "usage": {
+              "prompt_tokens": 2841,
+              "completion_tokens": 330,
+              "total_tokens": 3171
+            },
+            "duration_ms": 2062
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-profile-with-experience-r2",
+      "stage": "formal",
+      "project": "java-null-profile",
+      "task_id": "a9ca7855-3bad-4858-aa24-74803643eafd",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 2,
+      "elapsed_ms": 15038,
+      "test_counts": {
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ProfileFormatter.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "a894a601-ebfa-4ee8-9680-378a541ffb53",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 14964,
+          "completion_tokens": 920,
+          "total_tokens": 15884
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 7
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "a9ca7855-3bad-4858-aa24-74803643eafd",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 7,
+        "elapsed_ms": 14837,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7c17510b-bbdb-46b7-bb82-6bdeb1823820",
+            "usage": {
+              "prompt_tokens": 1453,
+              "completion_tokens": 39,
+              "total_tokens": 1492
+            },
+            "duration_ms": 1070
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "222e869c-a54e-49f6-be10-2708b6da04c3",
+            "usage": {
+              "prompt_tokens": 1722,
+              "completion_tokens": 137,
+              "total_tokens": 1859
+            },
+            "duration_ms": 889
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "447e51f3-3a64-437f-b31d-9a6d50ccdc8f",
+            "usage": {
+              "prompt_tokens": 2404,
+              "completion_tokens": 155,
+              "total_tokens": 2559
+            },
+            "duration_ms": 1014
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "83969763-67fd-4da9-9755-c4879d23e444",
+            "usage": {
+              "prompt_tokens": 2702,
+              "completion_tokens": 23,
+              "total_tokens": 2725
+            },
+            "duration_ms": 652
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "3f88e51b-7cd9-46f7-b25b-49d1847ff6f2",
+            "usage": {
+              "prompt_tokens": 3627,
+              "completion_tokens": 56,
+              "total_tokens": 3683
+            },
+            "duration_ms": 1606
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "eb934d8a-fa52-4a4d-9ded-951ddd49d8de",
+            "usage": {
+              "prompt_tokens": 3056,
+              "completion_tokens": 510,
+              "total_tokens": 3566
+            },
+            "duration_ms": 3271
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-profile-without-experience-r2",
+      "stage": "formal",
+      "project": "java-null-profile",
+      "task_id": "ecbf04ea-917f-4678-b10b-f71c27ec2788",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 2,
+      "elapsed_ms": 19338,
+      "test_counts": {
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ProfileFormatter.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "32cabe59-ad46-443b-bc63-8314e7845e80",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 7,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 12992,
+          "completion_tokens": 875,
+          "total_tokens": 13867
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 7
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "ecbf04ea-917f-4678-b10b-f71c27ec2788",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 7,
+        "elapsed_ms": 19287,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "error_type": "ConnectError",
+            "duration_ms": 5225
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "820fdea2-b3d0-4473-93b4-c0728db4e8d8",
+            "usage": {
+              "prompt_tokens": 1167,
+              "completion_tokens": 54,
+              "total_tokens": 1221
+            },
+            "duration_ms": 1259
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "cb598389-e0ee-410a-910b-061cdee3d2e2",
+            "usage": {
+              "prompt_tokens": 1431,
+              "completion_tokens": 137,
+              "total_tokens": 1568
+            },
+            "duration_ms": 1227
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "52980ab0-aa70-4aec-a500-fa089c70c4bd",
+            "usage": {
+              "prompt_tokens": 2038,
+              "completion_tokens": 131,
+              "total_tokens": 2169
+            },
+            "duration_ms": 791
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "bea0f2ee-4a8f-4f21-981d-f9fae02f48e8",
+            "usage": {
+              "prompt_tokens": 2291,
+              "completion_tokens": 23,
+              "total_tokens": 2314
+            },
+            "duration_ms": 657
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "2abc8bf7-17cf-4108-8ac7-7c2eb60ae47c",
+            "usage": {
+              "prompt_tokens": 3183,
+              "completion_tokens": 60,
+              "total_tokens": 3243
+            },
+            "duration_ms": 925
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "f5f07048-ad30-4143-9eaf-568eaded465f",
+            "usage": {
+              "prompt_tokens": 2882,
+              "completion_tokens": 470,
+              "total_tokens": 3352
+            },
+            "duration_ms": 2820
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-list-with-experience-r2",
+      "stage": "formal",
+      "project": "java-null-list",
+      "task_id": "96ad6408-0f79-495f-a5c7-dc9cb7eff3f3",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 2,
+      "elapsed_ms": 15018,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ScoreSummary.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "05844bd1-3245-453c-a914-2e90a4e36380",
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 14960,
+          "completion_tokens": 1133,
+          "total_tokens": 16093
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "96ad6408-0f79-495f-a5c7-dc9cb7eff3f3",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14922,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "125b714e-9911-4608-a845-a09f1f34745e",
+            "usage": {
+              "prompt_tokens": 1455,
+              "completion_tokens": 84,
+              "total_tokens": 1539
+            },
+            "duration_ms": 1118
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "c57c7222-9187-48f8-bc3d-4a00f8bfe181",
+            "usage": {
+              "prompt_tokens": 1758,
+              "completion_tokens": 95,
+              "total_tokens": 1853
+            },
+            "duration_ms": 960
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "21883dcc-3d90-4555-8873-2f1007cc305f",
+            "usage": {
+              "prompt_tokens": 2371,
+              "completion_tokens": 163,
+              "total_tokens": 2534
+            },
+            "duration_ms": 1045
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "f7d5d4e3-542f-4bfb-a933-b36541cc6d44",
+            "usage": {
+              "prompt_tokens": 2678,
+              "completion_tokens": 58,
+              "total_tokens": 2736
+            },
+            "duration_ms": 694
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "e13afe1e-9f2a-47bb-bff4-56b385915635",
+            "usage": {
+              "prompt_tokens": 3638,
+              "completion_tokens": 82,
+              "total_tokens": 3720
+            },
+            "duration_ms": 1106
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "1862a008-bdd2-48e0-aa95-1eeed7eeae2d",
+            "usage": {
+              "prompt_tokens": 3060,
+              "completion_tokens": 651,
+              "total_tokens": 3711
+            },
+            "duration_ms": 3644
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-list-without-experience-r2",
+      "stage": "formal",
+      "project": "java-null-list",
+      "task_id": "65784c1d-4581-4b1b-a35d-bccd6cf249a3",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 2,
+      "elapsed_ms": 15413,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/ScoreSummary.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "35dc45a3-4f89-4324-8d38-f30d02105aaa",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 12908,
+          "completion_tokens": 837,
+          "total_tokens": 13745
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "65784c1d-4581-4b1b-a35d-bccd6cf249a3",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 15325,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "9ce9f0f2-856e-40aa-9aa2-a7ebd3a56b32",
+            "usage": {
+              "prompt_tokens": 1169,
+              "completion_tokens": 46,
+              "total_tokens": 1215
+            },
+            "duration_ms": 1169
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "15802c6a-9dff-43d2-a3e8-7afeef9be637",
+            "usage": {
+              "prompt_tokens": 1406,
+              "completion_tokens": 95,
+              "total_tokens": 1501
+            },
+            "duration_ms": 1067
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "81fd3f92-c8cc-40fc-9b04-a07ac8e95b9c",
+            "usage": {
+              "prompt_tokens": 1975,
+              "completion_tokens": 161,
+              "total_tokens": 2136
+            },
+            "duration_ms": 1470
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "738d97bb-6ca7-40ce-9896-64a193203f9c",
+            "usage": {
+              "prompt_tokens": 2259,
+              "completion_tokens": 23,
+              "total_tokens": 2282
+            },
+            "duration_ms": 1015
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "20619698-81b3-439f-b871-14eedb4ca1b9",
+            "usage": {
+              "prompt_tokens": 3165,
+              "completion_tokens": 93,
+              "total_tokens": 3258
+            },
+            "duration_ms": 1076
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "0bacc112-afe9-4f51-811e-4e354cd05837",
+            "usage": {
+              "prompt_tokens": 2934,
+              "completion_tokens": 419,
+              "total_tokens": 3353
+            },
+            "duration_ms": 2899
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-map-with-experience-r2",
+      "stage": "formal",
+      "project": "java-null-map",
+      "task_id": "782ceabe-2f41-4a8f-b5f0-5fb57a4e7084",
+      "outcome": "failed",
+      "use_experience": true,
+      "repetition": 2,
+      "elapsed_ms": 16107,
+      "test_counts": {
+        "tests": null,
+        "failures": null,
+        "errors": null,
+        "skipped": null
+      },
+      "changed_files": [],
+      "experience_saved": null,
+      "experience_id": null,
+      "expected_reference_ids": [
+        "0b1918a4-1c82-4781-9eed-544ceed7f965"
+      ],
+      "reference_received": false,
+      "comparison_valid": false,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 3,
+        "successful_model_requests": 0,
+        "reported_tokens": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "total_tokens": 0
+        },
+        "decision_rounds": 1,
+        "tool_calls": 0
+      },
+      "tests_passed": null,
+      "error_message": "Cannot connect to the model service after three bounded attempts.",
+      "audit": {
+        "task_id": "782ceabe-2f41-4a8f-b5f0-5fb57a4e7084",
+        "experience_enabled": true,
+        "decision_rounds": 1,
+        "tool_calls": 0,
+        "elapsed_ms": 15899,
+        "retrieved_experience_ids": [
+          "0b1918a4-1c82-4781-9eed-544ceed7f965"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "error_type": "ConnectError",
+            "duration_ms": 5224
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "error_type": "ConnectError",
+            "duration_ms": 5432
+          },
+          {
+            "phase": "decision",
+            "attempt": 3,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [
+              "0b1918a4-1c82-4781-9eed-544ceed7f965"
+            ],
+            "request_experience_hashes": [
+              "651e5d614d2a516e91af5eaa340ac865c538accc13c80942efcee1bf953568e4"
+            ],
+            "error_type": "ConnectError",
+            "duration_ms": 5011
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-null-map-without-experience-r2",
+      "stage": "formal",
+      "project": "java-null-map",
+      "task_id": "97147bf3-21e5-4518-bc64-8e7baac0ece2",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 2,
+      "elapsed_ms": 14535,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/SettingsReader.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "87d2883b-c97f-4ee4-8881-bffc1f541030",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13311,
+          "completion_tokens": 917,
+          "total_tokens": 14228
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "97147bf3-21e5-4518-bc64-8e7baac0ece2",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14438,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "fb32dc58-4a0d-49d6-9bd4-ea2a0d5f721a",
+            "usage": {
+              "prompt_tokens": 1176,
+              "completion_tokens": 54,
+              "total_tokens": 1230
+            },
+            "duration_ms": 1078
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "5647572e-20bf-4352-8449-ac3dd251acee",
+            "usage": {
+              "prompt_tokens": 1427,
+              "completion_tokens": 95,
+              "total_tokens": 1522
+            },
+            "duration_ms": 882
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "227a8229-0928-4475-bb6c-dbf0b2dbc4f3",
+            "usage": {
+              "prompt_tokens": 2043,
+              "completion_tokens": 227,
+              "total_tokens": 2270
+            },
+            "duration_ms": 1485
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "b02e29ae-9b01-4520-8616-8cab35416729",
+            "usage": {
+              "prompt_tokens": 2389,
+              "completion_tokens": 58,
+              "total_tokens": 2447
+            },
+            "duration_ms": 963
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "821a255a-1111-4c30-809c-4af85a55fd75",
+            "usage": {
+              "prompt_tokens": 3322,
+              "completion_tokens": 72,
+              "total_tokens": 3394
+            },
+            "duration_ms": 945
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "7e288d88-5023-4b0b-82e5-22e291f04767",
+            "usage": {
+              "prompt_tokens": 2954,
+              "completion_tokens": 411,
+              "total_tokens": 3365
+            },
+            "duration_ms": 2660
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-range-end-with-experience-r2",
+      "stage": "formal",
+      "project": "java-range-end",
+      "task_id": "a767f57a-c358-4586-923a-356966127f92",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 2,
+      "elapsed_ms": 13960,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/RangeLabels.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "53ce95da-7f0e-48b9-a424-96ad4cd88663",
+      "expected_reference_ids": [
+        "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15329,
+          "completion_tokens": 897,
+          "total_tokens": 16226
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "a767f57a-c358-4586-923a-356966127f92",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 13911,
+        "retrieved_experience_ids": [
+          "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "2a3b9ef9-f3b5-4c6b-a472-b9999cdbc61c",
+            "usage": {
+              "prompt_tokens": 1492,
+              "completion_tokens": 65,
+              "total_tokens": 1557
+            },
+            "duration_ms": 890
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "dda0c65b-b856-4ac2-b299-3e3408af6841",
+            "usage": {
+              "prompt_tokens": 1778,
+              "completion_tokens": 95,
+              "total_tokens": 1873
+            },
+            "duration_ms": 845
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "a32ccbcf-a347-4822-a226-8d6caa949eee",
+            "usage": {
+              "prompt_tokens": 2437,
+              "completion_tokens": 204,
+              "total_tokens": 2641
+            },
+            "duration_ms": 1398
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "978c5349-ba79-472a-9f1e-24f868acb4ee",
+            "usage": {
+              "prompt_tokens": 2787,
+              "completion_tokens": 58,
+              "total_tokens": 2845
+            },
+            "duration_ms": 758
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "81ef2dd1-5c1e-4223-960c-83ba4a433e94"
+            ],
+            "request_experience_hashes": [
+              "41d10ccabd9b098af62a6fd40300da2428aeb633303ecb91d546577397e3e33d"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "4b905d4d-d17b-4e74-9b14-b687d38cec37",
+            "usage": {
+              "prompt_tokens": 3741,
+              "completion_tokens": 72,
+              "total_tokens": 3813
+            },
+            "duration_ms": 1291
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "731528be-577a-49de-b04b-f8f452001ef4",
+            "usage": {
+              "prompt_tokens": 3094,
+              "completion_tokens": 403,
+              "total_tokens": 3497
+            },
+            "duration_ms": 2378
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-range-end-without-experience-r2",
+      "stage": "formal",
+      "project": "java-range-end",
+      "task_id": "a3f53d95-946d-4109-9eeb-13a8282158bc",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 2,
+      "elapsed_ms": 14566,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/RangeLabels.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "9df1d592-e765-4c50-b766-6b769fa68137",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13217,
+          "completion_tokens": 806,
+          "total_tokens": 14023
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "a3f53d95-946d-4109-9eeb-13a8282158bc",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 14463,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "4302325b-29f5-4907-aedf-3905fb25ac34",
+            "usage": {
+              "prompt_tokens": 1187,
+              "completion_tokens": 45,
+              "total_tokens": 1232
+            },
+            "duration_ms": 926
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "ef7c93c1-e5c4-4f0f-ad1a-d7196b376c3d",
+            "usage": {
+              "prompt_tokens": 1427,
+              "completion_tokens": 95,
+              "total_tokens": 1522
+            },
+            "duration_ms": 1043
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "1dcc76a0-3c68-4eec-a43e-ea611a5a84e7",
+            "usage": {
+              "prompt_tokens": 2040,
+              "completion_tokens": 192,
+              "total_tokens": 2232
+            },
+            "duration_ms": 1480
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "99d167aa-567c-4f0c-9def-fe5b3f036790",
+            "usage": {
+              "prompt_tokens": 2353,
+              "completion_tokens": 23,
+              "total_tokens": 2376
+            },
+            "duration_ms": 967
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "5d9ec103-3680-42cf-b48d-b999e69a8fb7",
+            "usage": {
+              "prompt_tokens": 3253,
+              "completion_tokens": 67,
+              "total_tokens": 3320
+            },
+            "duration_ms": 1099
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "a0fc4179-138d-409a-b03d-28304af9b516",
+            "usage": {
+              "prompt_tokens": 2957,
+              "completion_tokens": 384,
+              "total_tokens": 3341
+            },
+            "duration_ms": 2689
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-parse-count-with-experience-r2",
+      "stage": "formal",
+      "project": "java-parse-count",
+      "task_id": "48b3c92c-0288-4003-b199-88ddf3011f50",
+      "outcome": "passed",
+      "use_experience": true,
+      "repetition": 2,
+      "elapsed_ms": 16034,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/CountParser.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "1f2809c8-63de-4988-939e-da379f47a110",
+      "expected_reference_ids": [
+        "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+      ],
+      "reference_received": true,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 6,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 15699,
+          "completion_tokens": 1175,
+          "total_tokens": 16874
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "48b3c92c-0288-4003-b199-88ddf3011f50",
+        "experience_enabled": true,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 15891,
+        "retrieved_experience_ids": [
+          "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "df97723d-4ccd-415d-8f4e-084c6341cb23",
+            "usage": {
+              "prompt_tokens": 1522,
+              "completion_tokens": 65,
+              "total_tokens": 1587
+            },
+            "duration_ms": 1041
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7c59cd61-16ac-4d88-901a-5a62a9797023",
+            "usage": {
+              "prompt_tokens": 1803,
+              "completion_tokens": 95,
+              "total_tokens": 1898
+            },
+            "duration_ms": 921
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "982b56ea-16a5-4bf2-9283-f8f17220a1ac",
+            "usage": {
+              "prompt_tokens": 2453,
+              "completion_tokens": 357,
+              "total_tokens": 2810
+            },
+            "duration_ms": 2278
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "0c9f4ae9-c548-42b4-b968-d84863228c29",
+            "usage": {
+              "prompt_tokens": 2955,
+              "completion_tokens": 58,
+              "total_tokens": 3013
+            },
+            "duration_ms": 962
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [
+              "47900419-a3ae-4be4-bb4d-e2659716b1d4"
+            ],
+            "request_experience_hashes": [
+              "90958ae37c7ee2ec9b7631f466a53b0a6b45ec1c62b68ce710cc2c07d69d11ad"
+            ],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "0f727066-0b65-4ad0-a2bb-f5d4dd2642ee",
+            "usage": {
+              "prompt_tokens": 3909,
+              "completion_tokens": 59,
+              "total_tokens": 3968
+            },
+            "duration_ms": 942
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "16f4097f-bdd9-48a6-b111-93394f1ce4ac",
+            "usage": {
+              "prompt_tokens": 3057,
+              "completion_tokens": 541,
+              "total_tokens": 3598
+            },
+            "duration_ms": 3380
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "formal-java-parse-count-without-experience-r2",
+      "stage": "formal",
+      "project": "java-parse-count",
+      "task_id": "91ef6148-dcf9-4ebd-b684-2604c0bb17e8",
+      "outcome": "passed",
+      "use_experience": false,
+      "repetition": 2,
+      "elapsed_ms": 26358,
+      "test_counts": {
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/CountParser.java"
+      ],
+      "experience_saved": true,
+      "experience_id": "efffd263-ca6b-4670-918f-bf98def2fb84",
+      "expected_reference_ids": [],
+      "reference_received": false,
+      "comparison_valid": true,
+      "original_unchanged": true,
+      "frozen_unchanged": true,
+      "metrics": {
+        "model_requests": 8,
+        "successful_model_requests": 6,
+        "reported_tokens": {
+          "prompt_tokens": 13106,
+          "completion_tokens": 1102,
+          "total_tokens": 14208
+        },
+        "token_reporting_requests": {
+          "prompt_tokens": 6,
+          "completion_tokens": 6,
+          "total_tokens": 6
+        },
+        "decision_rounds": 5,
+        "tool_calls": 6
+      },
+      "tests_passed": true,
+      "error_message": null,
+      "audit": {
+        "task_id": "91ef6148-dcf9-4ebd-b684-2604c0bb17e8",
+        "experience_enabled": false,
+        "decision_rounds": 5,
+        "tool_calls": 6,
+        "elapsed_ms": 26207,
+        "retrieved_experience_ids": [],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "error_type": "ConnectError",
+            "duration_ms": 5202
+          },
+          {
+            "phase": "decision",
+            "attempt": 2,
+            "requested_model": "deepseek-flash",
+            "success": false,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "error_type": "ConnectError",
+            "duration_ms": 5424
+          },
+          {
+            "phase": "decision",
+            "attempt": 3,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "a693f895-99e9-4a5b-87f9-cc6cd42dcbd6",
+            "usage": {
+              "prompt_tokens": 1178,
+              "completion_tokens": 39,
+              "total_tokens": 1217
+            },
+            "duration_ms": 909
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "dc3971c0-4555-4473-9c03-f889bdad37dc",
+            "usage": {
+              "prompt_tokens": 1413,
+              "completion_tokens": 95,
+              "total_tokens": 1508
+            },
+            "duration_ms": 820
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "7db25748-1d7a-4b25-b66c-a35ad6cd7d64",
+            "usage": {
+              "prompt_tokens": 2024,
+              "completion_tokens": 187,
+              "total_tokens": 2211
+            },
+            "duration_ms": 1242
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "returned_model": "deepseek-flash",
+            "response_id": "427f2f85-e023-4c65-b1f1-89dac20040a8",
+            "usage": {
+              "prompt_tokens": 2332,
+              "completion_tokens": 23,
+              "total_tokens": 2355
+            },
+            "duration_ms": 682
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "0e78823d-ae38-4b3f-9c54-c5153f349529",
+            "usage": {
+              "prompt_tokens": 3228,
+              "completion_tokens": 58,
+              "total_tokens": 3286
+            },
+            "duration_ms": 953
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "returned_model": "deepseek-flash",
+            "response_id": "2e78dde8-db96-4444-8b30-0c0b534404c8",
+            "usage": {
+              "prompt_tokens": 2931,
+              "completion_tokens": 700,
+              "total_tokens": 3631
+            },
+            "duration_ms": 4371
+          }
+        ]
+      }
+    }
+  ]
+}

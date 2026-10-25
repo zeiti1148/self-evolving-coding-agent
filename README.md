@@ -8,7 +8,7 @@
 
 2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。当前基于 `main@5a09f3b`，交付位于 PR #6；经验模块和前端此前已通过 PR #2–#5 合并。完整证据与对照实验结论见文末报告。
 
-第一轮正式对照完成 24 个真实任务，两组均 12/12 修复通过，经验开启组仅 8/12 实际收到参考。已修复异常名称长句导致的漏检，另以五个独立真实任务验证。当前没有证据证明经验提高成功率或效率；归一化后的完整对照复测留在下一阶段。本机回归 234 项后端、58 项前端测试通过，双平台 CI 已实际运行通过。
+第一轮正式对照的漏检已修复，并在归一化后的版本上完成新一轮 24 项对照：两组均 11/12 成功，各有一次服务链路失败；经验组 12/12 检索命中、11/12 成功送达。十个双方成功配对的决策轮数与工具数相同，经验组报告 token 增加 12.22%，表面耗时差与连接重试等待差接近，尚无稳定效率收益证据。原始失败和前轮数据均保留。本机既有回归为后端 234 项、前端 58 项，双平台 CI 已通过；本次仅更新实验数据与说明。
 
 ## 目录与分工
 
@@ -88,6 +88,8 @@ npm.cmd run dev
 .\.venv\Scripts\python.exe scripts/acceptance.py --live
 # 独立训练3任务 + 试运行4任务 + 正式对照24任务；会调用真实模型
 .\.venv\Scripts\python.exe scripts/experiment.py --live --stage all
+# 重新生成训练经验并仅跑正式24项对照
+.\.venv\Scripts\python.exe scripts/experiment.py --live --stage formal
 # 归一化后的定向验证：3训练 + 2目标任务，不代替完整对照
 .\.venv\Scripts\python.exe scripts/experiment.py --live --stage retrieval-check
 cd frontend
