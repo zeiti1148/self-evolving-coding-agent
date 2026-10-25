@@ -1,0 +1,105 @@
+name: MVP regression
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    name: Regression (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    env:
+      CI: "true"
+      PYTHONUTF8: "1"
+      PYTHON: python
+      MAVEN_HOME: ${{ github.workspace }}/.cache/maven/apache-maven-3.9.11
+      # Acceptance uses ScriptedLLM. Never supply real provider credentials here.
+      LLM_API_BASE_URL: ""
+      LLM_API_KEY: ""
+      LLM_MODEL: ""
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+          overwrite-settings: false
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+
+      - name: Install Python dependencies
+        timeout-minutes: 5
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Install frontend dependencies
+        timeout-minutes: 5
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install project Maven and verify checksum
+        timeout-minutes: 5
+        run: python scripts/setup_maven.py
+
+      - name: Run backend tests
+        timeout-minutes: 5
+        run: python -m pytest backend/tests -q
+
+      - name: Run frontend tests
+        timeout-minutes: 5
+        working-directory: frontend
+        run: npm test
+
+      - name: Build frontend
+        timeout-minutes: 5
+        working-directory: frontend
+        run: npm run build
+
+      - name: Check frontend and backend contracts
+        timeout-minutes: 5
+        working-directory: frontend
+        run: npm run check:integration
+
+      - name: Run scripted model with real Maven and SQLite
+        timeout-minutes: 15
+        run: python scripts/acceptance.py --output "${{ runner.temp }}/coding-agent-ci/acceptance-report.json"
+
+      - name: Upload failure report only
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: acceptance-failure-${{ matrix.os }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/coding-agent-ci/acceptance-report.json
+          if-no-files-found: ignore
+          retention-days: 7
+          include-hidden-files: false
