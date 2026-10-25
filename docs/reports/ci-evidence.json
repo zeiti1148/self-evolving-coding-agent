@@ -1,0 +1,332 @@
+{
+  "checked_at": "2026-10-25T04:50:21.977001+00:00",
+  "run": {
+    "id": 40163035088,
+    "head_sha": "ffde38f4be6cac333c7dec8abec31d44501d885e",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/zeiti1148/self-evolving-coding-agent/actions/runs/40163035088"
+  },
+  "jobs": [
+    {
+      "name": "Regression (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/zeiti1148/self-evolving-coding-agent/actions/runs/40163035088/job/121078388437",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-25T04:45:22Z",
+          "completed_at": "2026-10-25T04:45:24Z"
+        },
+        {
+          "name": "Check out repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-25T04:45:24Z",
+          "completed_at": "2026-10-25T04:45:31Z"
+        },
+        {
+          "name": "Set up Python 3.11",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-25T04:45:31Z",
+          "completed_at": "2026-10-25T04:45:31Z"
+        },
+        {
+          "name": "Set up JDK 17",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-25T04:45:31Z",
+          "completed_at": "2026-10-25T04:45:31Z"
+        },
+        {
+          "name": "Set up Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-25T04:45:31Z",
+          "completed_at": "2026-10-25T04:45:36Z"
+        },
+        {
+          "name": "Install Python dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-25T04:45:36Z",
+          "completed_at": "2026-10-25T04:45:49Z"
+        },
+        {
+          "name": "Install frontend dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-25T04:45:49Z",
+          "completed_at": "2026-10-25T04:46:02Z"
+        },
+        {
+          "name": "Install project Maven and verify checksum",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-25T04:46:02Z",
+          "completed_at": "2026-10-25T04:46:02Z"
+        },
+        {
+          "name": "Run backend tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-25T04:46:02Z",
+          "completed_at": "2026-10-25T04:46:19Z"
+        },
+        {
+          "name": "Run frontend tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-25T04:46:19Z",
+          "completed_at": "2026-10-25T04:46:29Z"
+        },
+        {
+          "name": "Build frontend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-25T04:46:29Z",
+          "completed_at": "2026-10-25T04:46:35Z"
+        },
+        {
+          "name": "Check frontend and backend contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-25T04:46:35Z",
+          "completed_at": "2026-10-25T04:46:37Z"
+        },
+        {
+          "name": "Run scripted model with real Maven and SQLite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-25T04:46:37Z",
+          "completed_at": "2026-10-25T04:47:25Z"
+        },
+        {
+          "name": "Upload failure report only",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14,
+          "started_at": "2026-10-25T04:47:25Z",
+          "completed_at": "2026-10-25T04:47:25Z"
+        },
+        {
+          "name": "Post Set up Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-10-25T04:47:25Z",
+          "completed_at": "2026-10-25T04:47:25Z"
+        },
+        {
+          "name": "Post Set up JDK 17",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-10-25T04:47:25Z",
+          "completed_at": "2026-10-25T04:47:25Z"
+        },
+        {
+          "name": "Post Set up Python 3.11",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-10-25T04:47:25Z",
+          "completed_at": "2026-10-25T04:47:26Z"
+        },
+        {
+          "name": "Post Check out repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-10-25T04:47:26Z",
+          "completed_at": "2026-10-25T04:47:28Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-10-25T04:47:28Z",
+          "completed_at": "2026-10-25T04:47:28Z"
+        }
+      ]
+    },
+    {
+      "name": "Regression (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/zeiti1148/self-evolving-coding-agent/actions/runs/40163035088/job/121078388516",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-25T04:45:23Z",
+          "completed_at": "2026-10-25T04:45:24Z"
+        },
+        {
+          "name": "Check out repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-25T04:45:24Z",
+          "completed_at": "2026-10-25T04:45:25Z"
+        },
+        {
+          "name": "Set up Python 3.11",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-25T04:45:25Z",
+          "completed_at": "2026-10-25T04:45:25Z"
+        },
+        {
+          "name": "Set up JDK 17",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-25T04:45:25Z",
+          "completed_at": "2026-10-25T04:45:25Z"
+        },
+        {
+          "name": "Set up Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-25T04:45:25Z",
+          "completed_at": "2026-10-25T04:45:26Z"
+        },
+        {
+          "name": "Install Python dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-25T04:45:26Z",
+          "completed_at": "2026-10-25T04:45:33Z"
+        },
+        {
+          "name": "Install frontend dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-25T04:45:33Z",
+          "completed_at": "2026-10-25T04:45:38Z"
+        },
+        {
+          "name": "Install project Maven and verify checksum",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-25T04:45:38Z",
+          "completed_at": "2026-10-25T04:45:39Z"
+        },
+        {
+          "name": "Run backend tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-25T04:45:39Z",
+          "completed_at": "2026-10-25T04:45:47Z"
+        },
+        {
+          "name": "Run frontend tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-25T04:45:47Z",
+          "completed_at": "2026-10-25T04:45:53Z"
+        },
+        {
+          "name": "Build frontend",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-25T04:45:53Z",
+          "completed_at": "2026-10-25T04:46:00Z"
+        },
+        {
+          "name": "Check frontend and backend contracts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-25T04:46:00Z",
+          "completed_at": "2026-10-25T04:46:02Z"
+        },
+        {
+          "name": "Run scripted model with real Maven and SQLite",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-10-25T04:46:02Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        },
+        {
+          "name": "Upload failure report only",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14,
+          "started_at": "2026-10-25T04:46:46Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        },
+        {
+          "name": "Post Set up Node.js 22",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-10-25T04:46:46Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        },
+        {
+          "name": "Post Set up JDK 17",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-10-25T04:46:46Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        },
+        {
+          "name": "Post Set up Python 3.11",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-10-25T04:46:46Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        },
+        {
+          "name": "Post Check out repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 28,
+          "started_at": "2026-10-25T04:46:46Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 29,
+          "started_at": "2026-10-25T04:46:46Z",
+          "completed_at": "2026-10-25T04:46:46Z"
+        }
+      ]
+    }
+  ]
+}

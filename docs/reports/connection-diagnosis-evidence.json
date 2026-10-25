@@ -1,0 +1,4246 @@
+{
+  "date": "2026-10-25",
+  "baseline_commit": "07290d621acd1d5ee5b2f6203bbd48c9a333fa8f",
+  "method": "Fresh HTTPX clients; alternating route order; certificate verification enabled; no global proxy changes.",
+  "observed_proxy_route": {
+    "local_socks_port": 7890,
+    "mode": "global",
+    "outbound_region_label": "Singapore"
+  },
+  "batches": [
+    {
+      "source": ".cache/connection-diagnostic.json",
+      "source_sha256": "398d448ed57329632e7ac9d38ee577f2e6f90d8af39249c9176f8da94f759baa",
+      "created_at": "2026-10-25T08:22:25.122529+00:00",
+      "request": "GET /models without credentials or model generation",
+      "groups": {
+        "environment": {
+          "attempts": 8,
+          "connected": 8,
+          "connection_failures": 0,
+          "mean_ms": 1441.625,
+          "http_status_counts": {
+            "401": 8
+          },
+          "failure_events": {}
+        },
+        "direct": {
+          "attempts": 8,
+          "connected": 8,
+          "connection_failures": 0,
+          "mean_ms": 526.875,
+          "http_status_counts": {
+            "401": 8
+          },
+          "failure_events": {}
+        }
+      },
+      "attempts": [
+        {
+          "repeat": 1,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 716
+        },
+        {
+          "repeat": 1,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 287
+        },
+        {
+          "repeat": 2,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 315
+        },
+        {
+          "repeat": 2,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 685
+        },
+        {
+          "repeat": 3,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1287
+        },
+        {
+          "repeat": 3,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 653
+        },
+        {
+          "repeat": 4,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 726
+        },
+        {
+          "repeat": 4,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 2047
+        },
+        {
+          "repeat": 5,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1208
+        },
+        {
+          "repeat": 5,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 648
+        },
+        {
+          "repeat": 6,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 520
+        },
+        {
+          "repeat": 6,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1603
+        },
+        {
+          "repeat": 7,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 2616
+        },
+        {
+          "repeat": 7,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 545
+        },
+        {
+          "repeat": 8,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 521
+        },
+        {
+          "repeat": 8,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1371
+        }
+      ]
+    },
+    {
+      "source": ".cache/connection-diagnostic-model.json",
+      "source_sha256": "161bca76c6e4b3671934ebdae00fb2ed3c96e5db45f6542755c0a013ab0bc948",
+      "created_at": "2026-10-25T08:23:50.774124+00:00",
+      "request": "POST first decision only; no tool execution; six pairs across map/greeting",
+      "groups": {
+        "environment": {
+          "attempts": 6,
+          "connected": 6,
+          "connection_failures": 0,
+          "mean_ms": 1529.5,
+          "http_status_counts": {
+            "200": 6
+          },
+          "failure_events": {}
+        },
+        "direct": {
+          "attempts": 6,
+          "connected": 6,
+          "connection_failures": 0,
+          "mean_ms": 907,
+          "http_status_counts": {
+            "200": 6
+          },
+          "failure_events": {}
+        }
+      },
+      "attempts": [
+        {
+          "repeat": 1,
+          "project": "java-null-map",
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "c0e5ec11-8026-4562-97ed-40bf307e8892",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1482,
+            "completion_tokens": 69,
+            "total_tokens": 1551,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 202
+          },
+          "duration_ms": 1430
+        },
+        {
+          "repeat": 1,
+          "project": "java-null-map",
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "3e00ea0e-726e-4066-a032-216f64a26d3f",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1482,
+            "completion_tokens": 66,
+            "total_tokens": 1548,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 202
+          },
+          "duration_ms": 1019
+        },
+        {
+          "repeat": 2,
+          "project": "java-null-map",
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "fb65672f-74f0-4f47-97c2-80f4222e9873",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1482,
+            "completion_tokens": 54,
+            "total_tokens": 1536,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 202
+          },
+          "duration_ms": 1307
+        },
+        {
+          "repeat": 2,
+          "project": "java-null-map",
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "3a2e2858-8c9b-4c26-b47e-a44971dca78d",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1482,
+            "completion_tokens": 54,
+            "total_tokens": 1536,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 202
+          },
+          "duration_ms": 1332
+        },
+        {
+          "repeat": 3,
+          "project": "java-null-map",
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "53fcd75f-4bdf-4734-9ecb-4bccc391df8a",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1482,
+            "completion_tokens": 39,
+            "total_tokens": 1521,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 202
+          },
+          "duration_ms": 1606
+        },
+        {
+          "repeat": 3,
+          "project": "java-null-map",
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "65831524-15d0-4c93-b9dc-b3fdb072f177",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1482,
+            "completion_tokens": 64,
+            "total_tokens": 1546,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 202
+          },
+          "duration_ms": 908
+        },
+        {
+          "repeat": 4,
+          "project": "java-null-greeting",
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "b5275887-6d14-41a7-ba33-2c35a0f42ff8",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1471,
+            "completion_tokens": 39,
+            "total_tokens": 1510,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 191
+          },
+          "duration_ms": 628
+        },
+        {
+          "repeat": 4,
+          "project": "java-null-greeting",
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "73760677-2411-421f-9db9-f99703aee68f",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1471,
+            "completion_tokens": 68,
+            "total_tokens": 1539,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 191
+          },
+          "duration_ms": 1721
+        },
+        {
+          "repeat": 5,
+          "project": "java-null-greeting",
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "268bb7c6-0ea0-4d0b-811b-9e615b900e34",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1471,
+            "completion_tokens": 39,
+            "total_tokens": 1510,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 191
+          },
+          "duration_ms": 1454
+        },
+        {
+          "repeat": 5,
+          "project": "java-null-greeting",
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "7da2e0c8-226d-4686-90ac-1907d4220dcb",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1471,
+            "completion_tokens": 39,
+            "total_tokens": 1510,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 191
+          },
+          "duration_ms": 836
+        },
+        {
+          "repeat": 6,
+          "project": "java-null-greeting",
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "1b1cd797-80ac-4e47-b8f1-a5aa70d68e95",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1471,
+            "completion_tokens": 39,
+            "total_tokens": 1510,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 191
+          },
+          "duration_ms": 744
+        },
+        {
+          "repeat": 6,
+          "project": "java-null-greeting",
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "event": "http11.receive_response_body.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 200,
+          "connected": true,
+          "response_id": "baa4763b-be84-4ade-89d1-d21f8a837e03",
+          "returned_model": "deepseek-flash",
+          "usage": {
+            "prompt_tokens": 1471,
+            "completion_tokens": 60,
+            "total_tokens": 1531,
+            "prompt_tokens_details": {
+              "cached_tokens": 1280
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 6
+            },
+            "prompt_cache_hit_tokens": 1280,
+            "prompt_cache_miss_tokens": 191
+          },
+          "duration_ms": 1634
+        }
+      ]
+    },
+    {
+      "source": ".cache/connection-diagnostic-extended.json",
+      "source_sha256": "811afc82362218f792295c98af1123b4242d66ed316c35a234c46593edab56d9",
+      "created_at": "2026-10-25T08:25:37.571857+00:00",
+      "request": "GET /models without credentials or model generation",
+      "groups": {
+        "environment": {
+          "attempts": 24,
+          "connected": 19,
+          "connection_failures": 5,
+          "mean_ms": 2656.5833333333335,
+          "http_status_counts": {
+            "401": 19,
+            "None": 5
+          },
+          "failure_events": {
+            "socks.start_tls.failed": 5
+          }
+        },
+        "direct": {
+          "attempts": 24,
+          "connected": 24,
+          "connection_failures": 0,
+          "mean_ms": 584.875,
+          "http_status_counts": {
+            "401": 24
+          },
+          "failure_events": {}
+        }
+      },
+      "attempts": [
+        {
+          "repeat": 1,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 730
+        },
+        {
+          "repeat": 1,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 278
+        },
+        {
+          "repeat": 2,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 301
+        },
+        {
+          "repeat": 2,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 680
+        },
+        {
+          "repeat": 3,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 2159
+        },
+        {
+          "repeat": 3,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 506
+        },
+        {
+          "repeat": 4,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 567
+        },
+        {
+          "repeat": 4,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1190
+        },
+        {
+          "repeat": 5,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1294
+        },
+        {
+          "repeat": 5,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 630
+        },
+        {
+          "repeat": 6,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 523
+        },
+        {
+          "repeat": 6,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1173
+        },
+        {
+          "repeat": 7,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1151
+        },
+        {
+          "repeat": 7,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 586
+        },
+        {
+          "repeat": 8,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 711
+        },
+        {
+          "repeat": 8,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1411
+        },
+        {
+          "repeat": 9,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1382
+        },
+        {
+          "repeat": 9,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 651
+        },
+        {
+          "repeat": 10,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 853
+        },
+        {
+          "repeat": 10,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1327
+        },
+        {
+          "repeat": 11,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 6853
+        },
+        {
+          "repeat": 11,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 451
+        },
+        {
+          "repeat": 12,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 474
+        },
+        {
+          "repeat": 12,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1110
+        },
+        {
+          "repeat": 13,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1661
+        },
+        {
+          "repeat": 13,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 894
+        },
+        {
+          "repeat": 14,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 621
+        },
+        {
+          "repeat": 14,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1426
+        },
+        {
+          "repeat": 15,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.failed",
+              "exception_chain": [
+                {
+                  "type": "ConnectError",
+                  "errno": null,
+                  "winerror": null,
+                  "reason": null,
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                },
+                {
+                  "type": "SSLEOFError",
+                  "errno": 8,
+                  "winerror": null,
+                  "reason": "UNEXPECTED_EOF_WHILE_READING",
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                }
+              ]
+            }
+          ],
+          "connected": false,
+          "exception_chain": [
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "SSLEOFError",
+              "errno": 8,
+              "winerror": null,
+              "reason": "UNEXPECTED_EOF_WHILE_READING",
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            }
+          ],
+          "duration_ms": 6003
+        },
+        {
+          "repeat": 15,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 607
+        },
+        {
+          "repeat": 16,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 656
+        },
+        {
+          "repeat": 16,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.failed",
+              "exception_chain": [
+                {
+                  "type": "ConnectError",
+                  "errno": null,
+                  "winerror": null,
+                  "reason": null,
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                },
+                {
+                  "type": "SSLEOFError",
+                  "errno": 8,
+                  "winerror": null,
+                  "reason": "UNEXPECTED_EOF_WHILE_READING",
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                }
+              ]
+            }
+          ],
+          "connected": false,
+          "exception_chain": [
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "SSLEOFError",
+              "errno": 8,
+              "winerror": null,
+              "reason": "UNEXPECTED_EOF_WHILE_READING",
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            }
+          ],
+          "duration_ms": 5844
+        },
+        {
+          "repeat": 17,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1170
+        },
+        {
+          "repeat": 17,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 642
+        },
+        {
+          "repeat": 18,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 605
+        },
+        {
+          "repeat": 18,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1367
+        },
+        {
+          "repeat": 19,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 5552
+        },
+        {
+          "repeat": 19,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 594
+        },
+        {
+          "repeat": 20,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 570
+        },
+        {
+          "repeat": 20,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.failed",
+              "exception_chain": [
+                {
+                  "type": "ConnectError",
+                  "errno": null,
+                  "winerror": null,
+                  "reason": null,
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                },
+                {
+                  "type": "SSLEOFError",
+                  "errno": 8,
+                  "winerror": null,
+                  "reason": "UNEXPECTED_EOF_WHILE_READING",
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                }
+              ]
+            }
+          ],
+          "connected": false,
+          "exception_chain": [
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "SSLEOFError",
+              "errno": 8,
+              "winerror": null,
+              "reason": "UNEXPECTED_EOF_WHILE_READING",
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            }
+          ],
+          "duration_ms": 5741
+        },
+        {
+          "repeat": 21,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1642
+        },
+        {
+          "repeat": 21,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 595
+        },
+        {
+          "repeat": 22,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 589
+        },
+        {
+          "repeat": 22,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.failed",
+              "exception_chain": [
+                {
+                  "type": "ConnectError",
+                  "errno": null,
+                  "winerror": null,
+                  "reason": null,
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                },
+                {
+                  "type": "SSLEOFError",
+                  "errno": 8,
+                  "winerror": null,
+                  "reason": "UNEXPECTED_EOF_WHILE_READING",
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                }
+              ]
+            }
+          ],
+          "connected": false,
+          "exception_chain": [
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "SSLEOFError",
+              "errno": 8,
+              "winerror": null,
+              "reason": "UNEXPECTED_EOF_WHILE_READING",
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            }
+          ],
+          "duration_ms": 5712
+        },
+        {
+          "repeat": 23,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 1433
+        },
+        {
+          "repeat": 23,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 614
+        },
+        {
+          "repeat": 24,
+          "route": "direct",
+          "trace": [
+            {
+              "event": "connection.connect_tcp.started",
+              "host": "api.deepseek.com",
+              "port": 443
+            },
+            {
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "event": "connection.start_tls.started"
+            },
+            {
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "event": "http11.response_closed.started"
+            },
+            {
+              "event": "http11.response_closed.complete"
+            }
+          ],
+          "http_status": 401,
+          "connected": true,
+          "duration_ms": 519
+        },
+        {
+          "repeat": 24,
+          "route": "environment",
+          "trace": [
+            {
+              "event": "socks.connect_tcp.started",
+              "host": "127.0.0.1",
+              "port": 7890
+            },
+            {
+              "event": "socks.connect_tcp.complete"
+            },
+            {
+              "event": "socks.setup_socks5_connection.started"
+            },
+            {
+              "event": "socks.setup_socks5_connection.complete"
+            },
+            {
+              "event": "socks.start_tls.started"
+            },
+            {
+              "event": "socks.start_tls.failed",
+              "exception_chain": [
+                {
+                  "type": "ConnectError",
+                  "errno": null,
+                  "winerror": null,
+                  "reason": null,
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                },
+                {
+                  "type": "SSLEOFError",
+                  "errno": 8,
+                  "winerror": null,
+                  "reason": "UNEXPECTED_EOF_WHILE_READING",
+                  "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+                }
+              ]
+            }
+          ],
+          "connected": false,
+          "exception_chain": [
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "ConnectError",
+              "errno": null,
+              "winerror": null,
+              "reason": null,
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            },
+            {
+              "type": "SSLEOFError",
+              "errno": 8,
+              "winerror": null,
+              "reason": "UNEXPECTED_EOF_WHILE_READING",
+              "message": "[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1032)"
+            }
+          ],
+          "duration_ms": 5747
+        }
+      ]
+    }
+  ],
+  "findings": {
+    "reproduced": "5 of 24 environment-proxy handshakes failed at socks.start_tls with SSLEOFError / UNEXPECTED_EOF_WHILE_READING. TCP and SOCKS setup completed; HTTP headers/body were not sent. All 24 interleaved direct connections succeeded.",
+    "case_content": "Six paired first-decision requests (map/greeting, including the prior frozen reference) succeeded on both routes during the initial diagnostic period. No tools executed in these diagnostic calls.",
+    "historical_limit": "Old audits stored only ConnectError, not its cause. The reproduced mechanism and proxy dependency are established; the precise upstream component closing TLS and the cause of every historical event cannot be reconstructed.",
+    "scope": "Failure is reproducible without any task text or model call, so it is not specific to the map repair task. Prior runs also contain recovered ConnectErrors on other cases.",
+    "repair": "Make environment proxy/CA inheritance explicit and default model calls to direct; preserve TLS verification and the existing three-attempt cap; audit bounded phase names and safe machine codes."
+  }
+}

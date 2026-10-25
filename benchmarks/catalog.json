@@ -1,0 +1,44 @@
+[
+  {
+    "id": "java-null-greeting",
+    "path": "benchmarks/java",
+    "task_description": "Fix the NullPointerException in GreetingService.greet: name=null must return \"Hello, guest!\". Preserve normal trimmed-name behavior and run the unchanged Maven tests.",
+    "error_type": "NullPointerException",
+    "expected_test_count": 2
+  },
+  {
+    "id": "java-null-profile",
+    "path": "benchmarks/java-profile",
+    "task_description": "Fix the NullPointerException in ProfileFormatter.format: a null profile or null displayName must return \"User: guest\". Preserve normal trimmed-name behavior and run the unchanged Maven tests.",
+    "error_type": "NullPointerException",
+    "expected_test_count": 3
+  },
+  {
+    "id": "java-null-list",
+    "path": "benchmarks/java-null-list",
+    "task_description": "Fix the NullPointerException in ScoreSummary.total: a null list has total zero and null elements contribute zero. Preserve ordinary, empty-list and negative-value summation behavior and run the unchanged Maven tests.",
+    "error_type": "NullPointerException",
+    "expected_test_count": 5
+  },
+  {
+    "id": "java-null-map",
+    "path": "benchmarks/java-null-map",
+    "task_description": "Fix the NullPointerException in SettingsReader.language: a null settings map, missing language key or null language value must return \"en\". Preserve trimming and locale-independent lowercase normalization of configured values and run the unchanged Maven tests.",
+    "error_type": "NullPointerException",
+    "expected_test_count": 5
+  },
+  {
+    "id": "java-range-end",
+    "path": "benchmarks/java-range-end",
+    "task_description": "Fix the ArrayIndexOutOfBoundsException in RangeLabels.build: non-null integer arrays must become comma-separated values in input order, with no trailing comma; an empty array must produce an empty string. Preserve zero, negative and repeated values and run the unchanged Maven tests.",
+    "error_type": "ArrayIndexOutOfBoundsException",
+    "expected_test_count": 5
+  },
+  {
+    "id": "java-parse-count",
+    "path": "benchmarks/java-parse-count",
+    "task_description": "Fix the NumberFormatException in CountParser.parse: null, blank, malformed, out-of-int-range and negative inputs must return zero. Preserve parsing of valid nonnegative Java int values with surrounding whitespace and run the unchanged Maven tests.",
+    "error_type": "NumberFormatException",
+    "expected_test_count": 5
+  }
+]

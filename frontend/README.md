@@ -1,5 +1,7 @@
 # Vue 修复工作台：M3 与联调准备
 
+2026-10-25 更新：真实 API、Agent 和工具系统已在本轮功能分支实现，启动与验收以根目录 README 为准。下文 M3 测试记录保留为历史证据；最新页面验收使用测试脚本模型驱动真实 API、Maven 和 SQLite，不代表真实模型验收。
+
 实现任务提交、执行过程、最终结果和经验记录展示。默认使用浏览器模拟数据，
 无需启动 Python、FastAPI、Java 或模型服务。所有本阶段代码均位于 `frontend/`。
 
@@ -155,7 +157,7 @@ Vite 将请求转发到 `API_PROXY_TARGET`。这样不需要为本地开发额�
 
 以下公共接口事项留给团队确认，没有修改其他成员模块：
 
-1. `source_project` 的实际登记名称尚未约定；`java-null-greeting` 只是演示默认值。
+1. 真实后端已登记 `java-null-greeting` 与 `java-null-profile`；默认页面使用前者，第二个样例通过闭环验收脚本提交。
 2. 使用完整后端地址直接跨域访问时，API 服务需允许前端来源的 CORS；
    默认开发来源为 `http://127.0.0.1:5173`。跨域 POST JSON 会预检。
 3. 当前契约只有修改文件列表，没有 Diff 内容接口；M3 展示修改文件和工具轨迹，
@@ -194,7 +196,7 @@ npm.cmd run check:integration
 
 2026-10-22 的联调准备在 `integration-readiness` 分支，基于已合并经验模块和
 M3 前端的 `origin/main`（`89522a9`）。
-API、Agent、tools 在该基线仍未实现，需由对应成员提供真实服务后再验收完整闭环。
+API、Agent、tools 在上述历史基线未实现；当前功能分支已补齐，请按根目录 README 的闭环验收命令验证。
 
 ## 代码位置
 

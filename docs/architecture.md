@@ -31,7 +31,7 @@ Agent 核心循环 -----> OpenAI 兼容 LLM API
 - Agent：项目自行实现同步的单 Agent 执行循环，不依赖 Agent 框架。
 - 模型服务：通过兼容 OpenAI API 的接口接入，配置从环境变量读取。
 - 前端：Vue 3 + Vite，第一版通过 HTTP 轮询查看任务过程和结果。
-- 数据库：SQLite，用于保存任务元数据和结构化经验。
+- 数据库：SQLite，用于保存结构化经验；第一版任务状态与步骤仅在 API 进程内存中保存。
 - 被修复项目：Java、Maven、JUnit。
 
 ## 3. 系统模块

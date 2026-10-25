@@ -1,0 +1,23 @@
+[
+  {
+    "id": "train-postal-label",
+    "path": "benchmarks/training/postal-label",
+    "task_description": "Fix the NullPointerException in AddressLabel.render: a null Address or null Integer zip must return \"ZIP unknown\". For a present zip, return \"ZIP \" followed by its decimal value without zero padding. Preserve the Address record and run the unchanged Maven tests.",
+    "error_type": "NullPointerException",
+    "expected_test_count": 5
+  },
+  {
+    "id": "train-tail-picker",
+    "path": "benchmarks/training/tail-picker",
+    "task_description": "Fix the ArrayIndexOutOfBoundsException in TailPicker.last: a non-null empty integer array must return -1 and a nonempty array must return its last element. Preserve zero and negative values and run the unchanged Maven tests.",
+    "error_type": "ArrayIndexOutOfBoundsException",
+    "expected_test_count": 5
+  },
+  {
+    "id": "train-port-parser",
+    "path": "benchmarks/training/port-parser",
+    "task_description": "Fix the NumberFormatException and range handling in PortParser.parse: trimmed integer strings in the inclusive range 1 through 65535 must return that port. Null, blank, malformed, out-of-int-range and out-of-port-range inputs must return the default port 8080. Run the unchanged Maven tests.",
+    "error_type": "NumberFormatException",
+    "expected_test_count": 5
+  }
+]
