@@ -263,3 +263,18 @@ def test_network_timeout_after_task_budget_is_stopped(error_type):
     assert error.value.code == ErrorCode.AGENT_STOPPED
     assert len(client.audit) == 1
     client.close()
+
+
+@pytest.mark.parametrize("raw,expected", [
+    ("NumberFormatException and missing port-range validation", "NumberFormatException"),
+    ("java.lang.ArrayIndexOutOfBoundsException caused by array access", "ArrayIndexOutOfBoundsException"),
+])
+def test_extracted_error_description_becomes_retrievable_class(setup, raw, expected):
+    request, store, execute = setup
+    payload = {**EXPERIENCE, "error_type": raw}
+    model = SequenceLLM([{"role": "assistant", "content": "Done"},
+                         {"role": "assistant", "content": json.dumps(payload)}])
+    result = Agent(model, execute, store).run(request)
+    assert result.experience_saved is True
+    matches = store.search_experiences("", tags=["java"], error_type=expected)
+    assert [entry.id for entry in matches] == [result.experience_id]

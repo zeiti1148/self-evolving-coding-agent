@@ -14,6 +14,21 @@ from backend.shared import (AgentRequest, AgentResult, ApplicationError, ErrorCo
 from .llm import LLM, TOOLS, parse_arguments, validate_message
 
 logger = logging.getLogger(__name__)
+ERROR_CLASS = re.compile(r"\b[A-Za-z]+(?:Exception|Error)\b")
+
+
+def normalize_error_type(value):
+    """Keep a single Java error class as the exact-match retrieval key.
+
+    Providers sometimes append a prose explanation; that belongs in root_cause.
+    Leave non-string values to the existing shared-model validator.
+    """
+    if isinstance(value, str):
+        match = ERROR_CLASS.search(value)
+        return match.group() if match else value.strip()
+    return value
+
+
 SYSTEM_PROMPT = """You repair trusted Java/Maven benchmark projects. Use the supplied tools to inspect
 source and tests, reproduce the failure, edit only application source, and run tests. Paths are
 relative POSIX paths. Never change tests, pom.xml, Maven configuration or skip tests. Preserve
@@ -51,7 +66,7 @@ class Agent:
                 raise ApplicationError(ErrorCode.AGENT_STOPPED, "Task time budget exhausted.")
             return value
         try:
-            match = re.search(r"\b[A-Za-z]+(?:Exception|Error)\b", request.task_description)
+            match = ERROR_CLASS.search(request.task_description)
             error_type = match.group() if match else ("NullPointerException" if "空指针" in request.task_description else None)
             references = self.experiences.search_experiences("", tags=["java"], error_type=error_type, limit=5) if self.use_experience else []
             retrieved_ids = [entry.id for entry in references]
@@ -146,7 +161,7 @@ class Agent:
                 remaining()
                 # A separate bounded extraction request after verification; no tools or new code changes.
                 extraction = self.llm.complete([
-                    {"role": "system", "content": "Extract a reusable repair experience. Return only a JSON object with task_summary, error_type, root_cause, solution, verification, tags. Tags must include java. Use only supplied evidence. Do not include secrets or hidden reasoning."},
+                    {"role": "system", "content": "Extract a reusable repair experience. Return only a JSON object with task_summary, error_type, root_cause, solution, verification, tags. error_type must be only the simple Java exception class name (for example NullPointerException), with explanations in root_cause. Tags must include java. Use only supplied evidence. Do not include secrets or hidden reasoning."},
                     {"role": "user", "content": json.dumps({"task": request.task_description, "summary": summary,
                      "changed_files": changed, "trace": [r.model_dump(mode="json") for r in results]}, ensure_ascii=False)},
                 ])
@@ -154,6 +169,8 @@ class Agent:
                 if content.startswith("```"):
                     content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content)
                 data = json.loads(content)
+                if isinstance(data, dict) and "error_type" in data:
+                    data["error_type"] = normalize_error_type(data["error_type"])
                 data["source_task_id"] = request.task_id
                 data["verification"] = f"Final Maven verification passed: {results[-1].metadata.get('tests', 'unknown')} tests; call_id={calls[-1].id}."
                 if isinstance(data.get("tags", []), list):
