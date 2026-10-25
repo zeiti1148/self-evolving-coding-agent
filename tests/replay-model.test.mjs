@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { diffLines, fileState, writeComparison, finalTest, frame } from '../docs/demo/replay-model.mjs'
+import { diffLines, fileState, writeComparison, finalTest, frame, repairEdits } from '../docs/demo/replay-model.mjs'
 
 const write = (content, success = true) => ({call:{name:'write_file',arguments:{path:'./src/A.java',content}},result:{success,metadata:{}}})
 test('replay applies successful writes in order and never leaks the final file into an earlier step', () => {
@@ -28,4 +28,12 @@ test('only explicit system verification is shown as final; baseline is separate 
   assert.equal(frame(record,1).title,'Agent 调用 Maven 测试')
   assert.equal(frame(record,2).title,'程序执行独立最终测试')
   assert.equal(frame(record,3).kind,'summary')
+})
+test('overview compares original source with final successful writes and keeps source step references', () => {
+  const c = { initial_files: {'A.java':'original'}, steps: [
+    {call:{name:'write_file',arguments:{path:'A.java',content:'first'}},result:{success:true}},
+    {call:{name:'write_file',arguments:{path:'A.java',content:'final'}},result:{success:true}},
+    {call:{name:'write_file',arguments:{path:'A.java',content:'failed'}},result:{success:false}},
+  ] }
+  assert.deepEqual(repairEdits(c), [{path:'A.java',before:'original',after:'final',steps:[1,2]}])
 })

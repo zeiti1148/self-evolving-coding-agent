@@ -20,6 +20,19 @@ export function writeComparison(recording, index) {
   return { path: name, before: before ?? null, after: String(step.call.arguments.content ?? ''), applied: step.result.success }
 }
 
+// Overall repair: original source versus the last successful write to each file.
+export function repairEdits(recording) {
+  const edits = new Map()
+  recording.steps.forEach((step, index) => {
+    if (step.call.name !== 'write_file' || !step.result.success || typeof step.call.arguments.content !== 'string') return
+    const path = pathKey(step.call.arguments.path)
+    const previous = edits.get(path)
+    edits.set(path, { path, before: recording.initial_files[path] ?? '', after: step.call.arguments.content,
+      steps: [...(previous?.steps ?? []), index + 1] })
+  })
+  return [...edits.values()]
+}
+
 export function diffLines(before, after) {
   const left = before.replaceAll('\r\n', '\n').split('\n')
   const right = after.replaceAll('\r\n', '\n').split('\n')
