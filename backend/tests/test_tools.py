@@ -79,6 +79,12 @@ def test_build_and_tests_protected(service):
     assert invoke(service, "run_tests").error_code == ErrorCode.COMMAND_NOT_ALLOWED
 
 
+@pytest.mark.parametrize("path", ["POM.XML", ".MVN/maven.config", "SRC/TEST/NewTest.java", "MVNW.CMD"])
+def test_case_aliases_cannot_create_or_modify_build_and_test_files(service, path):
+    result = invoke(service, "write_file", path=path, content="-Dtest=OnlyPassingTest", create_parent=True)
+    assert result.error_code == ErrorCode.COMMAND_NOT_ALLOWED
+
+
 def test_unregistered_workspace_and_source_are_rejected(service, tmp_path):
     tool, workspace, source = service
     result = tool.execute_tool(source, ToolCall(id=str(uuid4()), name="list_files"))

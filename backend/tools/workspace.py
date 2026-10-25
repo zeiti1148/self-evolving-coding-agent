@@ -51,9 +51,13 @@ def inventory(root: Path) -> dict[str, str]:
 
 
 def protected(files: dict[str, str]) -> dict[str, str]:
+    # Windows aliases are case-insensitive, and Maven still reads .MVN/maven.config.
+    # Apply the same conservative policy on every host so a project cannot become
+    # writable merely by moving between platforms.
     return {name: digest for name, digest in files.items() if
-            Path(name).name == "pom.xml" or "src/test/" in name or
-            ".mvn" in Path(name).parts or Path(name).name.startswith("mvnw")}
+            Path(name).name.casefold() == "pom.xml" or "src/test/" in name.casefold() or
+            ".mvn" in [part.casefold() for part in Path(name).parts] or
+            Path(name).name.casefold().startswith("mvnw")}
 
 
 @dataclass
