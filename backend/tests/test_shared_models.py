@@ -55,11 +55,11 @@ def make_final_test_result() -> ToolResult:
     return ToolResult(call_id=TEST_CALL_ID, tool_name="run_tests", success=True)
 
 
-def test_normal_models_are_created_with_defaults() -> None:
+def test_normal_models_are_created_with_defaults(tmp_path: Path) -> None:
     request = AgentRequest(
         task_id=TASK_ID,
         task_description="Fix a null dereference",
-        workspace=Path("/tmp/tasks/example"),
+        workspace=tmp_path / "example",
     )
     experience = ExperienceCreate(
         task_summary="Fix greeting",
