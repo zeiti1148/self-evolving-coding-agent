@@ -1,0 +1,9 @@
+{
+  "id": "java-points-gift",
+  "path": "benchmarks/reuse/points-gift",
+  "title": "积分转赠：接收权限、手续费与状态一致性",
+  "difficulty": "中等 · 3 个业务类 · 12 项测试",
+  "task_description": "Repair this Java points-gifting project. IllegalArgumentException is raised when a recipient disables gifts, but the rejected gift can still consume the sender's points. Inspect source and unchanged tests and repair application source only. GiftRequest requires positive points and a nonnegative fee; totalDebit is points plus fee. PointsAccount rejects nonpositive debit/credit, allows debiting the exact balance, and rejects credit when gifts are disabled. PointsGiftService must validate the request, reject self-gifting, confirm the sender can pay points plus fee, and confirm the recipient accepts gifts before changing either balance. Any rejected gift leaves both accounts unchanged. A successful gift charges points plus fee to the sender and credits only points to the recipient. All tests and Maven configuration must remain unchanged; run the complete test suite.",
+  "expected_test_count": 12,
+  "error_type": "IllegalArgumentException"
+}

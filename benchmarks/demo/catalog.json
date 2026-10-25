@@ -1,0 +1,22 @@
+[
+  {
+    "id": "java-order-checkout",
+    "path": "benchmarks/demo/order-checkout",
+    "title": "订单结算：数量、折扣与运费",
+    "difficulty": "中等 · 3 个业务类 · 12 项测试",
+    "task_description": "Repair the order checkout project. Inspect all production classes and unchanged tests, reproduce the failures first, then repair application source. CartLine subtotal is unit price in cents times quantity; quantity must be positive and unit price nonnegative. DiscountPolicy returns the discount amount in cents, rounded down, with percent restricted to 0..100. CheckoutService sums line subtotals, subtracts the discount, then applies 600 cents shipping only when the discounted goods total is below 10000 cents. An empty cart totals zero. Preserve normal behavior, repair the independently tested helper classes as well as checkout, and run all unchanged Maven tests. Do not modify tests or build configuration.",
+    "expected_test_count": 12,
+    "learning_points": ["跨 CartLine、DiscountPolicy、CheckoutService 定位", "整数金额与数量计算", "折扣后的运费门槛与空购物车"],
+    "flow": ["购物项数量", "折扣金额", "折后运费", "订单总价"]
+  },
+  {
+    "id": "java-stock-transfer",
+    "path": "benchmarks/demo/stock-transfer",
+    "title": "库存转移：校验与失败原子性",
+    "difficulty": "中等 · 3 个业务类 · 12 项测试",
+    "task_description": "Repair the stock transfer project. Inspect the source and unchanged tests, reproduce failures first, and modify application source only. TransferRequest rejects null/blank SKU and nonpositive quantity. StockLedger rejects nonpositive deposit/withdraw amounts, allows withdrawing exactly the available quantity, and enforces capacity. TransferService must validate the request and all source/target constraints before modifying either ledger: any rejected transfer must leave both ledgers unchanged. Transferring to the same ledger is a no-op after request validation. Preserve successful transfer behavior and run all unchanged Maven tests. No concurrency support is required; this is an in-memory single-threaded atomicity exercise. Do not change tests or build configuration.",
+    "expected_test_count": 12,
+    "learning_points": ["请求校验、库存边界、服务协调三层", "目标仓容量不足时两边均不能变化", "恰好转空与同仓转移"],
+    "flow": ["请求合法性", "源仓可用量", "目标仓容量", "一次性提交变化"]
+  }
+]

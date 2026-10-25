@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "recording_created_at": "2026-10-25T11:16:56.431289+00:00",
+  "mode": "recorded-live-model",
+  "model": "deepseek-flash",
+  "base_commit": "65274214ac6853e28ee1ee78b54ceaf0fe1f9cd1",
+  "recorded_with_uncommitted_changes": true,
+  "recording_sha256": "4442ab596fb5722219ccbfce767d32d94194e178e26b8dd97693bad94aa30599",
+  "source_sha256": {
+    "backend/agent/core.py": "25d77c91ee28f0304af67be13eaf5eb3ca8e4478581e33906f601b8a956b2f9e",
+    "backend/tools/service.py": "d67ade5636c30eb6d8ee57bfe17dbd6296631b938e986be40ab97401442f29d7",
+    "backend/config.py": "a37cb6e8dd6f315bddbe844da261faf72fa94c38723690dbf0084bde60ce6b44",
+    "scripts/demo.py": "5e69c659692cb7a1c766173c739aa624150a04617d3d43495a85a2494f01f752"
+  },
+  "use_experience": false,
+  "cases": [
+    {
+      "id": "java-order-checkout",
+      "task_id": "dc6b7235-58db-41f8-a669-ca90977e2f76",
+      "verified": true,
+      "baseline": {
+        "tests": 12,
+        "failures": 10,
+        "errors": 0,
+        "skipped": 0
+      },
+      "final": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "final_call_id": "8b98da6d-f0a6-47d3-b94f-1865c3fa0e6a",
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/CartLine.java",
+        "src/main/java/dev/selfevolving/benchmark/CheckoutService.java",
+        "src/main/java/dev/selfevolving/benchmark/DiscountPolicy.java"
+      ],
+      "original_unchanged": true,
+      "tests_unchanged": true,
+      "experience_id": "d3a26868-b4b6-429a-920d-48c2dc7e70a7",
+      "decision_rounds": 7,
+      "tool_calls": 13,
+      "elapsed_ms": 44955,
+      "model_requests": 8,
+      "successful_model_requests": 8
+    },
+    {
+      "id": "java-stock-transfer",
+      "task_id": "cfde883d-c16e-43c3-b697-cdc507e609bd",
+      "verified": true,
+      "baseline": {
+        "tests": 12,
+        "failures": 5,
+        "errors": 2,
+        "skipped": 0
+      },
+      "final": {
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "final_call_id": "b03d50da-b855-45d4-844d-555209d63cef",
+      "changed_files": [
+        "src/main/java/dev/selfevolving/benchmark/StockLedger.java",
+        "src/main/java/dev/selfevolving/benchmark/TransferRequest.java",
+        "src/main/java/dev/selfevolving/benchmark/TransferService.java"
+      ],
+      "original_unchanged": true,
+      "tests_unchanged": true,
+      "experience_id": "3a1fc9e4-9bc1-463d-a9b5-501604e7f9bc",
+      "decision_rounds": 6,
+      "tool_calls": 10,
+      "elapsed_ms": 23014,
+      "model_requests": 7,
+      "successful_model_requests": 7
+    }
+  ]
+}

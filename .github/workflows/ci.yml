@@ -80,6 +80,10 @@ jobs:
         working-directory: frontend
         run: npm test
 
+      - name: Check offline replay state and code diffs
+        timeout-minutes: 2
+        run: node --test tests/replay-model.test.mjs
+
       - name: Build frontend
         timeout-minutes: 5
         working-directory: frontend

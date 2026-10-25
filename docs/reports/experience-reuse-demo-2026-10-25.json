@@ -1,0 +1,49 @@
+{
+  "mode": "recorded-live-reuse",
+  "created_at": "2026-10-25T15:23:50.486487+00:00",
+  "model": "deepseek-flash",
+  "git_head": "4152c6adcc9856a1dbe929e213465290d9f8f75f",
+  "git_dirty": true,
+  "source_recording_sha256": "4442ab596fb5722219ccbfce767d32d94194e178e26b8dd97693bad94aa30599",
+  "source_database_sha256": "0855ccf114028649c34f349746654f20161d4f6c6c67023dc9450fc827dba498",
+  "query": {
+    "query": "",
+    "tags": [
+      "java"
+    ],
+    "error_type": "IllegalArgumentException",
+    "limit": 5
+  },
+  "delivery_verified": true,
+  "source_database_unchanged": true,
+  "verified": true,
+  "recording_sha256": "04254951329eb3d094289cfc47bc3b4c5504f99a52e6de0c6e466c50a2d78183",
+  "source_experience_id": "3a1fc9e4-9bc1-463d-a9b5-501604e7f9bc",
+  "matched_ids": [
+    "3a1fc9e4-9bc1-463d-a9b5-501604e7f9bc"
+  ],
+  "experience_counts": {
+    "before": 2,
+    "after": 3
+  },
+  "target_task_id": "b471785a-9bb6-4771-a915-486d936dd877",
+  "new_experience_id": "ed6bd4f5-0423-487f-a96d-78f65d809bd8",
+  "changed_files": [
+    "src/main/java/dev/selfevolving/benchmark/GiftRequest.java",
+    "src/main/java/dev/selfevolving/benchmark/PointsAccount.java",
+    "src/main/java/dev/selfevolving/benchmark/PointsGiftService.java"
+  ],
+  "final_call_id": "8b5f4581-b2d7-4ddf-bc57-a1e74ad462f6",
+  "final_test_counts": {
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "model_requests": 6,
+  "metrics": {
+    "decision_rounds": 5,
+    "tool_calls": 10,
+    "elapsed_ms": 23710
+  }
+}

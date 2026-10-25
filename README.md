@@ -6,11 +6,13 @@
 
 已实现同步 Agent 循环、受控工具、FastAPI 四个业务接口、SQLite 经验模块及 Vue 工作台。两个 Java 样例已通过脚本模型回归与真实模型 `deepseek-flash` 验收，均运行真实文件工具、Maven 和 SQLite。
 
-2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。当前基于 `main@5a09f3b`，交付位于 PR #6；经验模块和前端此前已通过 PR #2–#5 合并。完整证据与对照实验结论见文末报告。
+2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。最小闭环已通过 PR #6 合并到 `main@6527421`；经验模块和前端此前已通过 PR #2–#5 合并。完整证据与对照实验结论见文末报告。
 
 经验检索归一化和模型连接路径已修复。连接故障复现为环境代理路径上的 TLS 握手提前关闭；默认模型调用改为显式直连，保留可选环境代理及证书验证。修复后完整 24 项对照：关闭组 12/12、开启组 12/12 成功，经验组 12/12 实际收到参考。双方成功配对的已报告 token 相对变化 +7.14%；不将网络稳定性改善误称为经验效果。后端 239 项、前端 58 项及构建/集成检查通过。当前验收与定位证据详见 [故障定位](docs/reports/connection-diagnosis-2026-10-25.md) 和 [实验报告](docs/reports/live-evaluation-2026-10-25.md)。
 
 ## 目录与分工
+
+本轮演示以经验闭环为主线：已有库存修复经验被新的积分转赠任务检索并携带到真实模型请求中，新任务 12 项测试全部通过，再保存新经验，工作库从 2 条增至 3 条。下载 [交互演示 HTML](docs/demo/recorded-demo.html)，默认依次展示字段设计、检索匹配、注入模型、新修复和继续积累；另可切换订单、库存的跨文件修复过程。三个案例各有 3 个业务类、12 项测试。机制详见 [项目核心与经验设计](docs/experience-loop.md)，证据见 [复用演示记录](docs/reports/experience-reuse-demo-2026-10-25.md)。原有 24 项对照保留独立统计。
 
 | 目录 | 内容 | 建议维护者 |
 | --- | --- | --- |
@@ -78,7 +80,7 @@ npm.cmd run dev
 | GET | `/api/tasks/{task_id}/steps` | 运行中读取步骤 |
 | GET | `/api/experiences?limit=20&offset=0` | 经验分页 |
 
-登记项目为 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`。案例描述、错误类型与预期测试数量见 `benchmarks/catalog.json`。其他样例可通过脚本/API 提交，或修改前端项目配置后使用页面。
+六个正式评估项目为 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`，描述与测试数量见 `benchmarks/catalog.json`。另登记 `java-order-checkout`、`java-stock-transfer` 两个修复演示项目，见 `benchmarks/demo/catalog.json`；积分转赠 `java-points-gift` 用于后续经验复用，见 `benchmarks/reuse/catalog.json`。其他样例可通过脚本/API 提交，或修改前端项目配置后使用页面。
 
 ## 验证
 
