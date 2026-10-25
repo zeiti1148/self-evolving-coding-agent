@@ -53,7 +53,8 @@ def code_provenance(root: Path = ROOT) -> dict:
     """Capture startup code identity without retaining Git status file names."""
     result = {"git_head": None, "git_dirty": None,
               "source_sha256": {name: file_hash(root / name) for name in (
-                  "backend/agent/core.py", "backend/agent/llm.py", "scripts/experiment.py")}}
+                  "backend/agent/core.py", "backend/agent/llm.py", "backend/agent/transport.py",
+                  "backend/config.py", "scripts/experiment.py")}}
     try:
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, capture_output=True,
                               text=True, timeout=5, check=False)
@@ -389,6 +390,7 @@ def run_experiment(*, live=False, stage="all", output_root: Path | None = None,
     report = {"mode": "live-model", "created_at": stamp, "directory": str(directory), "stage": stage, "purpose": purpose,
               "code_version": provenance,
               "requested_model": settings.llm_model, "task_timeout_seconds": settings.task_timeout,
+              "transport_policy": "environment" if settings.llm_trust_env else "direct",
               "planned_tasks": len(plan), "counts": counts, "plan": plan, "tasks": [], "baselines": {},
               "original_hashes": originals, "training_database": str(training_path),
               "frozen_database": str(frozen_path), "output_database": str(output_path),

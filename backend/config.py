@@ -19,6 +19,7 @@ class Settings:
     llm_base_url: str = ""
     llm_api_key: str = field(default="", repr=False)
     llm_model: str = ""
+    llm_trust_env: bool = False
     llm_timeout: float = 60.0
     task_timeout: float = 600.0
     use_experience: bool = True
@@ -32,6 +33,8 @@ class Settings:
     })
 
     def __post_init__(self) -> None:
+        if type(self.llm_trust_env) is not bool:
+            raise ValueError("llm_trust_env must be a boolean")
         for name in ("llm_timeout", "task_timeout"):
             value = getattr(self, name)
             if not math.isfinite(value) or value <= 0:
@@ -49,6 +52,9 @@ class Settings:
         experience = os.environ.get("USE_EXPERIENCE", "true").strip().lower()
         if experience not in {"true", "false"}:
             raise ValueError("USE_EXPERIENCE must be true or false")
+        trust_env = os.environ.get("LLM_TRUST_ENV", "false").strip().lower()
+        if trust_env not in {"true", "false"}:
+            raise ValueError("LLM_TRUST_ENV must be true or false")
 
         return cls(
             workspace_root=path("WORKSPACE_ROOT", ROOT / "runtime/workspaces"),
@@ -57,6 +63,7 @@ class Settings:
             llm_base_url=os.environ.get("LLM_API_BASE_URL", "").rstrip("/"),
             llm_api_key=os.environ.get("LLM_API_KEY", ""),
             llm_model=os.environ.get("LLM_MODEL", ""),
+            llm_trust_env=trust_env == "true",
             llm_timeout=float(os.environ.get("LLM_TIMEOUT_SECONDS", "60")),
             task_timeout=float(os.environ.get("TASK_TIMEOUT_SECONDS", "600")),
             use_experience=experience == "true",

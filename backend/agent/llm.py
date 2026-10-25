@@ -11,6 +11,7 @@ import httpx
 from backend.config import Settings
 from backend.shared import ApplicationError, ErrorCode
 from backend.tools.service import ARGUMENTS
+from .transport import TransportTrace, exception_chain
 
 TOOL_DESCRIPTIONS = {
     "list_files": "List files in the managed project; use recursive=true to locate source and tests.",
@@ -65,11 +66,14 @@ class ChatClient:
             except (ValueError, KeyError, TypeError):
                 pass
         if self._client is None:
-            self._client = httpx.Client(transport=self.transport)
+            self._client = httpx.Client(transport=self.transport, trust_env=config.llm_trust_env)
         # Retry connection establishment only: a read timeout may already incur model cost.
         for attempt in range(3):
             started = time.monotonic()
+            trace = TransportTrace(started)
             event = {"phase": "decision" if tools else "extraction", "attempt": attempt + 1,
+                     "transport_policy": "environment" if config.llm_trust_env else "direct",
+                     "transport_events": trace.events,
                      "requested_model": config.llm_model, "success": False,
                      "request_experience_ids": [x["id"] for x in references],
                      "request_experience_hashes": [hashlib.sha256(json.dumps(x, sort_keys=True, ensure_ascii=False).encode()).hexdigest() for x in references]}
@@ -78,7 +82,8 @@ class ChatClient:
                 timeout = httpx.Timeout(remaining, connect=min(10.0, remaining))
                 with self._client.stream("POST", config.llm_base_url.rstrip("/") + "/chat/completions",
                                          headers={"Authorization": "Bearer " + config.llm_api_key,
-                                                  "Accept-Encoding": "identity"}, json=payload, timeout=timeout) as response:
+                                                  "Accept-Encoding": "identity"}, json=payload, timeout=timeout,
+                                         extensions={"trace": trace}) as response:
                     event["http_status"] = response.status_code
                     response.raise_for_status()
                     # Observe raw bytes so compressed empty blocks cannot keep a read alive
@@ -106,6 +111,7 @@ class ChatClient:
                 return message
             except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
                 event["error_type"] = type(exc).__name__
+                event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
                 self._remaining()
                 if attempt == 2:
                     raise ApplicationError(ErrorCode.LLM_ERROR, "Cannot connect to the model service after three bounded attempts.") from None
@@ -115,6 +121,7 @@ class ChatClient:
                 raise ApplicationError(ErrorCode.LLM_ERROR, f"Model service returned HTTP {exc.response.status_code}.") from None
             except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
                 event["error_type"] = type(exc).__name__
+                event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
                 self._remaining()
                 raise ApplicationError(ErrorCode.LLM_ERROR, "Model request failed, timed out or returned an invalid response.") from None
             finally:

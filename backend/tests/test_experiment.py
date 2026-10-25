@@ -251,7 +251,8 @@ def test_retrieval_check_cannot_pass_with_failed_training_or_incomplete_checks()
 
 
 def test_code_provenance_records_hashes_and_boolean_without_git_status_paths(monkeypatch, tmp_path):
-    filenames = ("backend/agent/core.py", "backend/agent/llm.py", "scripts/experiment.py")
+    filenames = ("backend/agent/core.py", "backend/agent/llm.py", "backend/agent/transport.py",
+                 "backend/config.py", "scripts/experiment.py")
     for name in filenames:
         path = tmp_path / name
         path.parent.mkdir(parents=True, exist_ok=True)

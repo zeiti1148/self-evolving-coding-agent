@@ -42,6 +42,8 @@ Copy-Item .env.example .env.local
 
 根目录 `.env` 填写 `LLM_API_BASE_URL`（通常以 /v1 结尾）、`LLM_API_KEY`、`LLM_MODEL`。模型必须支持 Chat Completions function tool calls。配置缺失或服务失败会显示真实错误，不回退为模拟成功。密钥不能放入任何 `VITE_` 变量。
 
+模型连接默认 `LLM_TRUST_ENV=false`，直接连接服务，避免后台继承终端的全局代理。需要使用环境代理或自定义 CA 时显式设为 `true`，此时 HTTPX 会读取 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY` 和 `SSL_CERT_*`。两种模式都保留 HTTPS 证书验证。连接审计只记录阶段、异常类型和机器错误码，不记录密钥、异常原文或请求正文；连接重试仍最多三次，读取超时不自动重试。
+
 将 `frontend/.env.local` 设置为：
 
 ```dotenv
