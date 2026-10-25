@@ -44,10 +44,12 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             tasks.start(task_id)
             workspace = manager.create_workspace(settings.projects[request.source_project], task_id)
             agent = agent_factory(tools, experiences) if agent_factory else Agent(
-                llm_factory() if llm_factory else ChatClient(settings), tools.execute_tool, experiences)
+                llm_factory() if llm_factory else ChatClient(settings), tools.execute_tool, experiences,
+                use_experience=settings.use_experience, timeout_seconds=settings.task_timeout)
             result = agent.run(AgentRequest(task_id=task_id, workspace=workspace,
                                task_description=request.task_description, max_steps=request.max_steps),
                                on_step=lambda step: tasks.append(task_id, step))
+            tasks.put_audit(task_id, getattr(agent, "last_run_audit", {}))
             tasks.finish(task_id, result=result)
         except ApplicationError as exc:
             tasks.finish(task_id, error=exc.message)

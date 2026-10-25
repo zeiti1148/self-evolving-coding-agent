@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from threading import RLock
 from uuid import uuid4
+from copy import deepcopy
 
 from backend.shared import AgentResult, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse
 
@@ -17,6 +18,15 @@ class TaskStore:
         self.lock = RLock()
         self.statuses: dict[str, TaskStatusResponse] = {}
         self.steps: dict[str, list[TaskStep]] = {}
+        self.audits: dict[str, dict] = {}
+
+    def put_audit(self, task_id: str, audit: dict) -> None:
+        with self.lock:
+            self.audits[task_id] = deepcopy(audit)
+
+    def get_audit(self, task_id: str) -> dict:
+        with self.lock:
+            return deepcopy(self.audits.get(task_id, {}))
 
     def create(self) -> TaskCreateResponse:
         response = TaskCreateResponse(task_id=str(uuid4()))

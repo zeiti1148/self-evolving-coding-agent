@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
+import math
 from collections.abc import Callable
 from uuid import uuid4
 
@@ -23,10 +25,13 @@ Do not expose hidden reasoning; provide only concise actions, observations and c
 
 
 class Agent:
-    def __init__(self, llm: LLM, execute_tool: Callable, experience_store):
+    def __init__(self, llm: LLM, execute_tool: Callable, experience_store, *, use_experience: bool = True, timeout_seconds: float = 600):
         self.llm = llm
         self.execute_tool = execute_tool
         self.experiences = experience_store
+        self.use_experience = use_experience
+        self.timeout_seconds = timeout_seconds
+        self.last_run_audit: dict = {}
 
     def run(self, request: AgentRequest, *, on_step: Callable[[TaskStep], None] | None = None) -> AgentResult:
         calls: list[ToolCall] = []
@@ -34,10 +39,21 @@ class Agent:
         changed: list[str] = []
         retrieved_ids: list[str] = []
         retrieval_error = None
+        started = time.monotonic()
+        deadline = started + self.timeout_seconds
+        decisions = 0
+        if hasattr(self.llm, "set_deadline"):
+            self.llm.set_deadline(deadline)
+
+        def remaining() -> float:
+            value = deadline - time.monotonic()
+            if value <= 0:
+                raise ApplicationError(ErrorCode.AGENT_STOPPED, "Task time budget exhausted.")
+            return value
         try:
             match = re.search(r"\b[A-Za-z]+(?:Exception|Error)\b", request.task_description)
             error_type = match.group() if match else ("NullPointerException" if "空指针" in request.task_description else None)
-            references = self.experiences.search_experiences("", tags=["java"], error_type=error_type, limit=5)
+            references = self.experiences.search_experiences("", tags=["java"], error_type=error_type, limit=5) if self.use_experience else []
             retrieved_ids = [entry.id for entry in references]
             reference_data = [entry.model_dump(mode="json") for entry in references]
         except Exception:
@@ -50,6 +66,13 @@ class Agent:
 
         def execute(call: ToolCall, *, final: bool = False) -> ToolResult:
             nonlocal changed
+            budget = remaining()
+            if call.name in {"run_tests", "run_command"}:
+                arguments = dict(call.arguments)
+                timeout = arguments.get("timeout_seconds", 180 if call.name == "run_tests" else 60)
+                if type(timeout) is int and timeout > 0:
+                    arguments["timeout_seconds"] = min(timeout, max(1, math.floor(budget)))
+                    call = call.model_copy(update={"arguments": arguments})
             try:
                 result = self.execute_tool(request.workspace, call)
                 if result.call_id != call.id or result.tool_name != call.name:
@@ -81,6 +104,8 @@ class Agent:
         repair_succeeded = False
         try:
             for _ in range(request.max_steps):
+                remaining()
+                decisions += 1
                 message = validate_message(self.llm.complete(messages, tools=TOOLS))
                 messages.append(message)
                 tool_calls = message.get("tool_calls", [])
@@ -104,7 +129,8 @@ class Agent:
             else:
                 error_message = "Decision budget exhausted."
         except ApplicationError as exc:
-            status, summary, error_message = "failed", "Task execution failed.", exc.message
+            status = "stopped" if exc.code == ErrorCode.AGENT_STOPPED else "failed"
+            summary, error_message = "Task execution stopped." if status == "stopped" else "Task execution failed.", exc.message
             # A failed callback or model call is not a completed final verification.
             tests_passed = None
             repair_succeeded = False
@@ -117,6 +143,7 @@ class Agent:
         experience_error = None
         if status == "succeeded":
             try:
+                remaining()
                 # A separate bounded extraction request after verification; no tools or new code changes.
                 extraction = self.llm.complete([
                     {"role": "system", "content": "Extract a reusable repair experience. Return only a JSON object with task_summary, error_type, root_cause, solution, verification, tags. Tags must include java. Use only supplied evidence. Do not include secrets or hidden reasoning."},
@@ -137,7 +164,15 @@ class Agent:
                 experience_saved = False
                 experience_error = "Experience extraction, validation or storage failed."
 
-        return AgentResult(task_id=request.task_id, status=status, summary=summary, steps=calls,
+        result = AgentResult(task_id=request.task_id, status=status, summary=summary, steps=calls,
                            tool_results=results, repair_succeeded=repair_succeeded, tests_passed=tests_passed,
                            changed_files=changed, experience_saved=experience_saved, experience_id=experience_id,
                            experience_save_error=experience_error, error_message=error_message)
+        events = list(getattr(self.llm, "audit", []))
+        self.last_run_audit = {"task_id": request.task_id, "experience_enabled": self.use_experience,
+                              "decision_rounds": decisions, "tool_calls": len(calls),
+                              "elapsed_ms": round((time.monotonic() - started) * 1000),
+                              "retrieved_experience_ids": retrieved_ids, "model_requests": events}
+        if hasattr(self.llm, "close"):
+            self.llm.close()
+        return result

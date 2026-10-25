@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import json
+import time
 from dataclasses import replace
 from uuid import uuid4
 
@@ -167,3 +168,98 @@ def test_http_protocol_and_safe_error_messages():
 def test_missing_model_configuration_fails_safely():
     with pytest.raises(ApplicationError, match="Configure"):
         ChatClient(Settings()).complete([])
+
+
+def test_wire_audit_records_references_model_and_usage_without_secrets():
+    settings = replace(Settings(), llm_base_url="https://model.invalid/v1", llm_api_key="test-secret", llm_model="test")
+    ref = {"id": str(uuid4()), "solution": "private reference body"}
+    def handler(request):
+        assert ref["id"] in request.content.decode()
+        return httpx.Response(200, json={"id": "response1", "model": "served-model", "usage": {"prompt_tokens": 12,"completion_tokens": 5,"total_tokens": 17},
+            "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": "Done"}}]})
+    client = ChatClient(settings, transport=httpx.MockTransport(handler))
+    client.complete([{"role": "system", "content": "system"}, {"role":"user","content":json.dumps({"reference_experiences":[ref]})}], tools=[{}])
+    assert client.audit[0]["request_experience_ids"] == [ref["id"]]
+    assert client.audit[0]["returned_model"] == "served-model"
+    assert client.audit[0]["usage"]["total_tokens"] == 17
+    serialized = json.dumps(client.audit)
+    assert "test-secret" not in serialized and "private reference body" not in serialized
+    client.close()
+
+
+def test_connect_failure_retries_are_bounded_and_read_timeout_does_not_retry():
+    settings = replace(Settings(), llm_base_url="https://model.invalid/v1", llm_api_key="test-secret", llm_model="test")
+    for error_type, expected in [(httpx.ConnectError, 3),(httpx.ReadTimeout, 1)]:
+        def handler(request):
+            raise error_type("failure", request=request)
+        client = ChatClient(settings, transport=httpx.MockTransport(handler))
+        with pytest.raises(ApplicationError):
+            client.complete([])
+        assert len(client.audit) == expected
+        client.close()
+
+
+def test_disabled_experience_is_not_retrieved_or_injected(setup, monkeypatch):
+    request, store, execute = setup
+    monkeypatch.setattr(store, "search_experiences", lambda *a, **k: pytest.fail("retrieval must be disabled"))
+    llm=SequenceLLM([{"role":"assistant","content":"Done"},extraction()])
+    agent=Agent(llm,execute,store,use_experience=False)
+    result=agent.run(request)
+    assert result.status == "succeeded" and json.loads(llm.requests[0][1]["content"])["reference_experiences"] == []
+    assert agent.last_run_audit["experience_enabled"] is False
+
+
+def test_deadline_prevents_later_tools_and_experience_writes(setup):
+    request,store,execute=setup
+    class SlowLLM:
+        def complete(self,*a,**k):
+            time.sleep(.02)
+            return tool_message()
+    result=Agent(SlowLLM(),execute,store,timeout_seconds=.005).run(request)
+    assert result.status == "stopped" and result.tests_passed is None and result.steps == []
+    assert result.experience_saved is None
+
+
+def test_compressed_response_is_rejected_before_body_is_consumed():
+    class NeverRead(httpx.SyncByteStream):
+        def __iter__(self):
+            pytest.fail("compressed body must be rejected before decompression")
+            yield b""
+    settings = replace(Settings(), llm_base_url="https://model.invalid/v1", llm_api_key="test-secret", llm_model="test")
+    def handler(request):
+        assert request.headers["accept-encoding"] == "identity"
+        return httpx.Response(200, headers={"Content-Encoding": "gzip"}, stream=NeverRead())
+    client = ChatClient(settings, transport=httpx.MockTransport(handler))
+    with pytest.raises(ApplicationError, match="invalid response"):
+        client.complete([])
+    client.close()
+
+
+def test_raw_response_chunks_observe_task_deadline():
+    class SlowStream(httpx.SyncByteStream):
+        def __iter__(self):
+            for _ in range(100):
+                time.sleep(.005)
+                yield b" "
+    settings = replace(Settings(), llm_base_url="https://model.invalid/v1", llm_api_key="test-secret", llm_model="test")
+    client = ChatClient(settings, transport=httpx.MockTransport(lambda _: httpx.Response(200, stream=SlowStream())))
+    client.set_deadline(time.monotonic() + .02)
+    with pytest.raises(ApplicationError) as error:
+        client.complete([])
+    assert error.value.code == ErrorCode.AGENT_STOPPED
+    client.close()
+
+
+@pytest.mark.parametrize("error_type", [httpx.ReadTimeout, httpx.ConnectTimeout])
+def test_network_timeout_after_task_budget_is_stopped(error_type):
+    settings = replace(Settings(), llm_base_url="https://model.invalid/v1", llm_api_key="test-secret", llm_model="test")
+    def handler(request):
+        time.sleep(.02)
+        raise error_type("timed out", request=request)
+    client = ChatClient(settings, transport=httpx.MockTransport(handler))
+    client.set_deadline(time.monotonic() + .005)
+    with pytest.raises(ApplicationError) as error:
+        client.complete([])
+    assert error.value.code == ErrorCode.AGENT_STOPPED
+    assert len(client.audit) == 1
+    client.close()
