@@ -434,3 +434,16 @@ backend/api, backend/agent, backend/tools, backend/experience
 - 成员三实现经验接口和轮询前端，可用固定 API 数据开发页面。
 - API/Agent 联调必须验证运行中任务能够读到已完成步骤。
 - 字段重命名、错误语义、状态迁移、同步/异步模型或工作目录归属变化都属于公共接口变更，合并前必须由团队确认并同步更新文档和公共模型测试。
+
+## 11. MVP 实现配置与验收记录
+
+本轮保持既有函数签名、模型字段和四个 HTTP 端点不变。以下为工具实现的具体运行约束：
+
+- 登记项目：`java-null-greeting` 和 `java-null-profile`。任务目录通过 UUID 与根目录外侧的 `.records` 所有权记录管理；状态仍不跨 API 重启恢复。
+- 文件工具采用相对 POSIX 路径，拒绝全部符号链接和 Windows reparse points，包括指向工作区内部的链接。基准测试、pom.xml、Maven 配置只读。
+- 命令参数数组白名单：`java -version`、`javac -version`、`mvn -version`、`mvn compile`、`mvn test`；后两项可带固定 `-B`。不接收自由 `-D`、插件目标、重定向或 Shell 文本。
+- 普通命令默认 60 秒、最大 180 秒；测试默认 180 秒、最大 300 秒。进程输出最多 50000 字符，超出设置 `truncated`。
+- `run_tests` 固定运行 `clean test`，只分析新生成的 Surefire 报告；存在失败/错误为 `TEST_FAILED`，零测试、跳过测试、构建/报告故障为 `COMMAND_FAILED`，超时为 `COMMAND_TIMEOUT`。
+- 在已有 `ToolResult.metadata` 扩展字段中记录测试数量、退出码、执行时间、实际修改文件、`final_verification` 和 `retrieved_experience_ids`。这些是诊断信息，不增加必填公共字段。
+- 经验检索故障通过 metadata 记录并允许任务继续。只有成功最终验证后才发起一次无工具的经验提取请求；结构化校验或保存失败保持修复成功状态。
+- 工作副本、数据库和验收报告属于运行时数据，不提交到版本控制。
