@@ -32,6 +32,7 @@ class Settings:
         "java-parse-count": ROOT / "benchmarks/java-parse-count",
         "java-order-checkout": ROOT / "benchmarks/demo/order-checkout",
         "java-stock-transfer": ROOT / "benchmarks/demo/stock-transfer",
+        "java-points-gift": ROOT / "benchmarks/reuse/points-gift",
     })
 
     def __post_init__(self) -> None:
