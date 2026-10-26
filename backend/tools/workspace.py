@@ -6,6 +6,7 @@ All links/reparse points are rejected, including links whose targets are in boun
 from __future__ import annotations
 
 import hashlib
+import fnmatch
 import json
 import os
 import shutil
@@ -17,7 +18,20 @@ from uuid import UUID
 
 from backend.shared import ApplicationError, ErrorCode
 
-IGNORED = {".git", "target", "node_modules", ".venv", "__pycache__"}
+IGNORED = {".git", "target", "node_modules", ".venv", "__pycache__", ".pytest_cache"}
+SECRET_PATTERNS = {".env", ".env.*", "*.pem", "*.key", "id_rsa", "id_ed25519", ".ssh"}
+
+
+def sensitive_path(path: str | Path) -> bool:
+    return any(fnmatch.fnmatchcase(part.casefold(), pattern) for part in Path(path).parts for pattern in SECRET_PATTERNS)
+
+
+def ignored_path(path: str | Path) -> bool:
+    return any(part.casefold() in IGNORED for part in Path(path).parts) or sensitive_path(path)
+
+
+def copy_ignored(directory: str, names: list[str]) -> set[str]:
+    return {name for name in names if ignored_path(name)}
 
 
 def reject_links(path: Path) -> None:
@@ -40,13 +54,14 @@ def inventory(root: Path) -> dict[str, str]:
             reject_links(parent / name)
         for name in files:
             path = parent / name
-            if any(part in IGNORED for part in path.relative_to(root).parts):
+            if ignored_path(path.relative_to(root)):
                 continue
             if path.stat().st_size > 10_000_000:
                 raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Project file exceeds the 10 MB limit.")
             result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
         if len(result) > 10_000:
             raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Project has too many files.")
+        dirs[:] = [name for name in dirs if not ignored_path(name)]
     return result
 
 
@@ -54,10 +69,18 @@ def protected(files: dict[str, str]) -> dict[str, str]:
     # Windows aliases are case-insensitive, and Maven still reads .MVN/maven.config.
     # Apply the same conservative policy on every host so a project cannot become
     # writable merely by moving between platforms.
-    return {name: digest for name, digest in files.items() if
-            Path(name).name.casefold() == "pom.xml" or "src/test/" in name.casefold() or
-            ".mvn" in [part.casefold() for part in Path(name).parts] or
-            Path(name).name.casefold().startswith("mvnw")}
+    def is_protected(name: str) -> bool:
+        parts = [part.casefold() for part in Path(name).parts]
+        base = parts[-1]
+        return (sensitive_path(name) or base == "pom.xml" or "src/test/" in name.casefold() or
+                ".mvn" in parts or base.startswith("mvnw") or
+                any(part in {"test", "tests"} for part in parts) or
+                base in {"pyproject.toml", "pytest.ini", "setup.cfg", "setup.py", "tox.ini",
+                         "conftest.py", "sitecustomize.py", "usercustomize.py", "uv.lock",
+                         "poetry.lock", "pipfile", "pipfile.lock", ".python-version", ".agent-project.json"} or
+                base.startswith("requirements") or
+                base.endswith(".py") and (base.startswith("test_") or base.endswith("_test.py")))
+    return {name: digest for name, digest in files.items() if is_protected(name)}
 
 
 @dataclass
@@ -99,7 +122,7 @@ class WorkspaceManager:
                     raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "Task workspace already exists.")
                 self.root.mkdir(parents=True, exist_ok=True)
                 # Do not follow links during copy; inspect the copied tree again.
-                shutil.copytree(source, target, symlinks=True, ignore=shutil.ignore_patterns(*IGNORED))
+                shutil.copytree(source, target, symlinks=True, ignore=copy_ignored)
                 if inventory(target) != baseline:
                     raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "Source changed while it was copied.")
                 record_path = self._record_path(task_id)

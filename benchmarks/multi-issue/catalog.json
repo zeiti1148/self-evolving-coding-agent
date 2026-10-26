@@ -1,0 +1,20 @@
+[
+  {
+    "id": "java-fulfillment-multi",
+    "label": "Java 配送请求多异常修复",
+    "language": "java",
+    "repository_id": "java-fulfillment",
+    "source": "benchmarks/multi-issue/java-fulfillment",
+    "task_example": "修复配送请求的三个独立异常：RecipientNames 对 null 姓名抛出 NullPointerException，应返回 guest；QuantityParser 对空白、非法或 null 数量抛出 NumberFormatException，应返回 0，负数也归零；ItemSelector 对越界下标抛出 IndexOutOfBoundsException，应返回 none。保留正常输入行为，检查 FulfillmentService 的组合调用，并通过全部 12 项测试。",
+    "expected_tests": 12
+  },
+  {
+    "id": "python-fulfillment-multi",
+    "label": "Python 配送请求多异常修复",
+    "language": "python",
+    "repository_id": "python-fulfillment",
+    "source": "benchmarks/multi-issue/python-fulfillment",
+    "task_example": "修复配送请求的三个独立异常：recipient_name 对 None 姓名抛出 AttributeError，应返回 guest；parse_quantity 对空白、非法或 None 数量抛出 ValueError/TypeError，应返回 0，负数也归零；select_item 对越界下标抛出 IndexError，应返回 none，负数下标也不可选中末项。保留正常输入行为，检查 prepare 的组合调用，并通过全部 12 项 pytest 测试。",
+    "expected_tests": 12
+  }
+]

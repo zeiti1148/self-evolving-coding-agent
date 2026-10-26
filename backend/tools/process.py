@@ -85,6 +85,9 @@ def run_process(argv: list[str], cwd: Path, timeout: int, limit: int = 50_000) -
     # Do not pass model credentials or user-provided JVM/Maven command options to projects.
     allowed_env = {"PATH", "SYSTEMROOT", "WINDIR", "TEMP", "TMP", "HOME", "USERPROFILE", "JAVA_HOME", "LANG", "LC_ALL"}
     env = {k: v for k, v in os.environ.items() if k.upper() in allowed_env}
+    # Run only the installed pytest core and the registered project's test
+    # configuration, regardless of optional plugins in the host environment.
+    env.update(PYTEST_DISABLE_PLUGIN_AUTOLOAD="1", PYTHONDONTWRITEBYTECODE="1", PYTHONUTF8="1")
     try:
         process = subprocess.Popen(argv, cwd=cwd, env=env, shell=False, stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
