@@ -136,6 +136,47 @@ class ToolResult(SharedModel):
         return self
 
 
+class RepairIssue(SharedModel):
+    """One repair rule; array order in an experience expresses repair order."""
+
+    error_type: str = Field(min_length=1, max_length=200)
+    root_cause: str = Field(min_length=1, max_length=5_000)
+    solution: str = Field(min_length=1, max_length=10_000)
+    files: list[Annotated[str, StringConstraints(strip_whitespace=False, min_length=1, max_length=1_000)]] = Field(default_factory=list, max_length=50)
+
+    @field_validator("files")
+    @classmethod
+    def validate_files(cls, values: list[str]) -> list[str]:
+        normalized = []
+        reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
+        for value in values:
+            _validate_relative_file(value)
+            path = PurePosixPath(value)
+            if any(ord(character) < 32 or character in '<>:"|?*' for character in value):
+                raise ValueError("files must be workspace-relative paths")
+            if value.endswith("/") or value.split("/")[-1] == ".":
+                raise ValueError("files must identify files, not directories")
+            if any(part.rstrip(" .") != part or part.split(".")[0].upper() in reserved for part in path.parts):
+                raise ValueError("files contain invalid path components")
+            normalized.append(path.as_posix())
+        return list(dict.fromkeys(normalized))
+
+
+class VerificationEvidence(SharedModel):
+    """Program-generated evidence for a completed independent final test run."""
+
+    source_task_id: str
+    tool_call_id: str
+    runner: Literal["maven", "pytest"]
+    tests: int = Field(strict=True, gt=0, le=10_000_000)
+    failures: int = Field(default=0, strict=True, ge=0, le=0)
+    errors: int = Field(default=0, strict=True, ge=0, le=0)
+    skipped: int = Field(default=0, strict=True, ge=0, le=0)
+
+    _validate_source_task_id = field_validator("source_task_id")(_canonical_uuid)
+    _validate_tool_call_id = field_validator("tool_call_id")(_canonical_uuid)
+
+
 class ExperienceCreate(SharedModel):
     task_summary: str = Field(min_length=1, max_length=1_000)
     error_type: str | None = Field(default=None, min_length=1, max_length=200)
@@ -144,11 +185,40 @@ class ExperienceCreate(SharedModel):
     verification: str = Field(min_length=1, max_length=5_000)
     tags: list[str] = Field(default_factory=list, max_length=20)
     source_task_id: str | None = None
+    schema_version: Literal[1, 2] = 2
+    language: Literal["java", "python"] = "java"
+    scope: Literal["global", "project"] = "global"
+    repository_id: str | None = Field(default=None, min_length=1, max_length=200)
+    source_revision: str | None = Field(default=None, min_length=1, max_length=200)
+    applicability: list[Annotated[str, StringConstraints(min_length=1, max_length=1_000)]] = Field(default_factory=list, max_length=20)
+    issues: list[RepairIssue] = Field(default_factory=list, max_length=50)
+    evidence: list[VerificationEvidence] = Field(default_factory=list, max_length=100)
+    merged_from: list[str] = Field(default_factory=list, max_length=10)
 
     _validate_source_task_id = field_validator("source_task_id")(
         lambda value: _canonical_uuid(value) if value is not None else value
     )
     _normalize_experience_tags = field_validator("tags")(_normalize_tags)
+    _normalize_applicability = field_validator("applicability")(_normalize_tags)
+
+    @field_validator("merged_from")
+    @classmethod
+    def validate_merged_from(cls, values: list[str]) -> list[str]:
+        canonical = [_canonical_uuid(value) for value in values]
+        if len(set(canonical)) != len(canonical):
+            raise ValueError("merged_from must contain distinct source IDs")
+        return canonical
+
+    @model_validator(mode="after")
+    def validate_experience_scope(self) -> ExperienceCreate:
+        if self.scope == "project" and self.repository_id is None:
+            raise ValueError("project experience requires repository_id")
+        if self.scope == "global" and self.repository_id is not None:
+            raise ValueError("global experience must not carry repository_id")
+        runner = "maven" if self.language == "java" else "pytest"
+        if any(item.runner != runner for item in self.evidence):
+            raise ValueError("verification runner must match experience language")
+        return self
 
 
 class Experience(ExperienceCreate):

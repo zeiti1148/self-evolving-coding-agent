@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS experiences (
     verification TEXT NOT NULL,
     tags TEXT NOT NULL,
     source_task_id TEXT,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    details TEXT NOT NULL DEFAULT '{}'
 )
 """
 
@@ -67,12 +68,30 @@ def connect(path: Path) -> Iterator[sqlite3.Connection]:
         path.parent.mkdir(parents=True, exist_ok=True)
         with closing(sqlite3.connect(path, timeout=5.0)) as connection:
             connection.row_factory = sqlite3.Row
+            connection.execute("PRAGMA foreign_keys=ON")
             with connection:
+                # Serialize schema inspection and migration across first-use workers.
+                # Old nine-column databases are migrated without rewriting records.
+                connection.execute("BEGIN IMMEDIATE")
                 connection.execute(SCHEMA)
+                columns = {row["name"] for row in connection.execute("PRAGMA table_info(experiences)")}
+                if "details" not in columns:
+                    connection.execute("ALTER TABLE experiences ADD COLUMN details TEXT NOT NULL DEFAULT '{}'")
                 connection.execute(
                     "CREATE INDEX IF NOT EXISTS experiences_created_at_idx "
                     "ON experiences(created_at DESC, id DESC)"
                 )
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_merges (
+                    merge_key TEXT PRIMARY KEY NOT NULL,
+                    merged_id TEXT NOT NULL UNIQUE REFERENCES experiences(id)
+                )""")
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_merge_sources (
+                    source_id TEXT PRIMARY KEY NOT NULL REFERENCES experiences(id),
+                    merged_id TEXT NOT NULL REFERENCES experiences(id),
+                    CHECK (source_id != merged_id)
+                )""")
+                connection.execute("CREATE INDEX IF NOT EXISTS experience_merge_target_idx ON experience_merge_sources(merged_id)")
+            with connection:
                 yield connection
     except (sqlite3.Error, OSError):
         raise storage_error() from None
