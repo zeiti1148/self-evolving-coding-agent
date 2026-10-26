@@ -1,4 +1,4 @@
-import type { AgentResult, Experience, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse, ToolCall, ToolResult } from './contracts'
+import type { AgentResult, Experience, ExperienceKnowledge, MergePreview, RegisteredProject, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse, ToolCall, ToolResult } from './contracts'
 
 // Guard the fields consumed by the UI. Public Pydantic models remain authoritative.
 type Data = Record<string, unknown>
@@ -92,13 +92,59 @@ export function readSteps(value: unknown, expectedId: string): TaskStepsResponse
   check(steps.every((step, index) => index === 0 || step.sequence > steps[index - 1]!.sequence))
   return { ...data, steps } as unknown as TaskStepsResponse
 }
-export function readExperiences(value: unknown): Experience[] {
-  return list(value, item => {
-    const data: Data = { error_type: null, tags: [], source_task_id: null, ...object(item) }
-    check(uuid(data.id) && date(data.created_at))
-    check(['task_summary', 'root_cause', 'solution', 'verification'].every(key => text(data[key])))
-    check(nullable(data.error_type, text) && nullable(data.source_task_id, uuid))
-    list(data.tags, tag => { check(text(tag)); return tag })
-    return data as unknown as Experience
+function readKnowledge(value: unknown): ExperienceKnowledge {
+  const data: Data = { error_type: null, tags: [], source_task_id: null, schema_version: 1,
+    language: 'java', scope: 'global', repository_id: null, source_revision: null,
+    applicability: [], issues: [], evidence: [], merged_from: [], ...object(value) }
+  check(['task_summary', 'root_cause', 'solution', 'verification'].every(key => text(data[key])))
+  check(nullable(data.error_type, text) && nullable(data.source_task_id, uuid))
+  check(data.schema_version === 1 || data.schema_version === 2)
+  check(data.language === 'java' || data.language === 'python')
+  check(data.scope === 'global' || data.scope === 'project')
+  check(nullable(data.repository_id, text) && nullable(data.source_revision, text))
+  check(data.scope === 'project' ? text(data.repository_id) : data.repository_id === null)
+  for (const field of ['tags', 'applicability']) list(data[field], item => { check(text(item)); return item })
+  list(data.merged_from, id => { check(uuid(id)); return id })
+  list(data.issues, value => {
+    const issue = object(value)
+    check(['error_type', 'root_cause', 'solution'].every(key => text(issue[key])))
+    list(issue.files, file => { check(text(file)); return file })
+    return issue
   })
+  list(data.evidence, value => {
+    const evidence = object(value)
+    check(uuid(evidence.source_task_id) && uuid(evidence.tool_call_id))
+    check(evidence.runner === 'maven' || evidence.runner === 'pytest')
+    check(Number.isInteger(evidence.tests) && Number(evidence.tests) > 0)
+    check(evidence.failures === 0 && evidence.errors === 0 && evidence.skipped === 0)
+    return evidence
+  })
+  return data as unknown as ExperienceKnowledge
+}
+export function readExperience(value: unknown): Experience {
+  const data = object(value)
+  check(uuid(data.id) && date(data.created_at))
+  return { ...data, ...readKnowledge(data) } as unknown as Experience
+}
+export function readExperiences(value: unknown): Experience[] { return list(value, readExperience) }
+export function readProjects(value: unknown): RegisteredProject[] {
+  const projects = list(value, value => {
+    const data = object(value)
+    check(text(data.id) && text(data.label) && text(data.repository_id))
+    check(data.language === 'java' || data.language === 'python')
+    check(nullable(data.source_revision, text) && typeof data.task_example === 'string')
+    return data as unknown as RegisteredProject
+  })
+  check(new Set(projects.map(project => project.id)).size === projects.length)
+  return projects
+}
+export function readMergePreview(value: unknown): MergePreview {
+  const data = object(value)
+  check(boolean(data.can_merge))
+  const conflicts = list(data.conflicts, item => { check(text(item)); return item })
+  const source_ids = list(data.source_ids, item => { check(uuid(item)); return item as string })
+  check(source_ids.length >= 2 && source_ids.length <= 10 && new Set(source_ids).size === source_ids.length)
+  const preview = data.preview === null ? null : readKnowledge(data.preview)
+  check(data.can_merge ? preview !== null && conflicts.length === 0 : conflicts.length > 0)
+  return { can_merge: data.can_merge, conflicts, source_ids, preview }
 }

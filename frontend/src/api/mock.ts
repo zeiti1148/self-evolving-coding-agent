@@ -85,11 +85,14 @@ export function createMockApi(options: Options = {}): MockApi {
       const current = snapshot(task)
       return structuredClone({ task_id: id, status: current.status, steps: task.steps.slice(0, current.steps_completed) })
     },
-    async listExperiences(limit = 20, offset = 0, signal) {
+    async listExperiences(limit = 20, offset = 0, signal, filters = {}) {
       checkAbort(signal)
       if (!Number.isInteger(limit) || limit < 1 || !Number.isInteger(offset) || offset < 0) throw new ApiError(422, '分页参数不合法。')
       state.tasks.forEach(snapshot)
-      return structuredClone([...state.experiences].sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id)).slice(offset, offset + limit))
+      return structuredClone(state.experiences.filter(item => (!filters.language || (item.language ?? 'java') === filters.language)
+        && (!filters.scope || (item.scope ?? 'global') === filters.scope)
+        && (!filters.repository_id || item.repository_id === filters.repository_id))
+        .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id)).slice(offset, offset + limit))
     },
   }
 }

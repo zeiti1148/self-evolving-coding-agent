@@ -19,7 +19,7 @@ watch(() => route.params.taskId, id => {
   <a class="skip-link" href="#main-content" @click.prevent="mainContent?.focus()">跳到主要内容</a>
   <div class="app-shell">
     <aside class="sidebar">
-      <RouterLink class="brand" to="/" aria-label="Coding Agent 首页"><span class="brand-mark"><AppIcon name="terminal" :size="23" /></span><span><strong>Coding Agent</strong><small>Java 修复工作台</small></span></RouterLink>
+      <RouterLink class="brand" to="/" aria-label="Coding Agent 首页"><span class="brand-mark"><AppIcon name="terminal" :size="23" /></span><span><strong>Coding Agent</strong><small>代码修复工作台</small></span></RouterLink>
       <div class="workspace-label">工作空间</div>
       <nav aria-label="主要导航">
         <RouterLink to="/" class="nav-link" exact-active-class="active"><AppIcon name="plus" />新建任务</RouterLink>

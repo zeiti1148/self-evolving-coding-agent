@@ -1,5 +1,5 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
-import { readCreatedTask, readExperiences, readSteps, readTask } from './validation'
+import { readCreatedTask, readExperience, readExperiences, readMergePreview, readProjects, readSteps, readTask } from './validation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -7,6 +7,7 @@ export class ApiError extends Error {
 
 function errorMessage(status: number, payload: unknown, path: string): string {
   if (status >= 500) return '服务暂时不可用，请稍后重试。'
+  if (status === 404 && path.startsWith('/api/projects')) return '项目登记接口不可用，请启动支持项目目录的后端。'
   if (status === 404) return path.startsWith('/api/experiences')
     ? '经验接口不存在，请确认后端地址和接口是否已实现。'
     : '找不到这个任务。服务重启后，任务记录可能已失效。'
@@ -23,7 +24,7 @@ function errorMessage(status: number, payload: unknown, path: string): string {
 
 export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThis.fetch): AgentApi {
   const base = baseUrl.replace(/\/$/, '')
-  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: TaskCreateRequest, signal?: AbortSignal): Promise<T> {
+  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: TaskCreateRequest | { experience_ids: string[] }, signal?: AbortSignal): Promise<T> {
     const controller = new AbortController()
     let timedOut = false
     const abort = () => controller.abort()
@@ -55,6 +56,13 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     createTask: (body, signal) => request('/api/tasks', readCreatedTask, 'POST', body, signal),
     getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
-    listExperiences: (limit = 20, offset = 0, signal) => request(`/api/experiences?limit=${limit}&offset=${offset}`, readExperiences, 'GET', undefined, signal),
+    listExperiences: (limit = 20, offset = 0, signal, filters = {}) => {
+      const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
+      for (const key of ['language', 'repository_id', 'scope'] as const) if (filters[key]) params.set(key, filters[key]!)
+      return request(`/api/experiences?${params}`, readExperiences, 'GET', undefined, signal)
+    },
+    listProjects: signal => request('/api/projects', readProjects, 'GET', undefined, signal),
+    previewMerge: (ids, signal) => request('/api/experiences/merge-preview', readMergePreview, 'POST', { experience_ids: ids }, signal),
+    mergeExperiences: (ids, signal) => request('/api/experiences/merge', readExperience, 'POST', { experience_ids: ids }, signal),
   }
 }

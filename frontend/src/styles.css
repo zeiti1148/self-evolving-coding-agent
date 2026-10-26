@@ -180,7 +180,7 @@ details[open] > summary .step-outcome svg, details[open] > summary .expand-label
 .activity-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
 .result-panel { margin-top: 24px; }
 .result-body { padding: 24px 26px; }
-.result-summary { font-size: 15px; line-height: 1.9; }
+.result-summary { font-size: 15px; line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
 .fact-grid { display: grid; grid-template-columns: repeat(3, 1fr); margin: 25px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-soft); }
 .fact-grid > div { padding: 19px 20px; display: grid; gap: 12px; }
 .fact-grid > div + div { border-left: 1px solid var(--line); }
@@ -282,3 +282,45 @@ details[open] > summary .step-outcome svg, details[open] > summary .expand-label
 }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Repository metadata and complex experience details share the existing workbench surfaces. */
+.workspace, main, .panel, .result-body, .saved-experience > div, .saved-experience > div > span { min-width: 0; }
+.project-metadata { display: flex; flex-wrap: wrap; gap: 5px 12px; color: var(--muted); font-size: 12px; margin-top: 10px; overflow-wrap: anywhere; }
+.project-metadata span { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.project-preview .project-example { padding-top: 18px; color: var(--code-ink); display: block; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; }
+.project-preview > div { flex-wrap: wrap; }
+.experience-filters { display: flex; flex-wrap: wrap; align-items: end; gap: 16px; padding: 20px 26px; border-bottom: 1px solid var(--line); }
+.experience-filters > div { min-width: 130px; flex: 1; }
+.experience-filters .repository-filter { flex: 2; min-width: 180px; }
+.experience-filters label { font-size: 12px; }
+.experience-filters .filter-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; flex: 0 1 auto; }
+.merge-toolbar { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; padding: 18px 26px; background: var(--surface-soft); font-size: 13px; }
+.merge-toolbar > div { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.experience-entry + .experience-entry { border-top: 1px solid var(--line); }
+.merge-selection { display: flex; gap: 9px; align-items: center; margin: 0; padding: 16px 26px 0; font-size: 12px; color: var(--muted); }
+.merge-selection input { width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
+.merge-preview { padding: 24px 26px; border-block: 1px solid var(--line); background: var(--surface-soft); }
+.merge-preview > p { color: var(--muted); margin: 10px 0 18px; }
+.merge-preview .experience-detail { padding: 0 0 24px; }
+.merge-preview .experience-detail h3 { margin: 0 0 16px; overflow-wrap: anywhere; }
+.merge-conflicts { display: block; margin: 0 0 18px; }
+.merge-conflicts ul { margin-bottom: 0; padding-left: 22px; }
+.merge-message { margin: 16px 26px; }
+.success-notice { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); padding: 14px; border-radius: 6px; overflow-wrap: anywhere; }
+.knowledge-list { padding-left: 20px; margin: 0; }
+.issue-list { padding-left: 22px; margin: 0; }
+.issue-list > li + li { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.issue-list h4 { margin: 0 0 7px; font-size: 14px; }
+.issue-list p { margin: 3px 0; }
+.issue-files { margin-top: 7px; padding-left: 18px; color: var(--muted); font-size: 12px; }
+.evidence-list { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 14px; }
+.evidence-list li { display: grid; gap: 5px; padding: 12px; border: 1px solid var(--line); border-radius: 5px; font-size: 12px; }
+.evidence-list li strong { color: var(--success); font-size: 13px; }
+.evidence-list code, .issue-files code, .project-metadata code, .knowledge-list code { overflow-wrap: anywhere; }
+@media (max-width: 680px) {
+  .experience-filters, .merge-toolbar, .merge-preview { padding: 18px; }
+  .experience-filters > div, .experience-filters .repository-filter { min-width: 0; flex: 1 1 100%; }
+  .merge-selection { padding: 16px 18px 0; }
+  .merge-message { margin: 16px 18px; }
+  .merge-preview .button { width: 100%; white-space: normal; }
+}

@@ -34,7 +34,7 @@ function time(value: string | null) { return value ? new Date(value).toLocaleStr
 </script>
 <template>
   <div class="page-heading"><div><h1>任务执行</h1><p>跟踪已完成的工具调用，检查修改后的验证结果。</p></div><RouterLink to="/" class="button secondary"><AppIcon name="plus" :size="17" />新建任务</RouterLink></div>
-  <div class="task-overview panel"><div class="task-identity"><span class="section-icon"><AppIcon name="terminal" :size="24" /></span><div><h2>Java 代码修复任务</h2><div class="task-id"><code>{{ taskId }}</code><button type="button" class="text-button" @click="copyId">{{ copied ? '已复制' : '复制 ID' }}</button></div></div></div><StatusBadge v-if="task" :status="task.status" /><span v-else class="text-muted">{{ loading ? '正在读取…' : '暂不可用' }}</span></div>
+  <div class="task-overview panel"><div class="task-identity"><span class="section-icon"><AppIcon name="terminal" :size="24" /></span><div><h2>代码修复任务</h2><div class="task-id"><code>{{ taskId }}</code><button type="button" class="text-button" @click="copyId">{{ copied ? '已复制' : '复制 ID' }}</button></div></div></div><StatusBadge v-if="task" :status="task.status" /><span v-else class="text-muted">{{ loading ? '正在读取…' : '暂不可用' }}</span></div>
   <div v-if="error" class="error-notice error-with-action" role="alert"><span>{{ error }}</span><button class="button secondary small" type="button" @click="retry">重新读取</button></div>
   <div v-if="loading && !task" class="panel empty-state" role="status"><AppIcon name="clock" :size="28" /><p>正在读取任务状态…</p></div>
   <template v-if="task">
