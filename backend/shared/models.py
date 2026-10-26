@@ -164,6 +164,9 @@ class AgentRequest(SharedModel):
     task_description: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     workspace: Path
     max_steps: int = Field(default=20, ge=1, le=MAX_STEPS)
+    language: Literal["java", "python"] = "java"
+    repository_id: str | None = Field(default=None, min_length=1, max_length=200)
+    source_revision: str | None = Field(default=None, min_length=1, max_length=200)
 
     _validate_task_id = field_validator("task_id")(_canonical_uuid)
 
