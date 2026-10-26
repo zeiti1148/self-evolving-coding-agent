@@ -18,7 +18,7 @@ TOOL_DESCRIPTIONS = {
     "read_file": "Read a UTF-8 file using relative POSIX paths. Preserves whitespace.",
     "write_file": "Atomically replace a source file. Tests and build configuration are read-only.",
     "run_command": "Only java/javac -version, mvn -version, mvn compile, mvn test are permitted.",
-    "run_tests": "Run the original Maven tests. Read error codes and output before deciding what to fix.",
+    "run_tests": "Run original acceptance tests with the registered Java/Maven or Python/pytest runner. Read test_failures, error_types and output, and repair every failure. Tests and build configuration are read-only.",
 }
 TOOLS = [{"type": "function", "function": {"name": name, "description": TOOL_DESCRIPTIONS[name],
           "parameters": model.model_json_schema()}} for name, model in ARGUMENTS.items()]
