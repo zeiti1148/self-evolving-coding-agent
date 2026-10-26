@@ -1,12 +1,29 @@
 # Self-Evolving Coding Agent
 
-三人中级实训项目：使用兼容 OpenAI 的模型服务修复 Java/Maven 项目，在真实测试通过后保存结构化经验，供相似任务参考。
+三人中级实训项目：使用兼容 OpenAI 的模型服务修复 Java/Maven 和 Python/pytest 项目，通过独立测试后保存结构化经验，供同仓库或适用的通用任务参考。
 
-## 当前进度
+## 第三阶段：复杂经验与多语言
+
+本分支基于已合并 PR #6 的 `main@6527421`，实现五项下一阶段目标：多问题结构化经验、可追溯合并、单任务多异常修复、Python 测试执行器、按仓库管理经验。计划见 [第三阶段计划](docs/next-week-plan.md)，设计和使用见 [经验 V2 说明](docs/experience-v2.md)。
+
+真实模式前端会读取服务器登记项目，直接选择 **Java 配送请求多异常修复** 或 **Python 配送请求多异常修复**，点击“填入修复示例”提交。每个案例有 4 个业务模块、3 类组合缺陷、12 项验收测试。经验页可以按语言、仓库和范围筛选，查看问题明细、修复顺序和测试证据，选择记录预览合并后再确认。
+
+```powershell
+# 脚本模型驱动真实 Maven、pytest、SQLite，含部分修复失败和合并后复用
+.\.venv\Scripts\python.exe scripts/acceptance_v2.py
+# 使用本地 .env 配置的真实模型验收 Java 与 Python
+.\.venv\Scripts\python.exe scripts/acceptance_v2.py --live
+# 登记可信本地仓库；在 .env 设置 PROJECT_REGISTRY=runtime/projects.json 后重启后端
+.\.venv\Scripts\python.exe scripts/register_project.py --id my-python-app --path D:/projects/my-python-app --language python --repository team/my-python-app --label 我的Python项目
+```
+
+Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依赖；必要时通过 `PYTHON_EXECUTABLE` 指定项目解释器。默认使用后端当前解释器。工作副本不复制 `.env*`、Git 元数据和常见私钥文件。项目的测试、依赖和构建配置保持只读。
+
+## 已合并的第二阶段基线
 
 已实现同步 Agent 循环、受控工具、FastAPI 四个业务接口、SQLite 经验模块及 Vue 工作台。两个 Java 样例已通过脚本模型回归与真实模型 `deepseek-flash` 验收，均运行真实文件工具、Maven 和 SQLite。
 
-2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。当前基于 `main@5a09f3b`，交付位于 PR #6；经验模块和前端此前已通过 PR #2–#5 合并。完整证据与对照实验结论见文末报告。
+2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。该阶段交付已由 PR #6 合并到 `main@6527421`；经验模块和前端此前已通过 PR #2–#5 合并。历史 24 项对照结果保留原统计。
 
 经验检索归一化和模型连接路径已修复。连接故障复现为环境代理路径上的 TLS 握手提前关闭；默认模型调用改为显式直连，保留可选环境代理及证书验证。修复后完整 24 项对照：关闭组 12/12、开启组 12/12 成功，经验组 12/12 实际收到参考。双方成功配对的已报告 token 相对变化 +7.14%；不将网络稳定性改善误称为经验效果。后端 239 项、前端 58 项及构建/集成检查通过。当前验收与定位证据详见 [故障定位](docs/reports/connection-diagnosis-2026-10-25.md) 和 [实验报告](docs/reports/live-evaluation-2026-10-25.md)。
 

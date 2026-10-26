@@ -94,12 +94,18 @@ jobs:
         timeout-minutes: 15
         run: python scripts/acceptance.py --output "${{ runner.temp }}/coding-agent-ci/acceptance-report.json"
 
+      - name: Verify multi-issue Java and Python repairs with scoped experience merging
+        timeout-minutes: 10
+        run: python scripts/acceptance_v2.py --output-dir "${{ runner.temp }}/coding-agent-ci/acceptance-v2"
+
       - name: Upload failure report only
         if: ${{ failure() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: acceptance-failure-${{ matrix.os }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/coding-agent-ci/acceptance-report.json
+          path: |
+            ${{ runner.temp }}/coding-agent-ci/acceptance-report.json
+            ${{ runner.temp }}/coding-agent-ci/acceptance-v2/report.json
           if-no-files-found: ignore
           retention-days: 7
           include-hidden-files: false
