@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import NewTaskView from '../src/views/NewTaskView.vue'
 import ExperiencesView from '../src/views/ExperiencesView.vue'
 import { apiContextKey } from '../src/api/context'
-import { createHttpApi } from '../src/api/http'
+import { ApiError, createHttpApi } from '../src/api/http'
 import { readExperiences, readMergePreview } from '../src/api/validation'
 import type { AgentApi, Experience, ExperienceKnowledge, MergePreview, RegisteredProject } from '../src/api/contracts'
 
@@ -142,6 +142,38 @@ describe('complex experience display and merge', () => {
       expect(client.mergeExperiences).not.toHaveBeenCalled()
     } finally { wrapper.unmount() }
   })
+
+  it('requires a new preview after a concurrent merge conflict and preserves selection', async () => {
+    const client = api()
+    vi.mocked(client.mergeExperiences!).mockRejectedValueOnce(new ApiError(409, '来源已被其他合并使用'))
+    const { wrapper } = await setup(ExperiencesView, client)
+    try {
+      for (const input of wrapper.findAll('.merge-selection input')) await input.setValue(true)
+      await wrapper.get('[data-testid="preview-merge"]').trigger('click'); await flushPromises()
+      await wrapper.get('[data-testid="confirm-merge"]').trigger('click'); await flushPromises()
+      expect(wrapper.get('[role="alert"]').text()).toContain('来源已被其他合并使用')
+      expect(wrapper.find('[data-testid="confirm-merge"]').exists()).toBe(false)
+      expect(wrapper.text()).toContain('已选择 2 / 10 条')
+      expect(wrapper.text()).not.toContain('合并经验已生成')
+      await wrapper.get('[data-testid="preview-merge"]').trigger('click'); await flushPromises()
+      expect(client.previewMerge).toHaveBeenCalledTimes(2)
+      expect(client.mergeExperiences).toHaveBeenCalledTimes(1)
+    } finally { wrapper.unmount() }
+  })
+
+  it('shows an HTTP contract error instead of a preview for substituted source IDs', async () => {
+    const wrong = { ...mergePreview, source_ids: [idA, idC], preview: { ...knowledge, merged_from: [idA, idC] } }
+    const fetcher = vi.fn().mockImplementation((url: string) => Promise.resolve(new Response(JSON.stringify(
+      url.endsWith('merge-preview') ? wrong : entries,
+    ))))
+    const { wrapper } = await setup(ExperiencesView, createHttpApi('', fetcher))
+    try {
+      for (const input of wrapper.findAll('.merge-selection input')) await input.setValue(true)
+      await wrapper.get('[data-testid="preview-merge"]').trigger('click'); await flushPromises()
+      expect(wrapper.get('[role="alert"]').text()).toContain('接口约定不一致')
+      expect(wrapper.find('[data-testid="confirm-merge"]').exists()).toBe(false)
+    } finally { wrapper.unmount() }
+  })
 })
 
 describe('V2 wire contracts', () => {
@@ -154,7 +186,7 @@ describe('V2 wire contracts', () => {
   })
   it('encodes repository filters and posts source identities to both merge endpoints', async () => {
     const fetcher = vi.fn().mockImplementation((url: string) => Promise.resolve(new Response(JSON.stringify(
-      url === '/api/projects' ? projects : url.endsWith('merge-preview') ? mergePreview : url.endsWith('/merge') ? entries[0] : entries,
+      url === '/api/projects' ? projects : url.endsWith('merge-preview') ? mergePreview : url.endsWith('/merge') ? { ...knowledge, id: idC, created_at: entries[0]!.created_at, merged_from: [idA, idB] } : entries,
     ))))
     const client = createHttpApi('', fetcher)
     await client.listProjects!()
@@ -163,5 +195,46 @@ describe('V2 wire contracts', () => {
     expect(fetcher.mock.calls.map(call => call[0])).toEqual(['/api/projects', '/api/experiences?limit=6&offset=5&language=python&repository_id=team%2Frepo+%26+tools&scope=project', '/api/experiences/merge-preview', '/api/experiences/merge'])
     expect(JSON.parse(fetcher.mock.calls[2]![1].body)).toEqual({ experience_ids: [idA, idB] })
     expect(JSON.parse(fetcher.mock.calls[3]![1].body)).toEqual({ experience_ids: [idA, idB] })
+  })
+
+  it.each([
+    { ...entries[0], evidence: [{ ...knowledge.evidence![0], runner: 'maven' }] },
+    { ...entries[0], merged_from: [idA, idA] },
+  ])('rejects inconsistent language/evidence or duplicate provenance', value => {
+    expect(() => readExperiences([value])).toThrow()
+  })
+
+  it.each([
+    { ...mergePreview, preview: { ...knowledge, merged_from: [idA, idC] } },
+    { ...mergePreview, can_merge: false, conflicts: ['Conflict'], preview: knowledge },
+  ])('rejects internally inconsistent merge previews', value => {
+    expect(() => readMergePreview(value)).toThrow()
+  })
+
+  it('rejects a preview for a different selection through the HTTP boundary', async () => {
+    const wrong = { ...mergePreview, source_ids: [idA, idC], preview: { ...knowledge, merged_from: [idA, idC] } }
+    const client = createHttpApi('', vi.fn().mockResolvedValue(new Response(JSON.stringify(wrong))))
+    await expect(client.previewMerge!([idA, idB])).rejects.toMatchObject({ status: 502 })
+  })
+
+  it.each([
+    { ...knowledge, id: idC, created_at: entries[0]!.created_at, merged_from: [] },
+    { ...knowledge, id: idC, created_at: entries[0]!.created_at, merged_from: [idA, idC] },
+    { ...knowledge, id: idA, created_at: entries[0]!.created_at, merged_from: [idA, idB] },
+  ])('rejects saved merge results that do not preserve the selected sources', async value => {
+    const client = createHttpApi('', vi.fn().mockResolvedValue(new Response(JSON.stringify(value))))
+    await expect(client.mergeExperiences!([idA, idB])).rejects.toMatchObject({ status: 502 })
+  })
+
+  it('accepts reordered sources and equivalent UUID case in preview and result', async () => {
+    const first = 'abcdef12-abcd-4abc-8abc-abcdef123456'
+    const sources = [idB, first]
+    const value = { ...mergePreview, source_ids: sources, preview: { ...knowledge, merged_from: sources } }
+    const merged = { ...knowledge, id: idC, created_at: entries[0]!.created_at, merged_from: sources }
+    const client = createHttpApi('', vi.fn().mockImplementation((url: string) => Promise.resolve(
+      new Response(JSON.stringify(url.endsWith('merge-preview') ? value : merged)),
+    )))
+    await expect(client.previewMerge!([first.toUpperCase(), idB])).resolves.toMatchObject({ can_merge: true })
+    await expect(client.mergeExperiences!([first.toUpperCase(), idB])).resolves.toMatchObject({ id: idC })
   })
 })

@@ -232,3 +232,10 @@ scripts/check_contracts.py     Pydantic 与临时 SQLite 验收
 分支 `frontend-m3` 从 `origin/main` 的 `a5a58d4` 创建。
 经验后端分支已重命名为 `experience-store`。这两个原始功能分支后来均已由团队
 合并进 `main`；本次联调准备使用合并后的代码。
+
+## V2 真实接口验收
+
+经验 V2 分支可使用 `python frontend/scripts/serve-v2-acceptance.py`（仓库根目录）
+启动 8002 端口的脚本模型后端，再把 Vite 的 `API_PROXY_TARGET` 指向它。
+此入口支持现有 Java/Python 组合缺陷案例，实际运行工具、测试和 SQLite，不调用真实模型。
+操作步骤、迁移结果和待协调的公共接口问题见 [V2 联调验收](V2_INTEGRATION_ACCEPTANCE.md)。

@@ -136,7 +136,8 @@ def _file_keys(issue: RepairIssue) -> frozenset[str]:
 
 
 def _issue_key(issue: RepairIssue) -> tuple:
-    return (_normalized(issue.error_type), _normalized(issue.root_cause), _normalized(issue.solution),
+    # Prose may contain case-sensitive identifiers and significant string whitespace.
+    return (_normalized(issue.error_type), issue.root_cause, issue.solution,
             tuple(sorted(_file_keys(issue))))
 
 
@@ -178,7 +179,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
     for source in sources[1:]:
         if (source.language, source.scope, source.repository_id) != (first.language, first.scope, first.repository_id):
             conflicts.append("Experiences must have the same language, scope and repository.")
-        if {_normalized(v) for v in source.applicability} != {_normalized(v) for v in first.applicability}:
+        if set(source.applicability) != set(first.applicability):
             conflicts.append("Applicability conditions differ; keep these experiences separate.")
     issues = []
     evidence = []
@@ -192,8 +193,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
                 same_error = _normalized(issue.error_type) == _normalized(previous.error_type)
                 overlap = not issue.files or not previous.files or bool(
                     _file_keys(issue) & _file_keys(previous))
-                same_rule = (_normalized(issue.root_cause), _normalized(issue.solution)) == (
-                    _normalized(previous.root_cause), _normalized(previous.solution))
+                same_rule = (issue.root_cause, issue.solution) == (previous.root_cause, previous.solution)
                 if same_error and overlap and not same_rule:
                     conflicts.append(f"Different repair rules overlap for {issue.error_type}; review the source records.")
                 if _issue_key(issue) == _issue_key(previous):

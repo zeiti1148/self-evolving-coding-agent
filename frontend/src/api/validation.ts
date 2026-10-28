@@ -20,6 +20,12 @@ function list<T>(value: unknown, read: (item: unknown) => T): T[] {
   check(Array.isArray(value))
   return value.map(read)
 }
+function sameIds(actual: readonly string[], expected: readonly string[]): boolean {
+  const normalized = actual.map(id => id.toLowerCase())
+  const wanted = new Set(expected.map(id => id.toLowerCase()))
+  return normalized.length === expected.length && new Set(normalized).size === normalized.length
+    && wanted.size === expected.length && normalized.every(id => wanted.has(id))
+}
 function readCall(value: unknown): ToolCall {
   const data: Data = { arguments: {}, ...object(value) }
   check(uuid(data.id) && text(data.name))
@@ -104,7 +110,8 @@ function readKnowledge(value: unknown): ExperienceKnowledge {
   check(nullable(data.repository_id, text) && nullable(data.source_revision, text))
   check(data.scope === 'project' ? text(data.repository_id) : data.repository_id === null)
   for (const field of ['tags', 'applicability']) list(data[field], item => { check(text(item)); return item })
-  list(data.merged_from, id => { check(uuid(id)); return id })
+  const mergedFrom = list(data.merged_from, id => { check(uuid(id)); return id as string })
+  check(mergedFrom.length <= 10 && sameIds(mergedFrom, mergedFrom))
   list(data.issues, value => {
     const issue = object(value)
     check(['error_type', 'root_cause', 'solution'].every(key => text(issue[key])))
@@ -115,6 +122,7 @@ function readKnowledge(value: unknown): ExperienceKnowledge {
     const evidence = object(value)
     check(uuid(evidence.source_task_id) && uuid(evidence.tool_call_id))
     check(evidence.runner === 'maven' || evidence.runner === 'pytest')
+    check(evidence.runner === (data.language === 'python' ? 'pytest' : 'maven'))
     check(Number.isInteger(evidence.tests) && Number(evidence.tests) > 0)
     check(evidence.failures === 0 && evidence.errors === 0 && evidence.skipped === 0)
     return evidence
@@ -127,6 +135,12 @@ export function readExperience(value: unknown): Experience {
   return { ...data, ...readKnowledge(data) } as unknown as Experience
 }
 export function readExperiences(value: unknown): Experience[] { return list(value, readExperience) }
+export function readMergedExperience(value: unknown, expectedIds: readonly string[]): Experience {
+  const result = readExperience(value)
+  check(expectedIds.length >= 2 && expectedIds.length <= 10 && sameIds(result.merged_from ?? [], expectedIds))
+  check(!expectedIds.some(id => id.toLowerCase() === result.id.toLowerCase()))
+  return result
+}
 export function readProjects(value: unknown): RegisteredProject[] {
   const projects = list(value, value => {
     const data = object(value)
@@ -138,13 +152,15 @@ export function readProjects(value: unknown): RegisteredProject[] {
   check(new Set(projects.map(project => project.id)).size === projects.length)
   return projects
 }
-export function readMergePreview(value: unknown): MergePreview {
+export function readMergePreview(value: unknown, expectedIds?: readonly string[]): MergePreview {
   const data = object(value)
   check(boolean(data.can_merge))
   const conflicts = list(data.conflicts, item => { check(text(item)); return item })
   const source_ids = list(data.source_ids, item => { check(uuid(item)); return item as string })
-  check(source_ids.length >= 2 && source_ids.length <= 10 && new Set(source_ids).size === source_ids.length)
+  check(source_ids.length >= 2 && source_ids.length <= 10 && sameIds(source_ids, source_ids))
+  if (expectedIds) check(sameIds(source_ids, expectedIds))
   const preview = data.preview === null ? null : readKnowledge(data.preview)
-  check(data.can_merge ? preview !== null && conflicts.length === 0 : conflicts.length > 0)
+  check(data.can_merge ? preview !== null && conflicts.length === 0 : preview === null && conflicts.length > 0)
+  if (preview) check(sameIds(preview.merged_from ?? [], source_ids))
   return { can_merge: data.can_merge, conflicts, source_ids, preview }
 }

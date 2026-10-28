@@ -163,6 +163,39 @@ def test_incompatible_sources_never_merge(store, changes):
     assert len(store.list_experiences()) == 2
 
 
+@pytest.mark.parametrize("field,left_text,right_text", [
+    ("solution", 'Return the literal "Admin".', 'Return the literal "admin".'),
+    ("solution", 'Return the literal "a  b".', 'Return the literal "a b".'),
+    ("root_cause", 'The key "UserID" is missing.', 'The key "userid" is missing.'),
+])
+def test_merge_preserves_case_and_spacing_in_repair_rules(store, field, left_text, right_text):
+    def record(text):
+        value = issue().model_dump()
+        value[field] = text
+        return store.save_experience(data(issues=[RepairIssue(**value)]))
+
+    left, right = record(left_text), record(right_text)
+    assert not store.preview_merge([left.id, right.id])["can_merge"]
+    with pytest.raises(ApplicationError):
+        store.merge_experiences([left.id, right.id])
+    assert len(store.list_experiences()) == 2
+    assert getattr(store.get_experience(left.id).issues[0], field) == left_text
+    assert getattr(store.get_experience(right.id).issues[0], field) == right_text
+
+
+@pytest.mark.parametrize("left_text,right_text", [
+    ('role == "Admin"', 'role == "admin"'),
+    ('separator == "  "', 'separator == " "'),
+])
+def test_merge_distinguishes_exact_applicability_conditions(store, left_text, right_text):
+    left = store.save_experience(data(applicability=[left_text]))
+    right = store.save_experience(data(applicability=[right_text]))
+    assert not store.preview_merge([left.id, right.id])["can_merge"]
+    with pytest.raises(ApplicationError):
+        store.merge_experiences([left.id, right.id])
+    assert len(store.list_experiences()) == 2
+
+
 def test_same_exception_in_different_files_can_preserve_distinct_rules(store):
     left = store.save_experience(data(issues=[issue(files=["A.java"])]))
     right = store.save_experience(data(issues=[issue(files=["B.java"], solution="Use an empty collection.")]))

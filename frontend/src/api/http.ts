@@ -1,5 +1,5 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
-import { readCreatedTask, readExperience, readExperiences, readMergePreview, readProjects, readSteps, readTask } from './validation'
+import { readCreatedTask, readExperiences, readMergedExperience, readMergePreview, readProjects, readSteps, readTask } from './validation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -62,7 +62,13 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
       return request(`/api/experiences?${params}`, readExperiences, 'GET', undefined, signal)
     },
     listProjects: signal => request('/api/projects', readProjects, 'GET', undefined, signal),
-    previewMerge: (ids, signal) => request('/api/experiences/merge-preview', readMergePreview, 'POST', { experience_ids: ids }, signal),
-    mergeExperiences: (ids, signal) => request('/api/experiences/merge', readExperience, 'POST', { experience_ids: ids }, signal),
+    previewMerge: (ids, signal) => {
+      const sources = [...ids]
+      return request('/api/experiences/merge-preview', data => readMergePreview(data, sources), 'POST', { experience_ids: sources }, signal)
+    },
+    mergeExperiences: (ids, signal) => {
+      const sources = [...ids]
+      return request('/api/experiences/merge', data => readMergedExperience(data, sources), 'POST', { experience_ids: sources }, signal)
+    },
   }
 }
