@@ -91,6 +91,7 @@ npm.cmd run dev
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
 | POST | `/api/tasks` | 提交登记项目的任务，返回 202 |
+| GET | `/api/tasks?limit=20&offset=0` | 分页查询持久化任务记录 |
 | GET | `/api/tasks/{task_id}` | 状态与终态结果 |
 | GET | `/api/tasks/{task_id}/steps` | 运行中读取步骤 |
 | GET | `/api/experiences?limit=20&offset=0` | 经验分页 |
@@ -136,7 +137,7 @@ npm.cmd run check:integration
 - 上述任务预算不是操作系统级硬时限。同步 HTTPX 的读取超时衡量空闲间隔，持续缓慢到达的响应头、DNS 等底层操作仍可能延后退出；CI 另设 job/step 硬时限。本机原型暂未加入独立请求进程或自定义网络传输层。
 - 按 Java 标签与错误类型检索最多五条经验，内容与 ID 注入上下文。检索故障记录警告，保存失败不改变已验证的修复成功。
 - `USE_EXPERIENCE=false` 可关闭检索和注入；成功后的保存行为保持一致，便于公平对照。正式实验使用独立训练经验的冻结快照，不从评估结果继续学习。
-- 单 API 进程、内存任务，重启丢失状态；经验持久化。暂不实现任务恢复、取消、历史、Diff、向量检索或模型训练。
+- 单 API 实例和进程；任务、步骤、结果、审计与经验保存到 SQLite。重启后已结束任务仍可查询，未完成任务标记为中断，不自动续跑。暂不实现断点恢复、取消、独立任务历史页面、Diff、向量检索或模型训练。
 - 默认保留 runtime/workspaces/<task UUID>；同根目录 .records 保存登记信息。开发人员使用 cleanup_workspace 校验后清理，禁止扩大删除范围。
 - 本轮 Starlette TestClient 对 HTTPX 发出弃用提示，当前测试通过；后续依赖升级需要复测。
 

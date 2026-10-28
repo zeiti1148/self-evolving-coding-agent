@@ -151,6 +151,29 @@ def test_model_error_does_not_claim_verification(setup):
     assert result.status == "failed" and result.tests_passed is None and not result.steps
 
 
+@pytest.mark.parametrize("status", ["succeeded", "failed"])
+def test_client_cleanup_failure_preserves_result_and_audit(setup, caplog, status):
+    request, store, execute = setup
+
+    class ClosingModel(SequenceLLM):
+        def close(self):
+            raise RuntimeError("private-close-detail")
+
+    responses = ([{"role": "assistant", "content": "Done"}, extraction()] if status == "succeeded"
+                 else [ApplicationError(ErrorCode.LLM_ERROR, "Model unavailable")])
+    agent = Agent(ClosingModel(responses), execute, store)
+    result = agent.run(request)
+    assert result.status == status
+    assert agent.last_run_audit["client_cleanup_failed"] is True
+    assert agent.last_run_audit["decision_rounds"] == 1
+    assert "cleanup" in caplog.text.lower() and "private-close-detail" not in caplog.text
+    if status == "succeeded":
+        assert result.tests_passed and result.experience_saved
+        assert store.get_experience(result.experience_id).source_task_id == request.task_id
+    else:
+        assert result.tests_passed is None and result.error_message == "Model unavailable"
+
+
 def test_http_protocol_and_safe_error_messages():
     settings = replace(Settings(), llm_base_url="https://model.invalid/v1", llm_api_key="test-secret", llm_model="test")
     def handler(request):

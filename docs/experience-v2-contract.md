@@ -8,6 +8,9 @@ ExperienceCreate 保留既有字段，增加：schema_version=2，language(java/
 
 RepairIssue 字段：error_type、root_cause、solution、files(string[])。issues 的数组顺序表示推荐修复顺序；相同错误类型可以有不同位置，但每项必须完整。VerificationEvidence 字段：source_task_id(UUID)、tool_call_id(UUID)、runner(maven/pytest)、tests(正整数)、failures=0、errors=0、skipped=0。真实证据由程序根据最终工具结果补充，不采信模型编造的计数和来源。
 
+`applicability` 去掉每项首尾空白后按精确文本去重，保留大小写、内部空白及顺序。
+它包含代码标识符或字符串条件，不能复用标签的大小写不敏感去重规则。
+
 ## 存储与合并
 
 保留 save_experience、list_experiences、search_experiences 现有签名与旧数据行为。增加 get_experience(id)，retrieve_experiences(query='', *, language, repository_id, error_types, limit=5)，以及 preview_merge(experience_ids) 和 merge_experiences(experience_ids)。

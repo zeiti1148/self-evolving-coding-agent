@@ -196,6 +196,17 @@ def test_merge_distinguishes_exact_applicability_conditions(store, left_text, ri
     assert len(store.list_experiences()) == 2
 
 
+def test_condition_array_survives_storage_and_cannot_merge_with_a_subset(store):
+    conditions = ['role == "Admin"', 'role == "admin"']
+    both = store.save_experience(data(applicability=conditions))
+    subset = store.save_experience(data(applicability=conditions[:1]))
+    assert store.get_experience(both.id).applicability == conditions
+    assert not store.preview_merge([both.id, subset.id])["can_merge"]
+    with pytest.raises(ApplicationError):
+        store.merge_experiences([both.id, subset.id])
+    assert len(store.list_experiences()) == 2
+
+
 def test_same_exception_in_different_files_can_preserve_distinct_rules(store):
     left = store.save_experience(data(issues=[issue(files=["A.java"])]))
     right = store.save_experience(data(issues=[issue(files=["B.java"], solution="Use an empty collection.")]))

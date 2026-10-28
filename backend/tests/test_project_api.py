@@ -1,4 +1,5 @@
 import json
+import re
 import threading
 from dataclasses import replace
 from uuid import uuid4
@@ -37,7 +38,8 @@ def test_catalog_and_task_metadata_are_server_owned(tmp_path):
     with TestClient(app) as client:
         projects = client.get("/api/projects").json()
         assert projects[0]["id"] == "demo" and projects[0]["language"] == "python"
-        assert projects[0]["source_revision"].startswith("tree:")
+        # A temporary project may live under the checkout when --basetemp is local.
+        assert re.fullmatch(r"(?:git:[0-9a-f]{40,64};)?tree:[0-9a-f]{64}", projects[0]["source_revision"])
         assert "source" not in projects[0] and str(tmp_path) not in json.dumps(projects)
         payload = {"task_description": "Fix", "source_project": "demo", "repository_id": "fake"}
         assert client.post("/api/tasks", json=payload).status_code == 422

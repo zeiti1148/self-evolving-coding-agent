@@ -89,6 +89,34 @@ def test_required_fields_and_bounds_are_validated() -> None:
         )
 
 
+@pytest.mark.parametrize("conditions,expected", [
+    (['role == "Admin"', 'role == "admin"'], ['role == "Admin"', 'role == "admin"']),
+    (['name == "Straße"', 'name == "STRASSE"'], ['name == "Straße"', 'name == "STRASSE"']),
+    (['separator == "  "', 'separator == " "'], ['separator == "  "', 'separator == " "']),
+    (['  role == "Admin"  ', 'role == "Admin"'], ['role == "Admin"']),
+])
+def test_applicability_preserves_literal_meaning_and_order(conditions, expected):
+    value = ExperienceCreate(task_summary="Fix", root_cause="Cause", solution="Fix",
+                             verification="Passed", applicability=conditions,
+                             tags=["Java", "java"])
+    assert value.applicability == expected
+    assert value.tags == ["Java"]
+    assert ExperienceCreate.model_validate_json(value.model_dump_json()).applicability == expected
+
+
+def test_applicability_assignment_keeps_case_sensitive_conditions():
+    value = ExperienceCreate(task_summary="Fix", root_cause="Cause", solution="Fix", verification="Passed")
+    value.applicability = ['role == "Admin"', 'role == "admin"']
+    assert value.applicability == ['role == "Admin"', 'role == "admin"']
+
+
+@pytest.mark.parametrize("condition", ["", " ", "\t\n"])
+def test_applicability_rejects_blank_conditions(condition):
+    with pytest.raises(ValidationError):
+        ExperienceCreate(task_summary="Fix", root_cause="Cause", solution="Fix",
+                         verification="Passed", applicability=[condition])
+
+
 @pytest.mark.parametrize(
     "values",
     [

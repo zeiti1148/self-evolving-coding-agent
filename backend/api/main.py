@@ -3,11 +3,14 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+import logging
+from threading import Lock
 from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from backend.agent.core import Agent
@@ -18,7 +21,10 @@ from backend.experience import ExperienceStore
 from backend.shared import (AgentRequest, ApplicationError, Experience, TaskCreateRequest,
                             TaskCreateResponse, TaskStatusResponse, TaskStepsResponse, ErrorCode)
 from backend.tools import ToolService, WorkspaceManager
-from .store import TaskStore
+from .store import TaskStorageError, TaskStore
+
+
+logger = logging.getLogger(__name__)
 
 
 class MergeRequest(BaseModel):
@@ -35,16 +41,27 @@ class MergeRequest(BaseModel):
 
 def create_app(settings: Settings | None = None, *, llm_factory=None, agent_factory=None) -> FastAPI:
     settings = settings or Settings.from_env()
-    tasks = TaskStore()
+    tasks = TaskStore(settings.database_path)
     manager = WorkspaceManager(settings.workspace_root, settings.projects)
     tools = ToolService(manager, settings.maven_home, python_executable=settings.python_executable)
     experiences = ExperienceStore(settings.database_path)
     executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="repair")
+    recording_failures: set[str] = set()
+    recording_lock = Lock()
 
     @asynccontextmanager
     async def lifespan(app):
-        yield
-        executor.shutdown(wait=True, cancel_futures=False)
+        try:
+            tasks.initialize()
+        except TaskStorageError:
+            logger.warning("Task storage unavailable at startup; task endpoints will report 503.")
+        try:
+            yield
+        finally:
+            try:
+                executor.shutdown(wait=True, cancel_futures=False)
+            finally:
+                tasks.close()
 
     app = FastAPI(title="Self-Evolving Coding Agent", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
@@ -53,6 +70,25 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
     app.state.tools = tools
     app.state.settings = settings
     app.state.experiences = experiences
+
+    @app.exception_handler(TaskStorageError)
+    async def task_storage_error(request, exc):
+        return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+    def ensure_recorded(task_id: str | None = None):
+        with recording_lock:
+            failed = bool(recording_failures) if task_id is None else task_id in recording_failures
+        if failed:
+            raise HTTPException(503, "Task recording failed; restore storage and restart the service.")
+
+    def fail_task(task_id: str, message: str):
+        try:
+            tasks.finish(task_id, error=message.strip()[:5000] or "Task execution failed.")
+        except (TaskStorageError, KeyError, ValueError):
+            # Do not leave a live client polling a stale 'running' snapshot forever.
+            with recording_lock:
+                recording_failures.add(task_id)
+            logger.error("Could not persist terminal state for task=%s", task_id)
 
     def run_task(task_id: str, request: TaskCreateRequest):
         try:
@@ -69,12 +105,11 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
                                language=project.language, repository_id=project.repository_id,
                                source_revision=revision),
                                on_step=lambda step: tasks.append(task_id, step))
-            tasks.put_audit(task_id, getattr(agent, "last_run_audit", {}))
-            tasks.finish(task_id, result=result)
+            tasks.finish(task_id, result=result, audit=getattr(agent, "last_run_audit", {}))
         except ApplicationError as exc:
-            tasks.finish(task_id, error=exc.message)
+            fail_task(task_id, exc.message)
         except Exception:
-            tasks.finish(task_id, error="Task scheduling or execution failed.")
+            fail_task(task_id, "Task scheduling or execution failed.")
 
     @app.post("/api/tasks", status_code=202, response_model=TaskCreateResponse)
     def create_task(request: TaskCreateRequest):
@@ -86,15 +121,22 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             validate_project_language(settings.project(request.source_project))
         except (ApplicationError, ValueError):
             raise HTTPException(400, "Source project is not registered or available.") from None
-        response = tasks.create()
+        response = tasks.create(request)
         try:
             executor.submit(run_task, response.task_id, request.model_copy(deep=True))
         except RuntimeError:
-            tasks.finish(response.task_id, error="Task scheduler is unavailable.")
+            fail_task(response.task_id, "Task scheduler is unavailable.")
         return response
+
+    @app.get("/api/tasks", response_model=list[TaskStatusResponse])
+    def list_tasks(limit: Annotated[int, Query(ge=1, le=100)] = 20,
+                   offset: Annotated[int, Query(ge=0, le=2**63-1)] = 0):
+        ensure_recorded()
+        return tasks.list_tasks(limit, offset)
 
     @app.get("/api/tasks/{task_id}", response_model=TaskStatusResponse)
     def get_task(task_id: UUID):
+        ensure_recorded(str(task_id))
         try:
             return tasks.get(str(task_id))
         except KeyError:
@@ -102,6 +144,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
 
     @app.get("/api/tasks/{task_id}/steps", response_model=TaskStepsResponse)
     def get_steps(task_id: UUID):
+        ensure_recorded(str(task_id))
         try:
             return tasks.get_steps(str(task_id))
         except KeyError:

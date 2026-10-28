@@ -273,5 +273,9 @@ class Agent:
                               "retrieval_events": retrieval_events,
                               "final_verification_attempts": sum(bool(r.metadata.get("final_verification")) for r in results)}
         if hasattr(self.llm, "close"):
-            self.llm.close()
+            try:
+                self.llm.close()
+            except Exception:
+                self.last_run_audit["client_cleanup_failed"] = True
+                logger.warning("Model client cleanup failed for task=%s; preserving recorded result.", request.task_id)
         return result

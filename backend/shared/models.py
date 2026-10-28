@@ -52,6 +52,14 @@ def _normalize_tags(tags: list[str]) -> list[str]:
     return normalized
 
 
+def _normalize_conditions(values: list[str]) -> list[str]:
+    # Conditions can contain case-sensitive identifiers and significant spaces.
+    cleaned = [value.strip() for value in values]
+    if any(not value for value in cleaned):
+        raise ValueError("applicability must not contain blank values")
+    return list(dict.fromkeys(cleaned))
+
+
 def _validate_relative_file(path: str) -> str:
     if "\\" in path:
         raise ValueError("must use a workspace-relative POSIX path")
@@ -199,7 +207,7 @@ class ExperienceCreate(SharedModel):
         lambda value: _canonical_uuid(value) if value is not None else value
     )
     _normalize_experience_tags = field_validator("tags")(_normalize_tags)
-    _normalize_applicability = field_validator("applicability")(_normalize_tags)
+    _normalize_applicability = field_validator("applicability")(_normalize_conditions)
 
     @field_validator("merged_from")
     @classmethod
