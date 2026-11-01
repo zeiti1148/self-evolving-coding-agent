@@ -27,7 +27,7 @@ watch(() => route.params.taskId, id => {
         <span v-else class="nav-link unavailable" title="提交任务后查看执行过程"><AppIcon name="play" />任务执行</span>
         <RouterLink to="/experiences" class="nav-link" active-class="active"><AppIcon name="book" />经验记录</RouterLink>
       </nav>
-      <div class="sidebar-bottom"><div class="project-mark"><AppIcon name="code" /><span>Self-Evolving<br /><strong>Coding Agent</strong></span></div><p>从修复过程积累经验<br />为下一次任务提供参考</p><span class="version">实训原型 / V3</span></div>
+      <div class="sidebar-bottom"><div class="project-mark"><AppIcon name="code" /><span>持续积累经验的<br /><strong>代码修复助手</strong></span></div><p>从修复过程积累经验<br />为下一次任务提供参考</p><span class="version">实训原型 / V3</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">
@@ -45,7 +45,7 @@ watch(() => route.params.taskId, id => {
         <p v-if="mock && demoNotice" class="warning-notice" role="status">{{ demoNotice }}</p>
         <RouterView />
       </main>
-      <footer class="workspace-footer"><span>Self-Evolving Coding Agent</span><span>任务执行 · 测试验证 · 经验积累</span></footer>
+      <footer class="workspace-footer"><span>具备经验积累能力的代码修复助手</span><span>任务执行 · 测试验证 · 经验积累</span></footer>
     </div>
   </div>
 </template>

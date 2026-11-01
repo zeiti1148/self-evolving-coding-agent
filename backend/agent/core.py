@@ -48,7 +48,9 @@ budget. Address every failing case, not only the first exception: fixing one err
 Once you believe the source is fixed, respond with a short factual summary without tool calls.
 The system will independently run final tests and may return remaining failures for another repair round.
 Do not claim tests passed without evidence. Use the registered language and its run_tests tool.
-Do not expose hidden reasoning; provide only concise actions, observations and conclusions."""
+Do not expose hidden reasoning; provide only concise actions, observations and conclusions.
+Write all human-facing explanations and summaries in Simplified Chinese. Preserve source code,
+literal values, file paths, exception names, tool arguments and identifiers exactly."""
 
 
 class Agent:
@@ -78,7 +80,7 @@ class Agent:
         def remaining() -> float:
             value = deadline - time.monotonic()
             if value <= 0:
-                raise ApplicationError(ErrorCode.AGENT_STOPPED, "Task time budget exhausted.")
+                raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
             return value
         def retrieve() -> list[dict]:
             nonlocal retrieved_ids, retrieval_error
@@ -93,7 +95,7 @@ class Agent:
                                          "experience_ids": [entry.id for entry in references]})
                 return [to_model_reference(entry) for entry in references]
             except Exception:
-                retrieval_error = "Experience retrieval was unavailable; task proceeded without references."
+                retrieval_error = "经验检索暂时不可用，本次任务继续执行，但不使用参考经验。"
                 return []
 
         reference_data = retrieve()
@@ -137,7 +139,7 @@ class Agent:
                     raise ValueError("mismatched tool result")
             except Exception:
                 result = ToolResult(call_id=call.id, tool_name=call.name, success=False,
-                                    error_code=ErrorCode.INTERNAL_TOOL_ERROR, error_message="Tool execution failed.")
+                                    error_code=ErrorCode.INTERNAL_TOOL_ERROR, error_message="工具执行失败。")
             result = result.model_copy(deep=True)
             result.metadata.update(retrieved_experience_ids=list(retrieved_ids))
             if retrieval_error:
@@ -146,7 +148,7 @@ class Agent:
                 if result.success and not verification_passed(result, request.language):
                     result = ToolResult(call_id=call.id, tool_name=call.name, success=False,
                         output=result.output, metadata=result.metadata, error_code=ErrorCode.TEST_FAILED,
-                        error_message="Final verification requires positive non-skipped tests for the registered runner.")
+                        error_message="最终验证必须使用项目登记的测试工具，并实际执行至少一项未跳过的测试。")
                 result.metadata["final_verification"] = True
             if isinstance(result.metadata.get("changed_files"), list):
                 changed = list(result.metadata["changed_files"])
@@ -156,11 +158,11 @@ class Agent:
                 try:
                     on_step(TaskStep(sequence=len(calls), call=call.model_copy(deep=True), result=result.model_copy(deep=True)))
                 except Exception:
-                    raise ApplicationError(ErrorCode.INTERNAL_ERROR, "Could not record a completed task step.") from None
+                    raise ApplicationError(ErrorCode.INTERNAL_ERROR, "无法记录已完成的任务步骤。") from None
             return result
 
         status = "stopped"
-        summary = "Decision budget exhausted."
+        summary = "决策次数已用完。"
         error_message = None
         tests_passed = None
         repair_succeeded = False
@@ -172,7 +174,7 @@ class Agent:
                 # Recheck eligibility at each model boundary; a concurrent merge/publication can supersede references.
                 payload = json.loads(messages[1]["content"])
                 payload["reference_experiences"] = retrieve()
-                payload["experience_usage_rule"] = "Check every applicability condition against the target business contract; never copy a source default blindly. Final target tests decide correctness."
+                payload["experience_usage_rule"] = "逐项核对经验适用条件与当前项目的业务要求，不得直接照搬来源项目的默认值。是否修复成功以当前项目的最终测试为准。"
                 messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
                 injection_events.append({"decision": decisions,
                                          "experience_ids": [entry["id"] for entry in payload["reference_experiences"]],
@@ -181,7 +183,7 @@ class Agent:
                 messages.append(message)
                 tool_calls = message.get("tool_calls", [])
                 if not tool_calls:
-                    summary = message["content"][:10_000].strip() or "Model finished."
+                    summary = message["content"][:10_000].strip() or "模型已完成本轮处理。"
                     final = execute(ToolCall(id=str(uuid4()), name="run_tests", arguments={}), final=True)
                     tests_passed = True if final.success else (False if final.error_code == ErrorCode.TEST_FAILED else None)
                     repair_succeeded = tests_passed is True
@@ -194,12 +196,12 @@ class Agent:
                         update_references()
                         messages.append({"role": "user", "content": json.dumps({
                             "final_verification": final.model_dump(mode="json"),
-                            "instruction": "Independent verification found remaining failures. Repair them, preserve passing behavior and rerun all tests.",
+                            "instruction": "独立验证发现仍有失败，请继续修复，保持已通过的行为，并重新运行全部测试。",
                             "decisions_remaining": request.max_steps - decisions}, ensure_ascii=False)})
                         final = None
                         continue
                     status = "stopped" if recoverable else "failed"
-                    error_message = "Decision budget exhausted with unresolved test failures." if recoverable else (final.error_message or "Final verification did not pass.")
+                    error_message = "决策次数已用完，仍有测试未通过。" if recoverable else (final.error_message or "最终验证未通过。")
                     break
                 for raw in tool_calls:
                     call = ToolCall(id=str(uuid4()), name=raw["function"]["name"],
@@ -213,15 +215,15 @@ class Agent:
                 tests_passed = True if final.success else (False if final.error_code == ErrorCode.TEST_FAILED else None)
                 repair_succeeded = tests_passed is True
                 status = "stopped"
-                error_message = "Decision budget exhausted."
+                error_message = "决策次数已用完。"
         except ApplicationError as exc:
             status = "stopped" if exc.code == ErrorCode.AGENT_STOPPED else "failed"
-            summary, error_message = "Task execution stopped." if status == "stopped" else "Task execution failed.", exc.message
+            summary, error_message = "任务执行已停止。" if status == "stopped" else "任务执行失败。", exc.message
             # A failed callback or model call is not a completed final verification.
             tests_passed = None
             repair_succeeded = False
         except Exception:
-            status, summary, error_message = "failed", "Task execution failed.", "Unexpected internal task error."
+            status, summary, error_message = "failed", "任务执行失败。", "任务执行时发生内部错误。"
             tests_passed, repair_succeeded = None, False
 
         experience_saved = None
@@ -234,7 +236,7 @@ class Agent:
                 experience_ids, experience_saved = [entry.id for entry in saved], True
             except Exception:
                 experience_saved = False
-                experience_error = "Experience extraction, validation or storage failed."
+                experience_error = "经验提取、校验或保存失败。"
 
         result = AgentResult(task_id=request.task_id, status=status, summary=summary, steps=calls,
                            tool_results=results, repair_succeeded=repair_succeeded, tests_passed=tests_passed,

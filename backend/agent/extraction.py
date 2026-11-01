@@ -22,7 +22,7 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
 
     def remaining():
         if time.monotonic() >= deadline:
-            raise ApplicationError(ErrorCode.AGENT_STOPPED, "Task time budget exhausted.")
+            raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
 
     remaining()
     if not request.repository_id:
@@ -46,9 +46,11 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
             "For a complex repair, identify independent knowledge groups, each with its related problems and repair order. "
             "Only name files actually changed, explain each group's supporting facts. A simple repair may yield one record. "
             "Use only the supplied trace. Do not invent evidence, business defaults, identifiers, secrets or hidden reasoning. "
-            "The program owns repository, language, state, provenance and final test evidence. No tool calls." )},
+            "The program owns repository, language, state, provenance and final test evidence. No tool calls. "
+            "Write all human-facing summaries, root causes, solutions, applicability conditions and descriptive tags in Simplified Chinese. "
+            "Preserve JSON keys, language tags, code literals, exception names, file paths and identifiers exactly." )},
         {"role": "user", "content": json.dumps({"task": request.task_description, "summary": summary,
-            "language": request.language, "changed_files": changed_files,
+            "language": request.language, "repository_id": request.repository_id, "changed_files": changed_files,
             "capabilities": request.capabilities, "trace": [r.model_dump(mode="json") for r in results]}, ensure_ascii=False)}])
     remaining()
     if response.get("tool_calls"):
@@ -71,14 +73,14 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
                     source_revision=request.source_revision, source_task_id=request.task_id,
                     reuse_status="active", batch_id=None, merged_from=[], derived_from=[], supersedes_id=None,
                     evidence=[evidence.model_dump()],
-                    verification=f"Final {runner} verification passed: {evidence.tests} tests; call_id={calls[-1].id}.")
+                    verification=f"程序独立运行 {runner} 最终验证，{evidence.tests} 项测试全部通过；工具调用编号：{calls[-1].id}。")
         if "error_type" in data:
             data["error_type"] = normalize_error_type(data["error_type"])
         if legacy and not data.get("issues") and data.get("error_type"):
             data["issues"] = [dict(error_type=data["error_type"], root_cause=data.get("root_cause"),
                                   solution=data.get("solution"), files=changed_files)]
         if legacy and not data.get("applicability"):
-            data["applicability"] = ["Preserve the registered repository's original tested business contract."]
+            data["applicability"] = ["必须保持已登记仓库原有测试验证的业务要求。"]
         for issue in data.get("issues", []):
             if isinstance(issue, dict):
                 issue["error_type"] = normalize_error_type(issue.get("error_type"))

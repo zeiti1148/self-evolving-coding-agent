@@ -73,7 +73,7 @@ def test_real_tls_eof_is_classified_before_any_http_body_is_sent(monkeypatch):
         settings = replace(Settings(), llm_base_url=f"https://127.0.0.1:{port}", llm_api_key="private-key", llm_model="test")
         client = ChatClient(settings)
         try:
-            with pytest.raises(ApplicationError, match="three bounded attempts"):
+            with pytest.raises(ApplicationError, match="三次"):
                 client.complete([])
             assert len(client.audit) == 3
             for event in client.audit:

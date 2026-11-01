@@ -32,7 +32,7 @@ def capture_context(request, execute_tool, **facts):
         result = execute_tool(request.workspace, call)
         if (not result.success or result.call_id != call.id or result.tool_name != name
                 or result.metadata.get("truncated")):
-            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Cannot capture a complete bounded source snapshot.")
+            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "无法在规定范围内读取完整的代码快照。")
         return result.output
     listing = invoke("list_files", recursive=True, max_entries=2000)
     paths = [path for path in listing.splitlines() if path and not path.endswith("/") and not ignored_path(path)]
@@ -41,7 +41,7 @@ def capture_context(request, execute_tool, **facts):
         content = invoke("read_file", path=path, max_chars=200000)
         size += len(content.encode("utf-8"))
         if size > 400000:
-            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Role source snapshot exceeds the 400000-byte limit.")
+            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "角色使用的代码快照超过 400000 字节限制。")
         files[path] = content
     hashes = {path: hashlib.sha256(content.encode("utf-8")).hexdigest() for path, content in files.items()}
     revision = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()

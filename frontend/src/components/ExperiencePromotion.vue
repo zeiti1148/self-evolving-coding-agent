@@ -56,6 +56,7 @@ onBeforeUnmount(() => { generation++; controller?.abort() })
         <label for="promotion-solution">修复规则</label><textarea id="promotion-solution" v-model="draft.solution" required rows="3" :disabled="busy" />
         <label for="promotion-conditions">适用条件（每行一项）</label><textarea id="promotion-conditions" v-model="conditions" required rows="3" :disabled="busy" />
         <label for="promotion-capabilities">目标必须具备的能力（逗号分隔）</label><input id="promotion-capabilities" v-model="capabilities" :disabled="busy" />
+        <p class="field-hint">填写能力标识：text-input 表示文本输入，integer-input 表示整数输入，indexed-selection 表示按下标选择。</p>
         <fieldset v-for="(issue, index) in draft.issues" :key="index" class="promotion-issue"><legend>相关问题 {{ index + 1 }}</legend>
           <label :for="`issue-type-${index}`">异常类型</label><input :id="`issue-type-${index}`" v-model="issue.error_type" required :disabled="busy" />
           <label :for="`issue-cause-${index}`">问题根因</label><textarea :id="`issue-cause-${index}`" v-model="issue.root_cause" required :disabled="busy" />

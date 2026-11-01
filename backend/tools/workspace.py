@@ -41,7 +41,7 @@ def reject_links(path: Path) -> None:
         except FileNotFoundError:
             continue
         if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
-            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "Links and reparse points are not allowed.")
+            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "不允许使用链接或重解析点。")
 
 
 def inventory(root: Path) -> dict[str, str]:
@@ -57,10 +57,10 @@ def inventory(root: Path) -> dict[str, str]:
             if ignored_path(path.relative_to(root)):
                 continue
             if path.stat().st_size > 10_000_000:
-                raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Project file exceeds the 10 MB limit.")
+                raise ApplicationError(ErrorCode.FILE_IO_ERROR, "项目文件超过 10 MB 限制。")
             result[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
         if len(result) > 10_000:
-            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Project has too many files.")
+            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "项目文件数量超过限制。")
         dirs[:] = [name for name in dirs if not ignored_path(name)]
     return result
 
@@ -104,7 +104,7 @@ class WorkspaceManager:
         path = source.resolve()
         allowed = {p.resolve() for p in self.projects.values()}
         if path not in allowed or not path.is_dir() or path.is_relative_to(self.root) or self.root.is_relative_to(path):
-            raise ApplicationError(ErrorCode.INVALID_WORKSPACE, "Source project is not registered or available.")
+            raise ApplicationError(ErrorCode.INVALID_WORKSPACE, "源项目尚未登记或当前不可用。")
         return path
 
     def _record_path(self, task_id: str) -> Path:
@@ -119,12 +119,12 @@ class WorkspaceManager:
             target = self.root / task_id
             with self.lock:
                 if target.exists() or self._record_path(task_id).exists():
-                    raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "Task workspace already exists.")
+                    raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "任务工作目录已存在。")
                 self.root.mkdir(parents=True, exist_ok=True)
                 # Do not follow links during copy; inspect the copied tree again.
                 shutil.copytree(source, target, symlinks=True, ignore=copy_ignored)
                 if inventory(target) != baseline:
-                    raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "Source changed while it was copied.")
+                    raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "复制过程中源文件发生变化。")
                 record_path = self._record_path(task_id)
                 reject_links(record_path)
                 record_path.parent.mkdir(exist_ok=True)
@@ -134,13 +134,13 @@ class WorkspaceManager:
         except ApplicationError:
             raise
         except (OSError, ValueError) as exc:
-            raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "Cannot create task workspace.") from exc
+            raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "无法创建任务工作目录。") from exc
 
     def get(self, workspace: Path) -> Workspace:
         reject_links(workspace)
         path = workspace.resolve()
         if not workspace.is_absolute() or path.parent != self.root or not path.is_dir():
-            raise ApplicationError(ErrorCode.INVALID_WORKSPACE, "Workspace is not a managed task directory.")
+            raise ApplicationError(ErrorCode.INVALID_WORKSPACE, "该目录不是受管理的任务工作目录。")
         try:
             task_id = str(UUID(path.name))
             if task_id != path.name:
@@ -159,28 +159,28 @@ class WorkspaceManager:
         except ApplicationError:
             raise
         except (OSError, ValueError, KeyError, TypeError) as exc:
-            raise ApplicationError(ErrorCode.INVALID_WORKSPACE, "Workspace ownership record is unavailable.") from exc
+            raise ApplicationError(ErrorCode.INVALID_WORKSPACE, "无法读取工作目录的归属记录。") from exc
 
     def resolve(self, record: Workspace, value: str) -> Path:
         if not value or "\x00" in value or "\\" in value or ":" in value:
-            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "Use a relative POSIX path inside the workspace.")
+            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "请使用工作目录内的相对路径，并以正斜杠分隔。")
         relative = Path(value)
         if relative.is_absolute() or PureWindowsPath(value).is_absolute() or ".." in relative.parts:
-            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "Path is outside the workspace.")
+            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "路径超出任务工作目录。")
         # Windows aliases (trailing dots/spaces, device files) are not project files.
         reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}
         if any(p.rstrip(" .") != p or p.split(".")[0].upper() in reserved for p in relative.parts):
-            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "Invalid project path.")
+            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "项目路径无效。")
         candidate = record.path / relative
         reject_links(candidate)
         resolved = candidate.resolve()
         if not resolved.is_relative_to(record.path):
-            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "Path is outside the workspace.")
+            raise ApplicationError(ErrorCode.PATH_OUTSIDE_WORKSPACE, "路径超出任务工作目录。")
         return resolved
 
     def verify_tests(self, record: Workspace) -> None:
         if protected(inventory(record.path)) != protected(record.baseline):
-            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "Benchmark tests and build configuration must remain unchanged.")
+            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "不得修改样例测试和构建配置。")
 
     def changed_files(self, workspace: Path) -> list[str]:
         record = self.get(workspace)
@@ -199,4 +199,4 @@ class WorkspaceManager:
                 self._record_path(record.path.name).unlink()
                 self.records.pop(record.path, None)
             except OSError as exc:
-                raise ApplicationError(ErrorCode.WORKSPACE_CLEANUP_FAILED, "Cannot clean task workspace.") from exc
+                raise ApplicationError(ErrorCode.WORKSPACE_CLEANUP_FAILED, "无法清理任务工作目录。") from exc

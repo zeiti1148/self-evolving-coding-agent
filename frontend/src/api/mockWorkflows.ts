@@ -21,9 +21,10 @@ export function mockWorkflows(state: MockState, persist: () => void, now: () => 
     if (ids.length < 2 || ids.length > 10 || new Set(ids).size !== ids.length) throw new ApiError(422, '请选择 2 至 10 条不同经验。')
     const items = ids.map(find), first = items[0]!
     const conflicts: string[] = []
+    const fieldLabels = { language: '语言', scope: '使用范围', repository_id: '所属仓库', reuse_status: '复用状态', applicability: '适用条件', required_capabilities: '目标所需能力' }
     if (ids.some(replaced)) conflicts.push('来源已被替代，请刷新列表。')
     for (const field of ['language', 'scope', 'repository_id', 'reuse_status', 'applicability', 'required_capabilities'] as const) {
-      if (items.some(item => JSON.stringify(item[field]) !== JSON.stringify(first[field]))) conflicts.push(`来源的 ${field} 不一致。`)
+      if (items.some(item => JSON.stringify(item[field]) !== JSON.stringify(first[field]))) conflicts.push(`来源的${fieldLabels[field]}不一致。`)
     }
     const preview: ExperienceKnowledge = { ...first, task_summary: '演示合并经验',
       root_cause: items.map(item => item.root_cause).join('\n'), solution: items.map(item => item.solution).join('\n'),

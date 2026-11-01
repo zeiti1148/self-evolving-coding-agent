@@ -53,6 +53,8 @@ class TestArgs(Arguments):
 
 ARGUMENTS = {"list_files": ListArgs, "read_file": ReadArgs, "write_file": WriteArgs,
              "run_command": CommandArgs, "run_tests": TestArgs}
+RESULT_ERRORS = {ErrorCode.COMMAND_TIMEOUT: "命令执行超时。", ErrorCode.COMMAND_FAILED: "命令执行失败，请查看原始输出。",
+                 ErrorCode.OUTPUT_LIMIT_EXCEEDED: "命令输出超过限制。", ErrorCode.TEST_FAILED: "测试未通过，请查看失败详情。"}
 
 
 class ToolService:
@@ -68,7 +70,7 @@ class ToolService:
         try:
             record = self.manager.get(workspace)
             if call.name not in ARGUMENTS:
-                raise ApplicationError(ErrorCode.INVALID_TOOL_CALL, "Unknown tool name.")
+                raise ApplicationError(ErrorCode.INVALID_TOOL_CALL, "无法识别该工具。")
             args = ARGUMENTS[call.name].model_validate(call.arguments)
             with record.lock:
                 # Fresh check, including all directories, before a file/process operation.
@@ -76,23 +78,23 @@ class ToolService:
                 output, metadata, code = getattr(self, "_" + call.name)(record, args)
                 metadata.setdefault("truncated", False)
             return ToolResult(**base, success=code is None, output=output, metadata=metadata,
-                              error_code=code, error_message=code.value.replace("_", " ").capitalize() if code else None)
+                              error_code=code, error_message=RESULT_ERRORS.get(code, "工具执行失败。") if code else None)
         except ValidationError:
             return ToolResult(**base, success=False, error_code=ErrorCode.INVALID_TOOL_CALL,
-                              error_message="Invalid tool arguments.")
+                              error_message="工具参数无效。")
         except ApplicationError as exc:
             return ToolResult(**base, success=False, error_code=exc.code, error_message=exc.message)
         except FileNotFoundError:
-            return ToolResult(**base, success=False, error_code=ErrorCode.FILE_NOT_FOUND, error_message="Project file was not found.")
+            return ToolResult(**base, success=False, error_code=ErrorCode.FILE_NOT_FOUND, error_message="未找到项目文件。")
         except (OSError, UnicodeError):
-            return ToolResult(**base, success=False, error_code=ErrorCode.FILE_IO_ERROR, error_message="Cannot access the requested text file.")
+            return ToolResult(**base, success=False, error_code=ErrorCode.FILE_IO_ERROR, error_message="无法访问指定的文本文件。")
         except Exception:
-            return ToolResult(**base, success=False, error_code=ErrorCode.INTERNAL_TOOL_ERROR, error_message="Tool execution failed.")
+            return ToolResult(**base, success=False, error_code=ErrorCode.INTERNAL_TOOL_ERROR, error_message="工具执行失败。")
 
     def _list_files(self, record, args: ListArgs):
         root = self.manager.resolve(record, args.path)
         if not root.is_dir():
-            raise ApplicationError(ErrorCode.FILE_NOT_FOUND, "Project directory was not found.")
+            raise ApplicationError(ErrorCode.FILE_NOT_FOUND, "未找到项目目录。")
         entries = []
         for path in sorted(root.rglob("*") if args.recursive else root.iterdir()):
             reject_links(path)
@@ -107,15 +109,15 @@ class ToolService:
 
     def _read_file(self, record, args: ReadArgs):
         if args.end_line is not None and args.end_line < args.start_line:
-            raise ApplicationError(ErrorCode.INVALID_TOOL_CALL, "end_line must not precede start_line.")
+            raise ApplicationError(ErrorCode.INVALID_TOOL_CALL, "结束行号不能小于起始行号。")
         path = self.manager.resolve(record, args.path)
         if sensitive_path(path.relative_to(record.path)):
-            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "Local credentials are not available to file tools.")
+            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "文件工具无权读取本地凭据。")
         # newline='' preserves CRLF, trailing newlines and code indentation.
         with path.open("r", encoding="utf-8", newline="") as stream:
             text = stream.read(2_000_001)
         if "\x00" in text or len(text) > 2_000_000:
-            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "Only bounded UTF-8 text files can be read.")
+            raise ApplicationError(ErrorCode.FILE_IO_ERROR, "只能读取大小在限制范围内的 UTF-8 文本文件。")
         output = "".join(text.splitlines(keepends=True)[args.start_line - 1:args.end_line])
         return output[:args.max_chars], {"truncated": len(output) > args.max_chars}, None
 
@@ -123,7 +125,7 @@ class ToolService:
         path = self.manager.resolve(record, args.path)
         relative = path.relative_to(record.path).as_posix()
         if protected({relative: ""}):
-            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "Benchmark tests and build configuration are read-only.")
+            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "样例测试和构建配置为只读。")
         if args.create_parent:
             path.parent.mkdir(parents=True, exist_ok=True)
         temp_path = None
@@ -136,7 +138,7 @@ class ToolService:
         finally:
             if temp_path is not None and temp_path.exists():
                 temp_path.unlink()
-        return "File written.", {"path": relative, "changed_files": self.manager.changed_files(record.path)}, None
+        return "文件已写入。", {"path": relative, "changed_files": self.manager.changed_files(record.path)}, None
 
     def _run_command(self, record, args: CommandArgs):
         cwd = self.manager.resolve(record, args.cwd)
@@ -146,7 +148,7 @@ class ToolService:
             if not executable and os.environ.get("JAVA_HOME"):
                 executable = str(Path(os.environ["JAVA_HOME"]) / "bin" / (command[0] + (".exe" if os.name == "nt" else "")))
             if not executable:
-                raise ApplicationError(ErrorCode.COMMAND_FAILED, "Java executable was not found.")
+                raise ApplicationError(ErrorCode.COMMAND_FAILED, "未找到 Java 可执行程序。")
             argv = [executable, "-version"]
         elif command in (["mvn", "-version"], ["mvn", "compile"], ["mvn", "test"], ["mvn", "-B", "test"], ["mvn", "-B", "compile"]):
             self.manager.verify_tests(record)
@@ -154,7 +156,7 @@ class ToolService:
         elif command in (["python", "--version"], ["python", "-V"]):
             argv = [self.python_executable, "-I", "--version"]
         else:
-            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "Command or arguments are not on the allowlist.")
+            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "该命令或参数不在允许列表中。")
         output, metadata, code = run_process(argv, cwd, args.timeout_seconds)
         metadata["changed_files"] = self.manager.changed_files(record.path)
         return output, metadata, code
@@ -167,11 +169,11 @@ class ToolService:
         java = prefix + "pom.xml" in record.baseline
         python = any(prefix + marker in record.baseline for marker in ("pyproject.toml", "pytest.ini", "setup.cfg", ".agent-project.json"))
         if java and python:
-            raise ApplicationError(ErrorCode.COMMAND_FAILED, "Ambiguous test runner: register a single-language project root.")
+            raise ApplicationError(ErrorCode.COMMAND_FAILED, "无法确定测试工具，请登记仅包含一种编程语言的项目根目录。")
         if python:
             return self._run_python_tests(record, cwd, args.timeout_seconds)
         if not java:
-            raise ApplicationError(ErrorCode.COMMAND_FAILED, "No registered Maven or Python project exists at this path.")
+            raise ApplicationError(ErrorCode.COMMAND_FAILED, "此路径下没有已登记的 Maven 或 Python 项目。")
         return self._run_maven_tests(record, cwd, args.timeout_seconds)
 
     def _run_maven_tests(self, record, cwd: Path, timeout_seconds: int):

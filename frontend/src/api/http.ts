@@ -5,6 +5,15 @@ export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
 }
 
+const fieldLabels: Record<string, string> = {
+  task_description: '任务描述', source_project: '源项目', max_steps: '决策步数', execution_mode: '执行模式',
+  language: '编程语言', scope: '使用范围', repository_id: '所属仓库', reuse_status: '复用状态',
+  experience_ids: '所选经验', source_id: '来源经验', draft: '发布草稿', supersedes_id: '被替代版本',
+  task_summary: '规则名称', root_cause: '根因', solution: '修复方案', applicability: '适用条件',
+  error_type: '异常类型', issues: '相关问题', files: '文件', tags: '标签', required_capabilities: '目标所需能力',
+  limit: '每页数量', offset: '起始位置', after_sequence: '起始序号', source_task_id: '来源任务', active_only: '仅显示有效经验',
+}
+
 function errorMessage(status: number, payload: unknown, path: string): string {
   if (status >= 500) return '服务暂时不可用，请稍后重试。'
   if (status === 404 && path.startsWith('/api/projects')) return '项目登记接口不可用，请启动支持项目目录的后端。'
@@ -15,8 +24,19 @@ function errorMessage(status: number, payload: unknown, path: string): string {
     const detail = payload.detail
     if (typeof detail === 'string') return detail
     if (Array.isArray(detail)) return detail.map(item => {
-      const field = Array.isArray(item?.loc) ? item.loc.slice(1).join('.') : '请求'
-      return `${field}：${String(item?.msg ?? '参数不合法')}`
+      const field = Array.isArray(item?.loc) ? item.loc.slice(1).map((part: string | number) =>
+        typeof part === 'number' ? `第 ${part + 1} 项` : fieldLabels[part] ?? part).join(' / ') : '请求'
+      const messages: Record<string, string> = {
+        missing: '此项不能为空', string_too_short: `至少需要 ${item?.ctx?.min_length} 个字符`,
+        string_too_long: `最多允许 ${item?.ctx?.max_length} 个字符`,
+        less_than_equal: `不能大于 ${item?.ctx?.le}`, greater_than_equal: `不能小于 ${item?.ctx?.ge}`,
+        int_parsing: '请输入整数', int_type: '请输入整数', bool_parsing: '请选择是或否',
+        literal_error: '请选择有效选项', extra_forbidden: '不支持此参数', uuid_parsing: '编号格式不正确',
+        too_short: `至少需要 ${item?.ctx?.min_length} 项`, too_long: `最多允许 ${item?.ctx?.max_length} 项`,
+      }
+      const message = typeof item?.msg === 'string' && /[\u4e00-\u9fff]/.test(item.msg)
+        ? item.msg.replace(/^Value error, /, '') : messages[item?.type] ?? '内容不符合要求，请检查输入'
+      return `${field}：${message}`
     }).join('；')
   }
   return `请求未成功（${status}），请检查输入后重试。`

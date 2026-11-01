@@ -31,5 +31,5 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8003)
     parser.add_argument("--data-dir", type=Path, default=ROOT / ".cache/frontend-v3-acceptance")
     args = parser.parse_args()
-    print(f"SCRIPTED MODEL ONLY; real tools and SQLite. Data: {args.data_dir.resolve()}", flush=True)
+    print(f"当前使用脚本模型；工具、测试和 SQLite 均实际运行。数据目录：{args.data_dir.resolve()}", flush=True)
     uvicorn.run(acceptance_app(args.data_dir.resolve()), host="127.0.0.1", port=args.port)

@@ -70,11 +70,11 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         with recording_lock:
             failed = bool(recording_failures) if task_id is None else task_id in recording_failures
         if failed:
-            raise HTTPException(503, "Task recording failed; restore storage and restart the service.")
+            raise HTTPException(503, "任务记录失败，请恢复存储后重启服务。")
 
     def fail_task(task_id: str, message: str):
         try:
-            tasks.finish(task_id, error=message.strip()[:5000] or "Task execution failed.")
+            tasks.finish(task_id, error=message.strip()[:5000] or "任务执行失败。")
         except (TaskStorageError, KeyError, ValueError):
             # Do not leave a live client polling a stale 'running' snapshot forever.
             with recording_lock:
@@ -109,23 +109,23 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         except ApplicationError as exc:
             fail_task(task_id, exc.message)
         except Exception:
-            fail_task(task_id, "Task scheduling or execution failed.")
+            fail_task(task_id, "任务调度或执行失败。")
 
     @app.post("/api/tasks", status_code=202, response_model=TaskCreateResponse)
     def create_task(request: TaskCreateRequest):
         source = settings.projects.get(request.source_project)
         if source is None:
-            raise HTTPException(400, "Source project is not registered or available.")
+            raise HTTPException(400, "源项目尚未登记或当前不可用。")
         try:
             manager.validate_source(source)
             validate_project_language(settings.project(request.source_project))
         except (ApplicationError, ValueError):
-            raise HTTPException(400, "Source project is not registered or available.") from None
+            raise HTTPException(400, "源项目尚未登记或当前不可用。") from None
         response = tasks.create(request)
         try:
             executor.submit(run_task, response.task_id, request.model_copy(deep=True))
         except RuntimeError:
-            fail_task(response.task_id, "Task scheduler is unavailable.")
+            fail_task(response.task_id, "任务调度器暂时不可用。")
         return response
 
     @app.get("/api/tasks", response_model=list[TaskStatusResponse])
@@ -140,7 +140,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         try:
             return tasks.get(str(task_id))
         except KeyError:
-            raise HTTPException(404, "Task was not found.") from None
+            raise HTTPException(404, "未找到该任务。") from None
 
     @app.get("/api/tasks/{task_id}/steps", response_model=TaskStepsResponse)
     def get_steps(task_id: UUID):
@@ -148,7 +148,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         try:
             return tasks.get_steps(str(task_id))
         except KeyError:
-            raise HTTPException(404, "Task was not found.") from None
+            raise HTTPException(404, "未找到该任务。") from None
 
     @app.get("/api/tasks/{task_id}/agents", response_model=list[AgentEvent])
     def get_agent_events(task_id: UUID, after_sequence: Annotated[int, Query(ge=0, le=2**63-1)] = 0,
@@ -157,7 +157,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         try:
             return tasks.get_agent_events(str(task_id), after_sequence=after_sequence, limit=limit)
         except KeyError:
-            raise HTTPException(404, "Task was not found.") from None
+            raise HTTPException(404, "未找到该任务。") from None
 
     register_experience_routes(app, experiences)
 

@@ -35,9 +35,9 @@ describe('HTTP contract', () => {
 
   it('formats FastAPI 422 details and preserves the HTTP status', async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: [
-      { loc: ['body', 'max_steps'], msg: 'Input should be less than or equal to 100' },
+      { loc: ['body', 'max_steps'], type: 'less_than_equal', ctx: { le: 100 }, msg: 'Input should be less than or equal to 100' },
     ] }), { status: 422 }))
-    await expect(createHttpApi('', fetcher).getTask('x')).rejects.toMatchObject({ status: 422, message: expect.stringContaining('max_steps') })
+    await expect(createHttpApi('', fetcher).getTask('x')).rejects.toMatchObject({ status: 422, message: '决策步数：不能大于 100' })
   })
 
   it('does not display raw server error pages', async () => {

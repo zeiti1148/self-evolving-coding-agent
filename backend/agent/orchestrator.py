@@ -14,7 +14,7 @@ from .context import capture_context
 from .core import error_types_in
 from .extraction import extract_and_save_experiences, verification_passed
 from .proposals import apply_proposal
-from .roles import RoleRunner
+from .roles import ROLE_LABELS, RoleRunner
 
 
 def repairable_test_failure(result, language):
@@ -62,7 +62,7 @@ class MultiAgentCoordinator:
                     try:
                         on_event(event.model_copy(deep=True))
                     except Exception:
-                        raise ApplicationError(ErrorCode.INTERNAL_ERROR, "Could not persist a role event.") from None
+                        raise ApplicationError(ErrorCode.INTERNAL_ERROR, "无法保存角色过程记录。") from None
 
         def execute(workspace, call, *, final=False):
             nonlocal changed
@@ -76,13 +76,13 @@ class MultiAgentCoordinator:
                     raise ValueError("mismatched tool response")
             except Exception:
                 result = ToolResult(call_id=call.id, tool_name=call.name, success=False,
-                                    error_code=ErrorCode.INTERNAL_TOOL_ERROR, error_message="Tool execution failed.")
+                                    error_code=ErrorCode.INTERNAL_TOOL_ERROR, error_message="工具执行失败。")
             result = result.model_copy(deep=True)
             if final:
                 if result.success and not verification_passed(result, request.language):
                     result = ToolResult(call_id=call.id, tool_name=call.name, success=False,
                         output=result.output, metadata=result.metadata, error_code=ErrorCode.TEST_FAILED,
-                        error_message="Final verification requires valid positive test evidence.")
+                        error_message="最终验证必须包含实际执行且通过的测试证据。")
                 result.metadata["final_verification"] = True
             if isinstance(result.metadata.get("changed_files"), list):
                 changed = list(result.metadata["changed_files"])
@@ -91,7 +91,7 @@ class MultiAgentCoordinator:
                 try:
                     on_step(TaskStep(sequence=len(calls), call=call, result=result.model_copy(deep=True)))
                 except Exception:
-                    raise ApplicationError(ErrorCode.INTERNAL_ERROR, "Could not persist a completed tool step.") from None
+                    raise ApplicationError(ErrorCode.INTERNAL_ERROR, "无法保存已完成的工具步骤。") from None
             budget.remaining_seconds()
             return result
 
@@ -106,7 +106,7 @@ class MultiAgentCoordinator:
                 return [to_model_reference(entry) for entry in entries]
             except Exception:
                 with lock:
-                    retrieval_events.append({"experience_ids": [], "error": "Retrieval unavailable"})
+                    retrieval_events.append({"experience_ids": [], "error": "经验检索暂时不可用"})
                 return []
 
         def capture():
@@ -116,15 +116,15 @@ class MultiAgentCoordinator:
         def run_role(role, context, proposal=None):
             agent_id = str(uuid4())
             context = replace(context, reference_experiences=retrieve())
-            emit(role, agent_id, role, "started", f"{role.title()} started with an independent context.", context.snapshot_revision)
+            emit(role, agent_id, role, "started", f"{ROLE_LABELS[role]}角色已启动，使用独立上下文。", context.snapshot_revision)
             try:
                 if role == "diagnosis": value = roles.diagnose(context, agent_id)
                 elif role == "repair": value = roles.propose(context, agent_id)
                 else: value = roles.review(context, proposal, agent_id)
                 audit = next(item for item in roles.audit if item["agent_id"] == agent_id)
                 summary = (value.summary if role == "diagnosis" else
-                           f"Proposal {value.proposal_id}: {len(value.changes)} source changes submitted." if role == "repair" else
-                           ("Review accepted: " if value.accepted else "Review rejected: ") + "; ".join(value.reasons))
+                           f"已提交修改提案 {value.proposal_id}，涉及 {len(value.changes)} 个源文件。" if role == "repair" else
+                           ("复核通过：" if value.accepted else "复核未通过：") + "；".join(value.reasons))
                 emit(role, agent_id, role, "completed", summary, context.snapshot_revision,
                      {"reported_tokens": audit["reported_tokens"], "elapsed_ms": audit["elapsed_ms"]})
                 return value
@@ -132,11 +132,11 @@ class MultiAgentCoordinator:
                 stopped = isinstance(exc, ApplicationError) and exc.code == ErrorCode.AGENT_STOPPED
                 audit = next((item for item in roles.audit if item["agent_id"] == agent_id), {})
                 emit(role, agent_id, role, "stopped" if stopped else "failed",
-                     exc.message if isinstance(exc, ApplicationError) else f"{role.title()} failed.", context.snapshot_revision,
+                     exc.message if isinstance(exc, ApplicationError) else f"{ROLE_LABELS[role]}失败。", context.snapshot_revision,
                      {"reported_tokens": audit.get("reported_tokens"), "elapsed_ms": audit.get("elapsed_ms", 0)})
                 raise
 
-        status, summary, error = "failed", "Collaboration did not complete.", None
+        status, summary, error = "failed", "协作任务尚未完成。", None
         repaired, passed, saved, ids, save_error = False, None, None, [], None
         try:
             baseline = execute(request.workspace, ToolCall(id=str(uuid4()), name="run_tests"))
@@ -151,61 +151,61 @@ class MultiAgentCoordinator:
                 diagnoses = [future.result().model_dump(mode="json") for future in futures]
             while True:
                 if budget.decisions >= request.max_steps:
-                    raise ApplicationError(ErrorCode.AGENT_STOPPED, "Shared decision budget exhausted.")
+                    raise ApplicationError(ErrorCode.AGENT_STOPPED, "所有角色共用的决策次数已用完。")
                 snapshot = capture()
                 proposal = run_role("repair", snapshot)
                 review = run_role("review", snapshot, proposal)
                 if not review.accepted:
-                    feedback.append("Independent review rejected the proposal: " + "; ".join(review.reasons))
+                    feedback.append("独立复核未通过：" + "; ".join(review.reasons))
                     continue
                 # A fresh complete snapshot checks changes during model calls, before any writes.
                 current = capture()
-                emit("coordinator", coordinator_id, "apply", "started", f"Checking proposal {proposal.proposal_id}.", current.snapshot_revision)
+                emit("coordinator", coordinator_id, "apply", "started", f"正在检查修改提案 {proposal.proposal_id}。", current.snapshot_revision)
                 try:
                     apply_proposal(proposal, request, execute, snapshot_revision=current.snapshot_revision)
                 except ApplicationError as exc:
                     emit("coordinator", coordinator_id, "apply", "failed", exc.message, current.snapshot_revision)
-                    if exc.code == ErrorCode.INVALID_TOOL_CALL and "Stale proposal" in exc.message:
+                    if exc.code == ErrorCode.INVALID_TOOL_CALL and exc.details.get("stale_proposal"):
                         feedback.append(exc.message)
                         continue
                     raise
-                emit("coordinator", coordinator_id, "apply", "completed", f"Applied reviewed proposal {proposal.proposal_id}.", current.snapshot_revision)
-                emit("coordinator", coordinator_id, "verify", "started", "Program is running independent final tests.")
+                emit("coordinator", coordinator_id, "apply", "completed", f"已应用通过复核的修改提案 {proposal.proposal_id}。", current.snapshot_revision)
+                emit("coordinator", coordinator_id, "verify", "started", "程序正在独立运行最终测试。")
                 final = execute(request.workspace, ToolCall(id=str(uuid4()), name="run_tests"), final=True)
                 passed = True if final.success else False if final.error_code == ErrorCode.TEST_FAILED else None
                 emit("coordinator", coordinator_id, "verify", "completed" if passed else "failed",
-                     f"Final tests: tests={final.metadata.get('tests')}, failures={final.metadata.get('failures')}, errors={final.metadata.get('errors')}, skipped={final.metadata.get('skipped')}.")
+                     f"最终测试：共 {final.metadata.get('tests')} 项，失败 {final.metadata.get('failures')} 项，错误 {final.metadata.get('errors')} 项，跳过 {final.metadata.get('skipped')} 项。")
                 if passed:
-                    status, repaired, summary = "succeeded", True, "Reviewed changes passed independent final tests."
+                    status, repaired, summary = "succeeded", True, "经过复核的修改已通过程序独立运行的最终测试。"
                     break
                 if not repairable_test_failure(final, request.language):
                     raise ApplicationError(final.error_code, final.error_message)
                 facts = [final.model_dump(mode="json")]
                 observed = list(dict.fromkeys([*observed, *final.metadata.get("error_types", [])]))[:20]
-                feedback.append("Independent final tests still fail; address the new failure facts.")
+                feedback.append("独立运行的最终测试仍有失败，请根据新的失败信息继续修复。")
         except ApplicationError as exc:
             status = "stopped" if exc.code == ErrorCode.AGENT_STOPPED else "failed"
-            error, summary = exc.message, "Collaboration stopped." if status == "stopped" else "Collaboration failed."
+            error, summary = exc.message, "协作任务已停止。" if status == "stopped" else "协作任务失败。"
         except Exception:
-            status, error, summary = "failed", "A collaboration role or coordinator operation failed.", "Collaboration failed."
+            status, error, summary = "failed", "角色调用或程序协调操作失败。", "协作任务失败。"
 
         if status == "succeeded":
             extractor, extractor_id = None, str(uuid4())
             extraction_started = time.monotonic()
             try:
                 budget.remaining_seconds()
-                emit("extractor", extractor_id, "extract", "started", "Extracting one atomic batch from final test facts.")
+                emit("extractor", extractor_id, "extract", "started", "正在依据最终测试结果提取经验，整批保存。")
                 extractor = self.llm_factory()
                 if any(extractor is client for client in roles.clients):
-                    raise ApplicationError(ErrorCode.LLM_ERROR, "Extractor requires an independent client.")
+                    raise ApplicationError(ErrorCode.LLM_ERROR, "经验提取必须使用独立的模型客户端。")
                 if hasattr(extractor, "set_deadline"): extractor.set_deadline(budget.deadline)
                 records = extract_and_save_experiences(extractor, self.experiences, request, summary=summary,
                     changed_files=changed, calls=calls, results=results, deadline=budget.deadline)
                 ids, saved = [entry.id for entry in records], True
-                emit("extractor", extractor_id, "extract", "completed", "Saved experiences: " + ", ".join(ids),
+                emit("extractor", extractor_id, "extract", "completed", "已保存经验：" + ", ".join(ids),
                      usage=client_usage(extractor, extraction_started))
             except Exception:
-                saved, save_error = False, "Experience extraction, validation or storage failed."
+                saved, save_error = False, "经验提取、校验或保存失败。"
                 ids = []
                 emit("extractor", extractor_id, "extract", "failed", save_error, usage=client_usage(extractor, extraction_started))
             finally:

@@ -26,7 +26,7 @@ def test_two_workers_compete_for_last_decision_without_overshoot():
 
 def test_expired_budget_permits_no_new_decisions():
     budget = budget_type()(max_decisions=10, deadline=time.monotonic() - 1)
-    with pytest.raises(ApplicationError, match="time budget"):
+    with pytest.raises(ApplicationError, match="时限"):
         budget.reserve_decision()
     with pytest.raises(ApplicationError):
         budget.remaining_seconds()

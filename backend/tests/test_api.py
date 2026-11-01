@@ -76,7 +76,7 @@ def test_model_configuration_failure_becomes_visible_terminal_error(tmp_path):
             if status["status"] == "failed":
                 break
             time.sleep(0.01)
-        assert status["status"] == "failed" and "Configure" in status["error_message"]
+        assert status["status"] == "failed" and "配置" in status["error_message"]
         assert status["result"]["tests_passed"] is None
 
 
@@ -131,7 +131,7 @@ def test_api_startup_exposes_interrupted_tasks_without_scheduling_them(tmp_path)
     with TestClient(create_app(settings)) as client:
         response = client.get(f"/api/tasks/{task_id}").json()
         assert response["status"] == "stopped" and response["result"] is None
-        assert "restart" in response["error_message"].lower()
+        assert "重启" in response["error_message"].lower()
         assert response["steps_completed"] == 1
         assert client.get(f"/api/tasks/{task_id}/steps").json()["steps"][0]["result"]["output"] == "Saved before restart"
 

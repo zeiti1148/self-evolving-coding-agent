@@ -54,7 +54,10 @@ class Settings:
         language = "python" if (source / "pyproject.toml").is_file() and not (source / "pom.xml").is_file() else "java"
         greeting = '修复 GreetingService.greet：name 为 null 时返回 "Hello, guest!"，保留正常字符串行为，并通过原始测试。'
         repository = "java-benchmarks" if identifier in Settings().projects else identifier
-        return ProjectDefinition(id=identifier, label=identifier, language=language,
+        labels = {"java-null-greeting": "Java 问候语：空值修复", "java-null-profile": "Java 用户资料：空值修复",
+                  "java-null-list": "Java 列表：空值修复", "java-null-map": "Java 映射：空值修复",
+                  "java-range-end": "Java 范围：边界修复", "java-parse-count": "Java 数量：解析修复"}
+        return ProjectDefinition(id=identifier, label=labels.get(identifier, identifier), language=language,
                                  repository_id=repository, source=source,
                                  task_example=greeting if identifier == "java-null-greeting" else "修复项目中的异常并通过全部原始测试，保持正常行为。")
 

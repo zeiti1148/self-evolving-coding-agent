@@ -17,13 +17,13 @@ class RunBudget:
     def remaining_seconds(self):
         remaining = self.deadline - time.monotonic()
         if remaining <= 0:
-            raise ApplicationError(ErrorCode.AGENT_STOPPED, "Task time budget exhausted.")
+            raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
         return remaining
 
     def reserve_decision(self):
         with self.lock:
             self.remaining_seconds()
             if self.decisions >= self.max_decisions:
-                raise ApplicationError(ErrorCode.AGENT_STOPPED, "Shared decision budget exhausted.")
+                raise ApplicationError(ErrorCode.AGENT_STOPPED, "所有角色共用的决策次数已用完。")
             self.decisions += 1
             return self.decisions

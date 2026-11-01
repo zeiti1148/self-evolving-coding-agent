@@ -118,7 +118,7 @@ def test_callback_failure_is_terminal_and_not_silently_dropped(setup):
     def fail(step):
         raise RuntimeError("failed")
     result = Agent(SequenceLLM([tool_message()]), execute, store).run(request, on_step=fail)
-    assert result.status == "failed" and "record" in result.error_message
+    assert result.status == "failed" and "记录" in result.error_message
     assert len(result.steps) == 1 and result.tests_passed is None
 
 
@@ -191,7 +191,7 @@ def test_http_protocol_and_safe_error_messages():
 
 
 def test_missing_model_configuration_fails_safely():
-    with pytest.raises(ApplicationError, match="Configure"):
+    with pytest.raises(ApplicationError, match="配置"):
         ChatClient(Settings()).complete([])
 
 
@@ -255,7 +255,7 @@ def test_compressed_response_is_rejected_before_body_is_consumed():
         assert request.headers["accept-encoding"] == "identity"
         return httpx.Response(200, headers={"Content-Encoding": "gzip"}, stream=NeverRead())
     client = ChatClient(settings, transport=httpx.MockTransport(handler))
-    with pytest.raises(ApplicationError, match="invalid response"):
+    with pytest.raises(ApplicationError, match="无效响应"):
         client.complete([])
     client.close()
 

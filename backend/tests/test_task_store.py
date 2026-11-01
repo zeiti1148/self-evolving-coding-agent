@@ -65,7 +65,7 @@ def test_restart_stops_only_unfinished_tasks_without_replaying_steps(tmp_path):
             value = second.get(task_id)
             assert value.status == "stopped" and value.result is None
             assert value.finished_at >= (value.started_at or value.created_at)
-            assert "restart" in value.error_message.lower()
+            assert "重启" in value.error_message.lower()
         assert second.get(pending).started_at is None
         assert second.get(running).steps_completed == 1
         assert second.get_steps(running).steps == [step]

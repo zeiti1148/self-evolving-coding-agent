@@ -57,7 +57,7 @@ def maven_argv(maven_home: Path, cwd: Path, goals: list[str]) -> list[str]:
     java = str(Path(java_home) / "bin" / ("java.exe" if os.name == "nt" else "java")) if java_home else shutil.which("java")
     jars = list((maven_home / "boot").glob("plexus-classworlds-*.jar"))
     if not java or len(jars) != 1 or not (maven_home / "bin/m2.conf").is_file():
-        raise ApplicationError(ErrorCode.COMMAND_FAILED, "Java or Maven is unavailable. Configure JAVA_HOME and MAVEN_HOME.")
+        raise ApplicationError(ErrorCode.COMMAND_FAILED, "Java 或 Maven 不可用，请配置 JAVA_HOME 和 MAVEN_HOME。")
     return [java, "-Dfile.encoding=UTF-8", "-Dmaven.home=" + str(maven_home),
             "-Dclassworlds.conf=" + str(maven_home / "bin/m2.conf"),
             "-Dmaven.multiModuleProjectDirectory=" + str(cwd),
@@ -94,7 +94,7 @@ def run_process(argv: list[str], cwd: Path, timeout: int, limit: int = 50_000) -
                                    start_new_session=os.name != "nt",
                                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
     except OSError as exc:
-        raise ApplicationError(ErrorCode.COMMAND_FAILED, "Cannot start the configured executable.") from exc
+        raise ApplicationError(ErrorCode.COMMAND_FAILED, "无法启动已配置的可执行程序。") from exc
     job = None
     if os.name == "nt":
         try:
@@ -102,7 +102,7 @@ def run_process(argv: list[str], cwd: Path, timeout: int, limit: int = 50_000) -
         except OSError as exc:
             terminate_tree(process)
             process.wait(timeout=10)
-            raise ApplicationError(ErrorCode.COMMAND_FAILED, "Cannot contain the command process tree.") from exc
+            raise ApplicationError(ErrorCode.COMMAND_FAILED, "无法限制命令的子进程范围。") from exc
     chunks: list[bytes] = []
     captured = 0
     total = 0

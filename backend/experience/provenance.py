@@ -12,7 +12,7 @@ def get_provenance(path, experience_id, *, max_nodes=100, max_depth=10):
     validate_integer(max_nodes, "max_nodes", 1)
     validate_integer(max_depth, "max_depth", 0)
     if max_nodes > 100 or max_depth > 10:
-        raise validation_error("Provenance is limited to 100 nodes and depth 10.")
+        raise validation_error("来源追踪最多包含 100 个节点，深度不超过 10 层。")
     nodes, edges, seen, truncated = [], [], set(), False
     queue = deque([(experience_id, 0, frozenset(), None)])
     with connect(path) as connection:
