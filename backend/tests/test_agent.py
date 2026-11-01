@@ -67,6 +67,23 @@ def test_multiround_mapping_callbacks_final_test_and_persistence(setup):
     assert result.steps[-1].id in saved.verification
 
 
+@pytest.mark.parametrize("passed", [True, False])
+def test_final_summary_uses_program_result_instead_of_pretest_model_claim(setup, passed):
+    request, store, _ = setup
+    model_claim = "代码修改已完成，等待程序独立运行最终测试。" if passed else "模型声称修复成功。"
+    def execute(workspace, call):
+        return ToolResult(call_id=call.id, tool_name=call.name, success=passed,
+            error_code=None if passed else ErrorCode.TEST_FAILED,
+            error_message=None if passed else "最终测试失败",
+            metadata={"runner": "maven", "tests": 2, "failures": 0 if passed else 1, "errors": 0,
+                      "skipped": 0, "changed_files": ["src/Main.java"]})
+    llm = SequenceLLM([{"role": "assistant", "content": model_claim}, extraction()])
+    result = Agent(llm, execute, store).run(request)
+    assert result.tests_passed is passed
+    assert model_claim not in result.summary
+    assert ("2 项测试全部通过" if passed else "最终测试未通过") in result.summary
+
+
 @pytest.mark.parametrize("code,expected", [(ErrorCode.TEST_FAILED, False), (ErrorCode.COMMAND_TIMEOUT, None), (ErrorCode.COMMAND_FAILED, None)])
 def test_final_verification_tristate(setup, code, expected):
     request, store, _ = setup
@@ -118,7 +135,7 @@ def test_callback_failure_is_terminal_and_not_silently_dropped(setup):
     def fail(step):
         raise RuntimeError("failed")
     result = Agent(SequenceLLM([tool_message()]), execute, store).run(request, on_step=fail)
-    assert result.status == "failed" and "record" in result.error_message
+    assert result.status == "failed" and "记录" in result.error_message
     assert len(result.steps) == 1 and result.tests_passed is None
 
 
@@ -191,7 +208,7 @@ def test_http_protocol_and_safe_error_messages():
 
 
 def test_missing_model_configuration_fails_safely():
-    with pytest.raises(ApplicationError, match="Configure"):
+    with pytest.raises(ApplicationError, match="配置"):
         ChatClient(Settings()).complete([])
 
 
@@ -255,7 +272,7 @@ def test_compressed_response_is_rejected_before_body_is_consumed():
         assert request.headers["accept-encoding"] == "identity"
         return httpx.Response(200, headers={"Content-Encoding": "gzip"}, stream=NeverRead())
     client = ChatClient(settings, transport=httpx.MockTransport(handler))
-    with pytest.raises(ApplicationError, match="invalid response"):
+    with pytest.raises(ApplicationError, match="无效响应"):
         client.complete([])
     client.close()
 

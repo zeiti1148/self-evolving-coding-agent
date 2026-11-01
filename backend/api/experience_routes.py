@@ -16,7 +16,7 @@ class MergeRequest(BaseModel):
     @classmethod
     def unique_ids(cls, values):
         if len(set(values)) != len(values):
-            raise ValueError("Select distinct experiences")
+            raise ValueError("请选择不同的经验")
         return values
 
 
@@ -42,7 +42,7 @@ def register_experience_routes(app, store):
     def sources(body):
         ids = [str(value) for value in body.experience_ids]
         if any(store.get_experience(identifier) is None for identifier in ids):
-            raise HTTPException(404, "An experience selected for merging was not found.")
+            raise HTTPException(404, "未找到选中用于合并的经验。")
         return ids
 
     @router.get("", response_model=list[Experience])
@@ -82,7 +82,7 @@ def register_experience_routes(app, store):
     def detail(identifier: UUID):
         record = operation(lambda: store.get_experience(str(identifier)))
         if record is None:
-            raise HTTPException(404, "Experience was not found.")
+            raise HTTPException(404, "未找到该经验。")
         return record
 
     app.include_router(router)

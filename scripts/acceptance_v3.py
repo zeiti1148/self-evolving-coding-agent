@@ -125,7 +125,8 @@ def run(live: bool, directory: Path) -> dict:
         return response.json()
 
     def submit(client, identifier, *, label, mode="multi", max_steps=24, fault=None, expect="succeeded", save_ok=True):
-        active["factory"] = ScriptedRoleFactory(partial_first="checkout" in identifier, fail_role=fault)
+        active["factory"] = ScriptedRoleFactory(partial_first="checkout" in identifier, fail_role=fault,
+                                                repository_cases={restricted.repository_id: target.id})
         start_index, started = len(requests), time.monotonic()
         project = settings.project(identifier)
         created = http(client, "post", "/api/tasks", json={"source_project": identifier, "task_description": project.task_example,

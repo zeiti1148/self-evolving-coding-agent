@@ -261,7 +261,7 @@ def test_conflicting_repair_order_is_not_silently_reordered(store):
     first, second = issue(), issue("NumberFormatException")
     left = store.save_experience(data(issues=[first, second]))
     right = store.save_experience(data(issues=[second, first]))
-    assert "repair orders" in " ".join(store.preview_merge([left.id, right.id])["conflicts"])
+    assert "修复顺序" in " ".join(store.preview_merge([left.id, right.id])["conflicts"])
 
 
 def test_merge_can_preserve_a_combined_dependency_order(store):
@@ -285,7 +285,7 @@ def test_source_already_merged_requires_using_its_current_replacement(store):
 def test_merge_missing_source_changes_nothing(store):
     existing = store.save_experience(data())
     plan = store.preview_merge([existing.id, str(uuid4())])
-    assert not plan["can_merge"] and "not found" in plan["conflicts"][0]
+    assert not plan["can_merge"] and "未找到" in plan["conflicts"][0]
     assert store.list_experiences() == [existing]
 
 

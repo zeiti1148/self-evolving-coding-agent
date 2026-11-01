@@ -87,6 +87,22 @@ it('shows verified success separately from failed experience saving', () => {
   expect(wrapper.text()).toContain('经验存储暂不可用')
   wrapper.unmount()
 })
+it('uses final test facts for the main conclusion while preserving the old pretest summary separately', () => {
+  const summary = '代码修改已完成，等待程序独立运行最终测试。'
+  const wrapper = mount(ResultSummary, { props: { result: { ...result, summary } } })
+  expect(wrapper.get('.result-summary').text()).toContain('最终测试已通过')
+  expect(wrapper.get('.result-summary').text()).not.toContain('等待')
+  expect(wrapper.get('details').text()).toContain(summary)
+  expect(wrapper.get('details').attributes('open')).toBeUndefined()
+  wrapper.unmount()
+})
+it('does not use a model success claim when final tests failed', () => {
+  const wrapper = mount(ResultSummary, { props: { result: { ...result, status: 'failed', tests_passed: false,
+    repair_succeeded: false, summary: '模型声称修复成功。' } } })
+  expect(wrapper.get('.result-summary').text()).toContain('最终测试未通过')
+  expect(wrapper.get('.result-summary').text()).not.toContain('修复成功')
+  wrapper.unmount()
+})
 it('does not turn null test and experience facts into failures', () => {
   const wrapper = mount(ResultSummary, { props: { result: {
     ...result, status: 'stopped', repair_succeeded: false, tests_passed: null,
@@ -210,6 +226,7 @@ it('keeps a verified result visible while HTTP step loading fails and recovers o
     await flushPromises()
     expect(wrapper.text()).toContain('修复成功')
     expect(wrapper.text()).toContain('测试通过')
+    expect(wrapper.html().indexOf('result-panel')).toBeLessThan(wrapper.html().indexOf('execution-panel'))
     expect(wrapper.get('[role="alert"]').text()).toContain('服务暂时不可用')
     expect(wrapper.text()).not.toContain('private traceback')
     failSteps = false

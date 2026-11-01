@@ -35,7 +35,7 @@ def validation_error(message: str) -> ApplicationError:
 def validate_integer(value: int, name: str, minimum: int) -> None:
     # sqlite3 parameters must fit in a signed 64-bit integer; bool is not a limit.
     if type(value) is not int or not minimum <= value <= 2**63 - 1:
-        raise validation_error(f"{name} must be an integer from {minimum} to 2^63-1.")
+        raise validation_error(f"参数 {name} 必须是 {minimum} 到 2^63-1 之间的整数。")
 
 
 def decode_row(row: sqlite3.Row) -> Experience:
@@ -78,15 +78,15 @@ def _uuid(value: str) -> str:
             raise ValueError("not text")
         return str(UUID(value))
     except (ValueError, AttributeError, TypeError):
-        raise validation_error("Experience IDs must be valid UUID strings.") from None
+        raise validation_error("经验编号必须是有效的 UUID。") from None
 
 
 def _merge_ids(values: list[str]) -> list[str]:
     if not isinstance(values, list) or not 2 <= len(values) <= 10:
-        raise validation_error("Select between 2 and 10 distinct experiences.")
+        raise validation_error("请选择 2 至 10 条不同的经验。")
     ids = [_uuid(value) for value in values]
     if len(ids) != len(set(ids)):
-        raise validation_error("Select distinct experiences.")
+        raise validation_error("请选择不同的经验。")
     return sorted(ids)
 
 
@@ -100,15 +100,15 @@ def _normalized(value: str) -> str:
 
 def _validate_filters(language=None, repository_id=None, scope=None):
     if language is not None and (not isinstance(language, str) or language not in {"java", "python"}):
-        raise validation_error("language must be java or python.")
+        raise validation_error("语言必须为 java 或 python。")
     if scope is not None and (not isinstance(scope, str) or scope not in {"global", "project"}):
-        raise validation_error("scope must be global or project.")
+        raise validation_error("经验范围必须为通用（global）或仓库专属（project）。")
     if repository_id is not None and (not isinstance(repository_id, str) or not repository_id.strip() or len(repository_id) > 200):
-        raise validation_error("repository_id must be a nonblank string up to 200 characters.")
+        raise validation_error("仓库标识不能为空，且不能超过 200 个字符。")
     try:
         (repository_id or "").encode("utf-8")
     except UnicodeEncodeError:
-        raise validation_error("repository_id must be valid Unicode.") from None
+        raise validation_error("仓库标识包含无效字符。") from None
 
 
 def _insert(connection: sqlite3.Connection, saved: Experience) -> None:
@@ -168,11 +168,11 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
     for source_id in ids:
         row = connection.execute(f"SELECT {COLUMNS} FROM experiences WHERE id=?", (source_id,)).fetchone()
         if row is None:
-            conflicts.append(f"Experience was not found: {source_id}")
+            conflicts.append(f"未找到经验：{source_id}")
             continue
         sources.append(decode_row(row))
         if connection.execute(f"SELECT 1 WHERE ? IN ({SUPERSEDED})", (source_id,)).fetchone():
-            conflicts.append(f"Experience has already been merged or superseded: {source_id}")
+            conflicts.append(f"经验已被合并或替代：{source_id}")
     if conflicts:
         return {"can_merge": False, "conflicts": conflicts, "source_ids": ids, "preview": None}
     # Stable source chronology preserves each record's declared repair order.
@@ -180,13 +180,13 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
     first = sources[0]
     for source in sources[1:]:
         if (source.language, source.scope, source.repository_id) != (first.language, first.scope, first.repository_id):
-            conflicts.append("Experiences must have the same language, scope and repository.")
+            conflicts.append("待合并经验必须具有相同的语言、使用范围和所属仓库。")
         if set(source.applicability) != set(first.applicability):
-            conflicts.append("Applicability conditions differ; keep these experiences separate.")
+            conflicts.append("适用条件不同，请分别保留这些经验。")
         if source.reuse_status != first.reuse_status:
-            conflicts.append("Reuse status differs; a merge cannot publish or review sources.")
+            conflicts.append("复用状态不同，不能通过合并代替发布或审阅。")
         if set(source.required_capabilities) != set(first.required_capabilities):
-            conflicts.append("Required capabilities differ; keep these experiences separate.")
+            conflicts.append("目标所需能力不同，请分别保留这些经验。")
     issues = []
     evidence = []
     evidence_seen = set()
@@ -202,7 +202,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
                     _file_keys(issue) & _file_keys(previous))
                 same_rule = (issue.root_cause, issue.solution) == (previous.root_cause, previous.solution)
                 if same_error and overlap and not same_rule:
-                    conflicts.append(f"Different repair rules overlap for {issue.error_type}; review the source records.")
+                    conflicts.append(f"针对 {issue.error_type} 的修复规则存在重叠冲突，请检查来源记录。")
             if not duplicate:
                 issues.append(issue)
         for item in source.evidence:
@@ -210,7 +210,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             if key in evidence_seen:
                 previous = next(e for e in evidence if (e.source_task_id, e.tool_call_id) == key)
                 if previous != item:
-                    conflicts.append("The same verification call has inconsistent evidence.")
+                    conflicts.append("同一次验证调用的测试证据不一致。")
             else:
                 evidence_seen.add(key)
                 evidence.append(item)
@@ -225,7 +225,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
     while pending:
         ready = next((key for key in pending if not predecessors[key] & pending.keys()), None)
         if ready is None:
-            conflicts.append("Source experiences require conflicting repair orders.")
+            conflicts.append("来源经验要求的修复顺序存在冲突。")
             break
         ordered.append(pending.pop(ready))
     if not pending:
@@ -239,7 +239,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             schema_version=3,
             reuse_status=first.reuse_status if all(source.evidence for source in sources) else "legacy_unreviewed",
             required_capabilities=first.required_capabilities,
-            task_summary="Merged repair knowledge: " + " / ".join(_unique_text(source.task_summary for source in sources)),
+            task_summary="合并经验：" + " / ".join(_unique_text(source.task_summary for source in sources)),
             error_type=error_types[0] if len(error_types) == 1 else None,
             root_cause="\n".join(f"{i + 1}. {issue.root_cause}" for i, issue in enumerate(issues)),
             solution="\n".join(f"{i + 1}. {issue.solution}" for i, issue in enumerate(issues)),
@@ -250,7 +250,7 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             applicability=first.applicability, issues=issues, evidence=evidence, merged_from=ids,
         )
     except ValidationError:
-        return {"can_merge": False, "conflicts": ["Combined experience exceeds the structured record limits; merge fewer sources."],
+        return {"can_merge": False, "conflicts": ["合并后内容超出记录限制，请减少合并的经验数量。"],
                 "source_ids": ids, "preview": None}
     return {"can_merge": True, "conflicts": [], "source_ids": ids, "preview": preview}
 
@@ -263,17 +263,17 @@ class ExperienceStore:
 
     def save_experience(self, data: ExperienceCreate) -> Experience:
         if not isinstance(data, ExperienceCreate):
-            raise validation_error("data must be an ExperienceCreate instance.")
+            raise validation_error("经验数据必须符合 ExperienceCreate 模型。")
         try:
             # Revalidate mutable nested fields that can bypass validate_assignment.
             validated = ExperienceCreate.model_validate(data.model_dump())
             json.dumps(validated.model_dump(mode="json"), ensure_ascii=False).encode("utf-8")
         except (ValidationError, UnicodeError):
-            raise validation_error("Experience data does not match the shared model.") from None
+            raise validation_error("经验数据不符合公共数据模型。") from None
         if validated.merged_from or validated.derived_from or validated.supersedes_id or validated.batch_id:
-            raise validation_error("Use the dedicated batch, merge or publication operation for provenance.")
+            raise validation_error("请通过批量保存、合并或发布操作生成来源信息。")
         if validated.scope == "global" and validated.reuse_status == "active":
-            raise validation_error("Active global experiences require explicit publication.")
+            raise validation_error("通用经验必须显式发布后才能启用。")
         saved = _new_experience(validated)
         with connect(self.database_path) as connection:
             _insert(connection, saved)
@@ -303,9 +303,9 @@ class ExperienceStore:
         validate_integer(offset, "offset", 0)
         _validate_filters(language, repository_id, scope)
         if type(active_only) is not bool:
-            raise validation_error("active_only must be a boolean.")
+            raise validation_error("仅显示有效记录的参数必须为布尔值。")
         if reuse_status is not None and reuse_status not in {"active", "candidate", "legacy_unreviewed"}:
-            raise validation_error("Unknown reuse status.")
+            raise validation_error("无法识别该复用状态。")
         if source_task_id is not None:
             source_task_id = _uuid(source_task_id)
         with connect(self.database_path) as connection:
@@ -349,17 +349,17 @@ class ExperienceStore:
         validate_integer(limit, "limit", 1)
         _validate_filters(language, repository_id)
         if language is None:
-            raise validation_error("language must be java or python.")
+            raise validation_error("语言必须为 java 或 python。")
         if not isinstance(query, str) or not isinstance(error_types, list) or any(
             not isinstance(value, str) or not value.strip() for value in error_types):
-            raise validation_error("query and error_types must contain text.")
+            raise validation_error("检索内容和异常类型必须为文本。")
         try:
             " ".join([query, *error_types]).encode("utf-8")
         except UnicodeEncodeError:
-            raise validation_error("Retrieval text must be valid Unicode.") from None
+            raise validation_error("检索文本包含无效字符。") from None
         if capabilities is not None and (not isinstance(capabilities, list) or any(
                 not isinstance(value, str) or not value.strip() for value in capabilities)):
-            raise validation_error("capabilities must contain nonblank identifiers.")
+            raise validation_error("能力列表必须包含非空标识。")
         context = RetrievalContext(language, repository_id, frozenset(capabilities or []))
         with connect(self.database_path) as connection:
             entries = (decode_row(row) for row in connection.execute(
@@ -403,21 +403,21 @@ class ExperienceStore:
     ) -> list[Experience]:
         validate_integer(limit, "limit", 1)
         if not isinstance(query, str):
-            raise validation_error("query must be a string.")
+            raise validation_error("查询内容必须为文本。")
         if tags is not None and (
             not isinstance(tags, list)
             or any(not isinstance(tag, str) or not tag.strip() for tag in tags)
         ):
-            raise validation_error("tags must be a list of nonblank strings.")
+            raise validation_error("标签必须是非空文本组成的列表。")
         if error_type is not None and (
             not isinstance(error_type, str) or not error_type.strip()
         ):
-            raise validation_error("error_type must be a nonblank string or None.")
+            raise validation_error("异常类型必须为非空文本或空值。")
         try:
             for text in [query, error_type or "", *(tags or [])]:
                 text.encode("utf-8")
         except UnicodeEncodeError:
-            raise validation_error("Search text must be valid Unicode.") from None
+            raise validation_error("搜索文本包含无效字符。") from None
 
         conditions: list[str] = ["id NOT IN (SELECT source_id FROM experience_merge_sources)"]
         parameters: list[str | int] = []

@@ -74,7 +74,7 @@ def test_same_task_changed_batch_conflicts(tmp_path):
     items = batch()
     saved = save(store, items)
     items[0].solution = "Different knowledge"
-    with pytest.raises(ApplicationError, match="different batch"):
+    with pytest.raises(ApplicationError, match="另一批不同的经验"):
         save(store, items)
     assert {x.id for x in store.list_experiences()} == {x.id for x in saved}
 

@@ -99,7 +99,7 @@ def test_rejected_stale_or_partial_proposals_resume_within_shared_budget(tmp_pat
         assert len(finals) == 2 and not finals[0].success and finals[1].success
     if option == "reject_first":
         first_write = next(step for step in steps if step.call.name == "write_file")
-        accepted = next(event for event in events if event.role == "review" and "accepted" in event.summary)
+        accepted = next(event for event in events if event.role == "review" and "复核通过：" in event.summary)
         assert first_write.completed_at >= accepted.created_at
 
 

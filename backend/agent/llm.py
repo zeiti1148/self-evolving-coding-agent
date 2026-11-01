@@ -47,7 +47,7 @@ class ChatClient:
     def _remaining(self) -> float:
         remaining = self.deadline - time.monotonic() if self.deadline else self.settings.llm_timeout
         if remaining <= 0:
-            raise ApplicationError(ErrorCode.AGENT_STOPPED, "Task time budget exhausted.")
+            raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
         return min(self.settings.llm_timeout, remaining)
 
     def complete(self, messages: list[dict], *, tools: list[dict] | None = None) -> dict:
@@ -55,7 +55,7 @@ class ChatClient:
         if (not config.llm_api_key or config.llm_api_key == "replace_with_your_api_key" or
                 not config.llm_model or config.llm_model == "example-model" or
                 not config.llm_base_url or "api.example.com" in config.llm_base_url):
-            raise ApplicationError(ErrorCode.LLM_ERROR, "Configure LLM_API_BASE_URL, LLM_API_KEY and LLM_MODEL in the local .env file.")
+            raise ApplicationError(ErrorCode.LLM_ERROR, "请在本地 .env 文件中配置 LLM_API_BASE_URL、LLM_API_KEY 和 LLM_MODEL。")
         payload = {"model": config.llm_model, "messages": messages, "stream": False}
         if tools:
             payload.update(tools=tools, tool_choice="auto")
@@ -117,16 +117,16 @@ class ChatClient:
                 event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
                 self._remaining()
                 if attempt == 2:
-                    raise ApplicationError(ErrorCode.LLM_ERROR, "Cannot connect to the model service after three bounded attempts.") from None
+                    raise ApplicationError(ErrorCode.LLM_ERROR, "已尝试连接模型服务三次，仍无法连接。") from None
                 time.sleep(min(0.2 * (attempt + 1), self._remaining()))
             except httpx.HTTPStatusError as exc:
                 event["error_type"] = "HTTPStatusError"
-                raise ApplicationError(ErrorCode.LLM_ERROR, f"Model service returned HTTP {exc.response.status_code}.") from None
+                raise ApplicationError(ErrorCode.LLM_ERROR, f"模型服务返回 HTTP {exc.response.status_code}。") from None
             except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
                 event["error_type"] = type(exc).__name__
                 event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
                 self._remaining()
-                raise ApplicationError(ErrorCode.LLM_ERROR, "Model request failed, timed out or returned an invalid response.") from None
+                raise ApplicationError(ErrorCode.LLM_ERROR, "模型请求失败、超时或返回了无效响应。") from None
             finally:
                 event["duration_ms"] = round((time.monotonic() - started) * 1000)
                 self.audit.append(event)
@@ -134,13 +134,13 @@ class ChatClient:
 
 def validate_message(message: dict) -> dict:
     if not isinstance(message, dict) or message.get("role", "assistant") != "assistant":
-        raise ApplicationError(ErrorCode.LLM_ERROR, "Invalid model message.")
+        raise ApplicationError(ErrorCode.LLM_ERROR, "模型返回的消息无效。")
     content = message.get("content")
     calls = message.get("tool_calls") or []
     if content is not None and not isinstance(content, str):
-        raise ApplicationError(ErrorCode.LLM_ERROR, "Invalid model content.")
+        raise ApplicationError(ErrorCode.LLM_ERROR, "模型返回的内容无效。")
     if not isinstance(calls, list) or len(calls) > 20 or (not calls and not content):
-        raise ApplicationError(ErrorCode.LLM_ERROR, "Model response must contain text or bounded tool calls.")
+        raise ApplicationError(ErrorCode.LLM_ERROR, "模型响应必须包含文本或符合数量限制的工具调用。")
     ids = set()
     clean = []
     for call in calls:
@@ -153,7 +153,7 @@ def validate_message(message: dict) -> dict:
             ids.add(raw_id)
             clean.append({"id": raw_id, "type": "function", "function": {"name": name, "arguments": arguments}})
         except (KeyError, TypeError, ValueError):
-            raise ApplicationError(ErrorCode.LLM_ERROR, "Model returned invalid or duplicate tool call IDs.") from None
+            raise ApplicationError(ErrorCode.LLM_ERROR, "模型返回的工具调用编号无效或重复。") from None
     result = {"role": "assistant", "content": content}
     if clean:
         result["tool_calls"] = clean

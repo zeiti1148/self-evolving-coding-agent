@@ -8,6 +8,25 @@ const pending = { task_id: taskId, status: 'pending', created_at: '2026-10-20T00
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers() })
 
 describe('HTTP contract', () => {
+  it('reads task-bound test source links with exact code whitespace and encoded filenames', async () => {
+    const path = 'tests/中文 test.py', content = '  # 中文\r\nassert "<script>"\r\n\r\n', sha256 = 'a'.repeat(64)
+    const info = { path, language: 'python', sha256 }
+    const fetcher = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({ task_id: taskId, files: [info] })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ task_id: taskId, ...info, content, size_bytes: new TextEncoder().encode(content).length })))
+    const client = createHttpApi('', fetcher)
+    expect(await client.listTestSources!(taskId)).toEqual({ task_id: taskId, files: [info] })
+    expect((await client.getTestSource!(taskId, path)).content).toBe(content)
+    expect(fetcher.mock.calls[1]?.[0]).toBe(`/api/tasks/${taskId}/test-source?${new URLSearchParams({ path })}`)
+  })
+
+  it('rejects a test source response from another task or file', async () => {
+    for (const wrong of [{ task_id: '22222222-2222-4222-8222-222222222222' }, { path: 'tests/other.py' }]) {
+      const data = { task_id: taskId, path: 'tests/test_rules.py', language: 'python', sha256: 'a'.repeat(64), content: 'code', size_bytes: 4, ...wrong }
+      const client = createHttpApi('', vi.fn().mockResolvedValue(new Response(JSON.stringify(data))))
+      await expect(client.getTestSource!(taskId, 'tests/test_rules.py')).rejects.toMatchObject({ status: 502 })
+    }
+  })
+
   it('posts exactly the shared task fields and accepts a 202 response', async () => {
     const response = { task_id: '11111111-1111-4111-8111-111111111111', status: 'pending', created_at: '2026-10-20T00:00:00Z' }
     const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify(response), { status: 202 }))
@@ -35,9 +54,9 @@ describe('HTTP contract', () => {
 
   it('formats FastAPI 422 details and preserves the HTTP status', async () => {
     const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({ detail: [
-      { loc: ['body', 'max_steps'], msg: 'Input should be less than or equal to 100' },
+      { loc: ['body', 'max_steps'], type: 'less_than_equal', ctx: { le: 100 }, msg: 'Input should be less than or equal to 100' },
     ] }), { status: 422 }))
-    await expect(createHttpApi('', fetcher).getTask('x')).rejects.toMatchObject({ status: 422, message: expect.stringContaining('max_steps') })
+    await expect(createHttpApi('', fetcher).getTask('x')).rejects.toMatchObject({ status: 422, message: '决策步数：不能大于 100' })
   })
 
   it('does not display raw server error pages', async () => {

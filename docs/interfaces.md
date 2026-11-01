@@ -500,3 +500,18 @@ Experience 支持 schema_version 1/2/3，新增 batch_id、reuse_status、derive
 角色事件含 event_id/task_id/agent_id/role/phase/status/sequence/snapshot_revision/summary/created_at/usage；usage.reported_tokens 未报告为 null，不能当 0。角色无工具权限；PatchProposal 必须含提案/角色 UUID、快照版本、路径、before_sha256 和完整 UTF-8 替换内容。程序统一验证应用并独立测试。
 
 所有模型入口使用 `ExperienceStore.retrieve_experiences` + `policy.to_model_reference`，不可直接注入管理 search/list 结果。检索审计与实际模型请求 ID/内容哈希分开记录；终态的测试事实另行判断。
+
+## 任务测试源码链接
+
+| 方法 | 路径 | 返回 |
+| --- | --- | --- |
+| GET | `/api/tasks/{id}/test-sources` | `{task_id, files:[{path,language,sha256}]}` |
+| GET | `/api/tasks/{id}/test-source?path=相对路径` | `{task_id,path,language,sha256,content,size_bytes}` |
+
+两个接口只读，不发起模型调用，不执行测试，也不生成工具步骤。文件从该任务保留的工作副本读取，归属必须与任务原始请求一致；不回退到当前项目目录或 GitHub 最新版本。`path` 使用正斜杠相对路径，查询参数应按 URL 编码。
+
+只列出任务创建时记录的 Java 测试目录下的 `.java` 文件，以及 Python 测试目录或 `test_*.py`、`*_test.py`、`conftest.py`。不提供业务源码、配置、密钥、任务后新增文件或任意磁盘路径。读取前沿用工作副本的路径、链接和重解析点保护；内容 SHA-256 必须与任务基线一致。
+
+最多列出 1000 个文件；单文件最多 200000 字节，须为 UTF-8 文本。`content` 保留缩进、原始换行和末尾空白。成功响应带 `Cache-Control: no-store`。任务、文件或工作副本不可用为 404；拒绝链接路径为 403；测试文件已改动为 409；超出大小限制为 413；编码不支持为 415。
+
+Vue 直接访问地址为 `/#/tasks/{id}/tests?file=相对路径`。省略 `file` 时打开首个测试文件；复制链接时包含所选文件。模拟前端不生成虚构源码。链接依赖可访问的前后端、持久化任务和工作副本，本机 `127.0.0.1` 地址不会自动成为公开分享地址。

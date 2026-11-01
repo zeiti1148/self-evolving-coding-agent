@@ -19,7 +19,7 @@ class TaskStorageError(Exception):
     """Safe API-facing error; underlying database details stay out of responses."""
 
     def __init__(self):
-        super().__init__("Task storage is unavailable or contains invalid data.")
+        super().__init__("任务存储不可用或包含无效数据。")
 
 
 def now():
@@ -115,7 +115,7 @@ class TaskStore:
                 **current.model_dump(), "status": "stopped",
                 "finished_at": max(now(), current.started_at or current.created_at,
                                    *(step.completed_at for step in steps)),
-                "error_message": "Task interrupted by a service restart; submit a new task to run again.",
+                "error_message": "服务重启中断了任务，请重新提交任务。",
             })
             self._write_status(connection, recovered)
             agent_events.recover_roles(connection, current.task_id, recovered.finished_at)
@@ -308,7 +308,7 @@ class TaskStore:
                 "finished_at": max(now(), current.started_at or current.created_at,
                                    *(step.completed_at for step in steps)),
                 "result": result.model_dump() if result else None,
-                "error_message": result.error_message if result else (error or "Task execution failed."),
+                "error_message": result.error_message if result else (error or "任务执行失败。"),
             }))
             if audit is not None:
                 self._write_audit(connection, task_id, audit)

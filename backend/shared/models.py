@@ -87,6 +87,27 @@ class ToolName(str, Enum):
     RUN_TESTS = "run_tests"
 
 
+class TestSourceInfo(SharedModel):
+    path: Annotated[str, StringConstraints(strip_whitespace=False, min_length=1, max_length=1_000)]
+    language: Literal["java", "python"]
+    sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class TestSourceIndex(SharedModel):
+    task_id: str
+    files: list[TestSourceInfo] = Field(max_length=1_000)
+
+    _validate_task_id = field_validator("task_id")(_canonical_uuid)
+
+
+class TestSourceFile(TestSourceInfo):
+    task_id: str
+    content: Annotated[str, StringConstraints(strip_whitespace=False, max_length=200_000)]
+    size_bytes: int = Field(strict=True, ge=0, le=200_000)
+
+    _validate_task_id = field_validator("task_id")(_canonical_uuid)
+
+
 KNOWN_TOOL_NAMES: frozenset[str] = frozenset(tool.value for tool in ToolName)
 ToolIdentifier = Annotated[
     str, StringConstraints(strip_whitespace=False, min_length=1)

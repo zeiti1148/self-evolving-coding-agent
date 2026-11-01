@@ -154,6 +154,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); out
 .execution-list > li:not(:last-child)::before { content: ''; position: absolute; top: 29px; bottom: 0; left: 13px; width: 1px; background: var(--line); }
 .step-marker { position: relative; background: var(--success-bg); color: var(--success); width: 27px; height: 27px; border: 1px solid var(--success-border); border-radius: 50%; display: grid; place-items: center; font-size: 11px; flex-shrink: 0; margin-top: 10px; }
 .step-marker.step-failed { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-border); }
+.step-marker.step-original-defect { color: var(--warning); background: var(--warning-bg); border-color: var(--warning-border); }
+.step-explanation, .step-test-counts { margin: 0; padding: 10px 22px 0; line-height: 1.8; font-size: 13px; }
+.step-explanation { color: var(--muted); }
+.process-summary { margin: 16px 0; font-size: 13px; overflow-wrap: anywhere; }
+.process-summary > summary { color: var(--muted); cursor: pointer; }
+.process-summary > p { white-space: pre-wrap; }
 .step-detail { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; }
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
@@ -341,3 +347,30 @@ details[open] > summary .step-outcome svg, details[open] > summary .expand-label
 .direct-experience .result-body { overflow-wrap: anywhere; }
 .promotion-panel label, .promotion-issue legend { font-weight: 600; }
 @media (max-width: 720px) { .saved-experience { flex-direction: column; align-items: flex-start; } .agent-event-heading time { margin-left: 0; } }
+
+/* Task-bound source links and a read-only code pane share both theme palettes. */
+.source-entry-link { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; }
+.source-task-id { overflow-wrap: anywhere; font-size: 12px; margin: -8px 0 24px; }
+.source-layout { display: grid; grid-template-columns: minmax(160px, 240px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.source-file-panel, .source-reader { min-width: 0; }
+.source-file-list { padding: 8px; margin: 0; list-style: none; max-height: 60vh; overflow: auto; }
+.source-file-list a { display: flex; align-items: start; gap: 9px; padding: 12px; border-radius: 6px; font-size: 12px; color: var(--muted); }
+.source-file-list a svg { flex-shrink: 0; margin-top: 2px; }
+.source-file-list a span { overflow-wrap: anywhere; }
+.source-file-list a:hover, .source-file-list a.selected { color: var(--accent); background: var(--surface-soft); }
+.source-file-list a.selected { box-shadow: inset 3px 0 var(--accent); }
+.source-reader-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between; padding: 20px 24px 12px; }
+.source-reader-heading > div { min-width: 0; }
+.source-filename { font-size: 14px; overflow-wrap: anywhere; margin: 0; }
+.source-reader-heading .field-hint { margin-bottom: 0; }
+.source-link-bar { padding: 0 24px 12px; }
+.source-link-bar label { font-size: 12px; color: var(--muted); }
+.source-link-input { font-size: 12px; }
+.source-verification { font-size: 12px; color: var(--muted); margin: 0; padding: 0 24px 18px; }
+.source-code-block { display: flex; align-items: stretch; overflow: auto; max-height: 70vh; background: var(--code-bg); color: var(--code-ink); border-top: 1px solid var(--line); border-radius: 0 0 10px 10px; }
+.source-code-block pre { font-family: 'Cascadia Code', Consolas, monospace; font-size: 12px; line-height: 1.8; margin: 0; padding: 18px; white-space: pre; tab-size: 4; }
+.source-code-block code { font: inherit; }
+.source-line-numbers { user-select: none; color: var(--code-muted); text-align: right; border-right: 1px solid var(--line); flex: 0 0 auto; }
+.source-content { flex: 1 0 auto; }
+@media (max-width: 900px) { .source-layout { grid-template-columns: minmax(0, 1fr); } .source-file-list { max-height: 180px; } }
+@media (max-width: 680px) { .source-reader-heading { padding: 18px 16px 12px; } .source-link-bar { padding: 0 16px 12px; } .source-verification { padding: 0 16px 16px; } .source-code-block pre { padding: 14px 10px; } }

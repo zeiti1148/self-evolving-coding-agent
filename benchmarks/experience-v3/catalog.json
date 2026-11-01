@@ -1,11 +1,11 @@
 [
   {
     "id": "java-checkout-complex",
-    "label": "Java checkout 六缺陷复杂修复",
+    "label": "Java 结算项目：六处缺陷修复",
     "language": "java",
     "repository_id": "v3-java-checkout",
     "source": "benchmarks/experience-v3/java-checkout",
-    "task_example": "Repair checkout input handling while preserving normal behavior. Names: missing or blank -> guest; trim other names. Quantity: missing, blank, malformed, negative or above 999 -> 0; otherwise parse the trimmed integer. Selection: null/empty collection, negative index or index >= length -> none; otherwise return the selected value. Check combined prepare calls and pass all 18 unchanged tests. Do not modify tests or build configuration.",
+    "task_example": "修复结算项目的输入处理，并保持正常输入的原有行为。名称：缺失或全为空白时返回 guest；其他名称去除首尾空白。数量：缺失、空白、格式错误、小于 0 或大于 999 时返回 0；其余情况去除首尾空白后解析为整数。列表选择：列表缺失或为空、下标小于 0 或达到或超过列表长度时返回 none；其余情况返回选中的值。检查 prepare 的组合调用，确保原有 18 项测试全部通过。不得修改测试或构建配置。",
     "expected_tests": 18,
     "capabilities": [
       "text-input",
@@ -15,11 +15,11 @@
   },
   {
     "id": "python-checkout-complex",
-    "label": "Python checkout 六缺陷复杂修复",
+    "label": "Python 结算项目：六处缺陷修复",
     "language": "python",
     "repository_id": "v3-python-checkout",
     "source": "benchmarks/experience-v3/python-checkout",
-    "task_example": "Repair checkout input handling while preserving normal behavior. Names: missing or blank -> guest; trim other names. Quantity: missing, blank, malformed, negative or above 999 -> 0; otherwise parse the trimmed integer. Selection: null/empty collection, negative index or index >= length -> none; otherwise return the selected value. Check combined prepare calls and pass all 18 unchanged tests. Do not modify tests or build configuration.",
+    "task_example": "修复结算项目的输入处理，并保持正常输入的原有行为。名称：缺失或全为空白时返回 guest；其他名称去除首尾空白。数量：缺失、空白、格式错误、小于 0 或大于 999 时返回 0；其余情况去除首尾空白后解析为整数。列表选择：列表缺失或为空、下标小于 0 或达到或超过列表长度时返回 none；其余情况返回选中的值。检查 prepare 的组合调用，确保原有 18 项测试全部通过。不得修改测试或构建配置。",
     "expected_tests": 18,
     "capabilities": [
       "text-input",
@@ -29,11 +29,11 @@
   },
   {
     "id": "java-booking-transfer",
-    "label": "Java booking 跨仓库业务适配",
+    "label": "Java 预约项目：跨仓库经验复用",
     "language": "java",
     "repository_id": "v3-java-booking",
     "source": "benchmarks/experience-v3/java-booking-transfer",
-    "task_example": "Repair booking input handling while preserving normal behavior. Names: missing or blank -> visitor; trim other names. Quantity: missing, blank or malformed -> 1; numeric values outside 1..30 must raise an error. Selection: null/empty collection, negative index or index >= length -> unassigned; otherwise return the selected value. Check combined prepare calls and pass all 12 unchanged tests. Do not modify tests or build configuration.",
+    "task_example": "修复预约项目的输入处理，并保持正常输入的原有行为。名称：缺失或全为空白时返回 visitor；其他名称去除首尾空白。数量：缺失、空白或格式错误时返回 1；数值不在 1 到 30 范围内时必须抛出异常。列表选择：列表缺失或为空、下标小于 0 或达到或超过列表长度时返回 unassigned；其余情况返回选中的值。检查 prepare 的组合调用，确保原有 12 项测试全部通过。不得修改测试或构建配置。",
     "expected_tests": 12,
     "capabilities": [
       "text-input",
@@ -43,11 +43,11 @@
   },
   {
     "id": "python-booking-transfer",
-    "label": "Python booking 跨仓库业务适配",
+    "label": "Python 预约项目：跨仓库经验复用",
     "language": "python",
     "repository_id": "v3-python-booking",
     "source": "benchmarks/experience-v3/python-booking-transfer",
-    "task_example": "Repair booking input handling while preserving normal behavior. Names: missing or blank -> visitor; trim other names. Quantity: missing, blank or malformed -> 1; numeric values outside 1..30 must raise an error. Selection: null/empty collection, negative index or index >= length -> unassigned; otherwise return the selected value. Check combined prepare calls and pass all 12 unchanged tests. Do not modify tests or build configuration.",
+    "task_example": "修复预约项目的输入处理，并保持正常输入的原有行为。名称：缺失或全为空白时返回 visitor；其他名称去除首尾空白。数量：缺失、空白或格式错误时返回 1；数值不在 1 到 30 范围内时必须抛出异常。列表选择：列表缺失或为空、下标小于 0 或达到或超过列表长度时返回 unassigned；其余情况返回选中的值。检查 prepare 的组合调用，确保原有 12 项测试全部通过。不得修改测试或构建配置。",
     "expected_tests": 12,
     "capabilities": [
       "text-input",

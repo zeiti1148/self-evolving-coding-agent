@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS experiences (
 def storage_error() -> ApplicationError:
     return ApplicationError(
         ErrorCode.EXPERIENCE_STORAGE_ERROR,
-        "Experience storage is unavailable or contains invalid data.",
+        "经验存储不可用或包含无效数据。",
     )
 
 

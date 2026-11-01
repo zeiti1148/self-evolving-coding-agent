@@ -48,7 +48,7 @@ onBeforeUnmount(() => { version++; clearTimeout(timer); controller?.abort() })
       <p v-if="!events.length && !error" class="text-muted">暂无角色事件。单 Agent 任务的过程见工具步骤。</p>
       <ol v-else class="agent-events"><li v-for="event in events" :key="event.event_id" data-testid="agent-event">
         <div class="agent-event-heading"><strong>{{ labels[event.role] }}</strong><span :class="event.status === 'failed' ? 'text-warning' : 'text-muted'">{{ statuses[event.status] }}</span><time>{{ new Date(event.created_at).toLocaleTimeString('zh-CN') }}</time></div>
-        <p>{{ event.summary }}</p><small v-if="event.status !== 'started' && event.role !== 'coordinator'" class="text-muted">{{ event.usage.elapsed_ms }} ms · {{ event.usage.reported_tokens === null ? '用量未报告' : `${event.usage.reported_tokens} tokens` }}</small>
+        <p>{{ event.summary }}</p><small v-if="event.status !== 'started' && event.role !== 'coordinator'" class="text-muted">{{ event.usage.elapsed_ms }} 毫秒 · {{ event.usage.reported_tokens == null ? '用量未报告' : `${event.usage.reported_tokens} 个词元` }}</small>
         <details v-if="event.snapshot_revision"><summary>快照与角色标识</summary><code>{{ event.snapshot_revision }}</code><p><code>{{ event.agent_id }}</code></p></details>
       </li></ol>
     </div>

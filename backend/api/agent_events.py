@@ -43,4 +43,4 @@ def recover_roles(connection, task_id, recovered_at):
             sequence += 1
             insert_event(connection, AgentEvent(**(event.model_dump() | dict(event_id=str(uuid4()), sequence=sequence,
                 status="stopped", created_at=max(recovered_at, event.created_at),
-                summary="Role interrupted by service restart; task was not resumed."))))
+                summary="服务重启中断了该角色，任务未自动恢复执行。"))))
