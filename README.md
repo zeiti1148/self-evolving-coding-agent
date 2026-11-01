@@ -2,22 +2,26 @@
 
 三人中级实训项目：使用兼容 OpenAI 的模型服务修复 Java/Maven 和 Python/pytest 项目，通过独立测试后保存结构化经验，供同仓库或适用的通用任务参考。
 
-## 第三阶段：复杂经验与多语言
+## 经验演进 V3
 
-本分支基于已合并 PR #6 的 `main@6527421`，实现五项下一阶段目标：多问题结构化经验、可追溯合并、单任务多异常修复、Python 测试执行器、按仓库管理经验。计划见 [第三阶段计划](docs/next-week-plan.md)，设计和使用见 [经验 V2 说明](docs/experience-v2.md)。
+当前实现：一次成功修复直接生成并原子保存多条经验、仓库隔离、可追溯合并、显式通用发布，以及诊断—修复提案—独立复核的运行时协作。保持 Python + FastAPI + SQLite + Vue 3，默认 single，可选 multi。最终成功始终由程序独立运行 Maven/pytest 验证。
 
-真实模式前端会读取服务器登记项目，直接选择 **Java 配送请求多异常修复** 或 **Python 配送请求多异常修复**，点击“填入修复示例”提交。每个案例有 4 个业务模块、3 类组合缺陷、12 项验收测试。经验页可以按语言、仓库和范围筛选，查看问题明细、修复顺序和测试证据，选择记录预览合并后再确认。
+Java/Python checkout 来源各有 18 项固定测试，booking 目标各有 12 项不同业务合同测试。页面支持角色过程、多条经验直达、仓库/状态筛选、合并预览、来源图和通用草稿编辑发布。
 
 ```powershell
-# 脚本模型驱动真实 Maven、pytest、SQLite，含部分修复失败和合并后复用
+# 脚本模型 + 真实 API、SQLite、代码工具、Maven/pytest
+.\.venv\Scripts\python.exe scripts/acceptance_v3.py
+# 单独执行真实模型验证；配置缺失时明确 not_run，绝不回退为脚本模型
+.\.venv\Scripts\python.exe scripts/acceptance_v3.py --live
+# 旧 V2 单经验链路兼容性回归
 .\.venv\Scripts\python.exe scripts/acceptance_v2.py
-# 使用本地 .env 配置的真实模型验收 Java 与 Python
-.\.venv\Scripts\python.exe scripts/acceptance_v2.py --live
-# 登记可信本地仓库；在 .env 设置 PROJECT_REGISTRY=runtime/projects.json 后重启后端
-.\.venv\Scripts\python.exe scripts/register_project.py --id my-python-app --path D:/projects/my-python-app --language python --repository team/my-python-app --label 我的Python项目
 ```
 
-Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依赖；必要时通过 `PYTHON_EXECUTABLE` 指定项目解释器。默认使用后端当前解释器。工作副本不复制 `.env*`、Git 元数据和常见私钥文件。项目的测试、依赖和构建配置保持只读。
+[实现与升级说明](docs/experience-v3.md) · [实际测试报告](docs/reports/experience-v3-2026-10-31.md) · [演示步骤](docs/demo.md)。旧 global 经验默认未审阅，不会自动跨仓库注入；先人工通用化、编辑和显式发布，目标仍需验证自身业务条件。此次没有真实模型配置，脚本验收不代表真实模型效果，也没有效率提升的对照结论。
+
+2026-11-01 阶段汇报：[阶段三正文与下一阶段计划](docs/reports/stage-3-2026-11-01.md) · [9 页 PPT](docs/presentations/coding-agent-v3-stage-report.pptx) · [逐页讲稿](docs/presentations/v3-stage-report-speech.md) · [本次回归与交付记录](docs/reports/delivery-2026-11-01.md)。上传前重跑后端 498 项、前端 87 项测试、生产构建与接口联调，结果均通过。
+
+Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依赖；可通过 `PYTHON_EXECUTABLE` 指定解释器。工作副本不复制 `.env*`、Git 元数据和常见私钥文件；测试、依赖和构建配置保持只读。
 
 ## 已合并的第二阶段基线
 
@@ -25,7 +29,7 @@ Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依
 
 2026-10-25 的真实验收中，Greeting 通过 2 项测试，Profile 通过 3 项测试；第二任务的成功 HTTP 请求包含第一任务保存的经验。该阶段交付已由 PR #6 合并到 `main@6527421`；经验模块和前端此前已通过 PR #2–#5 合并。历史 24 项对照结果保留原统计。
 
-经验检索归一化和模型连接路径已修复。连接故障复现为环境代理路径上的 TLS 握手提前关闭；默认模型调用改为显式直连，保留可选环境代理及证书验证。修复后完整 24 项对照：关闭组 12/12、开启组 12/12 成功，经验组 12/12 实际收到参考。双方成功配对的已报告 token 相对变化 +7.14%；不将网络稳定性改善误称为经验效果。后端 239 项、前端 58 项及构建/集成检查通过。当前验收与定位证据详见 [故障定位](docs/reports/connection-diagnosis-2026-10-25.md) 和 [实验报告](docs/reports/live-evaluation-2026-10-25.md)。
+经验检索归一化和模型连接路径已修复。连接故障复现为环境代理路径上的 TLS 握手提前关闭；默认模型调用改为显式直连，保留可选环境代理及证书验证。修复后完整 24 项对照：关闭组 12/12、开启组 12/12 成功，经验组 12/12 实际收到参考。双方成功配对的已报告 token 相对变化 +7.14%；不将网络稳定性改善误称为经验效果。当时后端 239 项、前端 58 项及构建/集成检查通过；这些是历史数据，当前 V3 结果见单独报告。当前验收与定位证据详见 [故障定位](docs/reports/connection-diagnosis-2026-10-25.md) 和 [实验报告](docs/reports/live-evaluation-2026-10-25.md)。
 
 ## 目录与分工
 
@@ -96,7 +100,7 @@ npm.cmd run dev
 | GET | `/api/tasks/{task_id}/steps` | 运行中读取步骤 |
 | GET | `/api/experiences?limit=20&offset=0` | 经验分页 |
 
-登记项目为 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`。案例描述、错误类型与预期测试数量见 `benchmarks/catalog.json`。其他样例可通过脚本/API 提交，或修改前端项目配置后使用页面。
+内置登记还包括 V3 checkout/booking 和 V2 fulfillment 两种语言样例，以及 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`。案例描述、错误类型与预期测试数量见 `benchmarks/catalog.json`。页面读取 `/api/projects` 目录，可直接选择登记项目。
 
 ## 验证
 
@@ -128,14 +132,14 @@ npm.cmd run check:integration
 
 ## 执行边界与限制
 
-- 仅用于本机、团队可信 Java 项目。路径白名单和进程管理不是操作系统沙箱，不用于公网或不可信项目。
+- 仅用于本机、团队可信 Java/Python 项目。路径白名单和进程管理不是操作系统沙箱，不用于公网或不可信项目。
 - 客户端只提交登记项目标识；文件工具拒绝目录穿越、绝对路径、Windows 设备路径、符号链接和目录联接。
 - 验收测试、pom.xml 和 Maven 配置只读。最终测试使用 clean test 和新报告；零测试、跳过测试、构建故障或超时不算通过。
 - 进程有超时与输出上限，截断标记为 metadata.truncated。Windows Job/POSIX 进程组清理子进程，Java/Maven 不继承模型密钥或自定义 JVM/Maven 参数。
 - 默认 20 轮模型决策。独立最终验证不占预算；耗尽预算保持 stopped，即使测试通过也不保存成功经验。成功后经验提取至多另调用模型一次。
 - `TASK_TIMEOUT_SECONDS` 默认 600 秒，协作式截止时间覆盖后续模型请求和工具执行；网络读等待还受 `LLM_TIMEOUT_SECONDS` 限制。连接建立失败最多尝试三次，读取超时不自动重发付费请求。
 - 上述任务预算不是操作系统级硬时限。同步 HTTPX 的读取超时衡量空闲间隔，持续缓慢到达的响应头、DNS 等底层操作仍可能延后退出；CI 另设 job/step 硬时限。本机原型暂未加入独立请求进程或自定义网络传输层。
-- 按 Java 标签与错误类型检索最多五条经验，内容与 ID 注入上下文。检索故障记录警告，保存失败不改变已验证的修复成功。
+- 按语言、仓库、发布状态、能力和错误类型检索最多五条有效经验；通用注入使用白名单，省略私有来源载荷。检索故障记录警告，保存失败不改变已验证的修复成功。
 - `USE_EXPERIENCE=false` 可关闭检索和注入；成功后的保存行为保持一致，便于公平对照。正式实验使用独立训练经验的冻结快照，不从评估结果继续学习。
 - 单 API 实例和进程；任务、步骤、结果、审计与经验保存到 SQLite。重启后已结束任务仍可查询，未完成任务标记为中断，不自动续跑。暂不实现断点恢复、取消、独立任务历史页面、Diff、向量检索或模型训练。
 - 默认保留 runtime/workspaces/<task UUID>；同根目录 .records 保存登记信息。开发人员使用 cleanup_workspace 校验后清理，禁止扩大删除范围。

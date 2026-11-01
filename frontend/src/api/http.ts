@@ -1,5 +1,5 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
-import { readCreatedTask, readExperiences, readMergedExperience, readMergePreview, readProjects, readSteps, readTask } from './validation'
+import { readAgentEvents, readCreatedTask, readExperience, readExperiences, readMergedExperience, readMergePreview, readProjects, readPromotionPreview, readProvenance, readSteps, readTask } from './validation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -24,7 +24,7 @@ function errorMessage(status: number, payload: unknown, path: string): string {
 
 export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThis.fetch): AgentApi {
   const base = baseUrl.replace(/\/$/, '')
-  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: TaskCreateRequest | { experience_ids: string[] }, signal?: AbortSignal): Promise<T> {
+  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: object, signal?: AbortSignal): Promise<T> {
     const controller = new AbortController()
     let timedOut = false
     const abort = () => controller.abort()
@@ -58,10 +58,15 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
     listExperiences: (limit = 20, offset = 0, signal, filters = {}) => {
       const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
-      for (const key of ['language', 'repository_id', 'scope'] as const) if (filters[key]) params.set(key, filters[key]!)
+      for (const key of ['language', 'repository_id', 'scope', 'reuse_status', 'source_task_id', 'active_only'] as const) if (filters[key] !== undefined) params.set(key, String(filters[key]))
       return request(`/api/experiences?${params}`, readExperiences, 'GET', undefined, signal)
     },
     listProjects: signal => request('/api/projects', readProjects, 'GET', undefined, signal),
+    getExperience: (id, signal) => request(`/api/experiences/${encodeURIComponent(id)}`, readExperience, 'GET', undefined, signal),
+    getProvenance: (id, signal) => request(`/api/experiences/${encodeURIComponent(id)}/provenance`, data => readProvenance(data, id), 'GET', undefined, signal),
+    getAgentEvents: (id, after = 0, signal) => request(`/api/tasks/${encodeURIComponent(id)}/agents?after_sequence=${after}&limit=100`, data => readAgentEvents(data, id, after), 'GET', undefined, signal),
+    previewPromotion: (id, signal) => request('/api/experiences/promotion-preview', data => readPromotionPreview(data, id), 'POST', { source_id: id }, signal),
+    publishGlobal: (id, draft, previous, signal) => request('/api/experiences/publish-global', readExperience, 'POST', { source_id: id, draft, supersedes_id: previous ?? null }, signal),
     previewMerge: (ids, signal) => {
       const sources = [...ids]
       return request('/api/experiences/merge-preview', data => readMergePreview(data, sources), 'POST', { experience_ids: sources }, signal)

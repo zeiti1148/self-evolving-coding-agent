@@ -395,7 +395,7 @@ API 统一使用 JSON；第一版由前端轮询，不提供 SSE 或 WebSocket�
 
 - 查询参数：`limit`（默认 20）和 `offset`（默认 0）。
 - 响应：`list[Experience]`，按创建时间倒序。
-- 参数不合法返回 `422`，存储故障返回不泄漏内部信息的 `500`。
+- 参数不合法返回 `422`，存储故障返回不泄漏内部信息的 `503`。
 
 ### 7.5 `GET /api/tasks`
 
@@ -476,3 +476,27 @@ backend/api, backend/agent, backend/tools, backend/experience
 - 模型连接建立最多三次尝试；读取超时、HTTP 错误和无效回复不重发。响应大小上限 2 MB，使用未压缩原始块检查任务剩余时间。任务预算耗尽归为 stopped，经验提取故障仍独立于已验证的修复事实。
 - 任务时限为协作式预算，不承诺所有网络阶段严格按总秒数中断。HTTPX 空闲读取超时仍可能被持续慢响应头延后；硬取消、同步 DNS 边界及请求隔离留待下一阶段处理。
 - 工作副本、数据库和验收报告属于运行时数据，不提交到版本控制。
+
+## V3 增量接口
+
+`TaskCreateRequest.execution_mode` 可为 `single`（默认）或 `multi`。仓库、语言和 capabilities 由服务器登记解析。`AgentResult.experience_ids` 为有序数组，旧 `experience_id` 对应第一条，读取旧单 ID 自动归一化。两者不一致、重复 ID 或未保存却带 ID 的结果被拒绝。
+
+| 方法 | 路径 | 输入/输出 |
+| --- | --- | --- |
+| GET | `/api/projects` | 登记项目，含仓库、语言、版本与 capabilities |
+| GET | `/api/tasks/{id}/agents?after_sequence=0&limit=100` | 连续、持久化角色事件数组，单任务游标 |
+| GET | `/api/experiences` | 增加 language/repository_id/scope/reuse_status/source_task_id/active_only 筛选 |
+| GET | `/api/experiences/{id}` | 包含旧记录及被替代记录的详情 |
+| GET | `/api/experiences/{id}/provenance` | nodes、edges、truncated；最多 100 节点/深度 10 |
+| POST | `/api/experiences/merge-preview` | `{experience_ids:[UUID,...]}`，返回 can_merge/conflicts/preview |
+| POST | `/api/experiences/merge` | 同预览输入，提交时重新校验，重复来源集合幂等 |
+| POST | `/api/experiences/promotion-preview` | `{source_id:UUID}`，返回草稿、最终注入预览、current_global_id |
+| POST | `/api/experiences/publish-global` | `{source_id,draft,supersedes_id:null或当前globalID}`，返回新记录 |
+
+参数/结构错误 422、未知来源 404、语义或版本冲突 409、存储故障 503。预览无写入。`active_only` 排除被合并或修订替代记录，复用状态仍应另用 `reuse_status` 过滤；管理查询结果不代表可注入集合。
+
+Experience 支持 schema_version 1/2/3，新增 batch_id、reuse_status、derived_from、supersedes_id、required_capabilities。新成功提取为 V3 active project。通用发布草稿仅允许知识字段，不接受来源、仓库或伪造证据；真实证据从源记录绑定。普通单条保存不能绕过批次/合并/发布操作写入来源索引或 active global。
+
+角色事件含 event_id/task_id/agent_id/role/phase/status/sequence/snapshot_revision/summary/created_at/usage；usage.reported_tokens 未报告为 null，不能当 0。角色无工具权限；PatchProposal 必须含提案/角色 UUID、快照版本、路径、before_sha256 和完整 UTF-8 替换内容。程序统一验证应用并独立测试。
+
+所有模型入口使用 `ExperienceStore.retrieve_experiences` + `policy.to_model_reference`，不可直接注入管理 search/list 结果。检索审计与实际模型请求 ID/内容哈希分开记录；终态的测试事实另行判断。

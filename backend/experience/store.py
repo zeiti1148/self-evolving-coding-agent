@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import hashlib
-import heapq
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -15,6 +14,7 @@ from pydantic import ValidationError
 from backend.shared import ApplicationError, ErrorCode, Experience, ExperienceCreate, RepairIssue
 
 from .database import connect, database_path, storage_error
+from .policy import RetrievalContext, rank_references
 
 
 COLUMNS = (
@@ -22,8 +22,10 @@ COLUMNS = (
     "tags, source_task_id, created_at, details"
 )
 ORDER = " ORDER BY created_at DESC, id DESC"
+SUPERSEDED = "SELECT source_id FROM experience_merge_sources UNION SELECT previous_id FROM experience_publication_revisions"
 DETAIL_FIELDS = frozenset({"schema_version", "language", "scope", "repository_id", "source_revision",
-                           "applicability", "issues", "evidence", "merged_from"})
+                           "applicability", "issues", "evidence", "merged_from", "batch_id", "reuse_status",
+                           "derived_from", "supersedes_id", "required_capabilities"})
 
 
 def validation_error(message: str) -> ApplicationError:
@@ -169,8 +171,8 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             conflicts.append(f"Experience was not found: {source_id}")
             continue
         sources.append(decode_row(row))
-        if connection.execute("SELECT 1 FROM experience_merge_sources WHERE source_id=?", (source_id,)).fetchone():
-            conflicts.append(f"Experience has already been merged: {source_id}")
+        if connection.execute(f"SELECT 1 WHERE ? IN ({SUPERSEDED})", (source_id,)).fetchone():
+            conflicts.append(f"Experience has already been merged or superseded: {source_id}")
     if conflicts:
         return {"can_merge": False, "conflicts": conflicts, "source_ids": ids, "preview": None}
     # Stable source chronology preserves each record's declared repair order.
@@ -181,23 +183,26 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             conflicts.append("Experiences must have the same language, scope and repository.")
         if set(source.applicability) != set(first.applicability):
             conflicts.append("Applicability conditions differ; keep these experiences separate.")
+        if source.reuse_status != first.reuse_status:
+            conflicts.append("Reuse status differs; a merge cannot publish or review sources.")
+        if set(source.required_capabilities) != set(first.required_capabilities):
+            conflicts.append("Required capabilities differ; keep these experiences separate.")
     issues = []
     evidence = []
     evidence_seen = set()
     issue_orders = []
     for source in sources:
+        prior_source_issues = list(issues)
         issue_orders.append(list(dict.fromkeys(_issue_key(issue) for issue in _source_issues(source))))
         for issue in _source_issues(source):
-            duplicate = False
-            for previous in issues:
+            duplicate = any(_issue_key(issue) == _issue_key(previous) for previous in issues)
+            for previous in prior_source_issues:
                 same_error = _normalized(issue.error_type) == _normalized(previous.error_type)
                 overlap = not issue.files or not previous.files or bool(
                     _file_keys(issue) & _file_keys(previous))
                 same_rule = (issue.root_cause, issue.solution) == (previous.root_cause, previous.solution)
                 if same_error and overlap and not same_rule:
                     conflicts.append(f"Different repair rules overlap for {issue.error_type}; review the source records.")
-                if _issue_key(issue) == _issue_key(previous):
-                    duplicate = True
             if not duplicate:
                 issues.append(issue)
         for item in source.evidence:
@@ -231,6 +236,9 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
     revisions = {source.source_revision for source in sources}
     try:
         preview = ExperienceCreate(
+            schema_version=3,
+            reuse_status=first.reuse_status if all(source.evidence for source in sources) else "legacy_unreviewed",
+            required_capabilities=first.required_capabilities,
             task_summary="Merged repair knowledge: " + " / ".join(_unique_text(source.task_summary for source in sources)),
             error_type=error_types[0] if len(error_types) == 1 else None,
             root_cause="\n".join(f"{i + 1}. {issue.root_cause}" for i, issue in enumerate(issues)),
@@ -262,24 +270,47 @@ class ExperienceStore:
             json.dumps(validated.model_dump(mode="json"), ensure_ascii=False).encode("utf-8")
         except (ValidationError, UnicodeError):
             raise validation_error("Experience data does not match the shared model.") from None
-        if validated.merged_from:
-            raise validation_error("Use merge_experiences to create records with merge provenance.")
+        if validated.merged_from or validated.derived_from or validated.supersedes_id or validated.batch_id:
+            raise validation_error("Use the dedicated batch, merge or publication operation for provenance.")
+        if validated.scope == "global" and validated.reuse_status == "active":
+            raise validation_error("Active global experiences require explicit publication.")
         saved = _new_experience(validated)
         with connect(self.database_path) as connection:
             _insert(connection, saved)
         return saved
 
+    def save_experiences(self, items: list[ExperienceCreate], *, source_task_id: str) -> list[Experience]:
+        from .batches import save_batch
+        return save_batch(self.database_path, items, source_task_id=source_task_id)
+
+    def preview_promotion(self, source_id: str):
+        from .promotion import preview_promotion
+        return preview_promotion(self.database_path, source_id)
+
+    def publish_global(self, source_id: str, draft, *, supersedes_id: str | None = None):
+        from .promotion import publish_global
+        return publish_global(self.database_path, source_id, draft, supersedes_id=supersedes_id)
+
+    def get_provenance(self, experience_id: str, *, max_nodes: int = 100, max_depth: int = 10):
+        from .provenance import get_provenance
+        return get_provenance(self.database_path, experience_id, max_nodes=max_nodes, max_depth=max_depth)
+
     def list_experiences(self, limit: int = 20, offset: int = 0, *, language: str | None = None,
                          repository_id: str | None = None, scope: str | None = None,
-                         active_only: bool = False) -> list[Experience]:
+                         active_only: bool = False, reuse_status: str | None = None,
+                         source_task_id: str | None = None) -> list[Experience]:
         validate_integer(limit, "limit", 1)
         validate_integer(offset, "offset", 0)
         _validate_filters(language, repository_id, scope)
         if type(active_only) is not bool:
             raise validation_error("active_only must be a boolean.")
+        if reuse_status is not None and reuse_status not in {"active", "candidate", "legacy_unreviewed"}:
+            raise validation_error("Unknown reuse status.")
+        if source_task_id is not None:
+            source_task_id = _uuid(source_task_id)
         with connect(self.database_path) as connection:
-            if language is not None or repository_id is not None or scope is not None or active_only:
-                where = " WHERE id NOT IN (SELECT source_id FROM experience_merge_sources)" if active_only else ""
+            if any(value is not None for value in (language, repository_id, scope, reuse_status, source_task_id)) or active_only:
+                where = f" WHERE id NOT IN ({SUPERSEDED})" if active_only else ""
                 items = []
                 matched = 0
                 for row in connection.execute(f"SELECT {COLUMNS} FROM experiences{where}{ORDER}"):
@@ -289,6 +320,10 @@ class ExperienceStore:
                     if repository_id is not None and item.repository_id != repository_id:
                         continue
                     if scope is not None and item.scope != scope:
+                        continue
+                    if reuse_status is not None and item.reuse_status != reuse_status:
+                        continue
+                    if source_task_id is not None and item.source_task_id != source_task_id:
                         continue
                     if matched >= offset:
                         items.append(item)
@@ -309,7 +344,8 @@ class ExperienceStore:
             return decode_row(row) if row else None
 
     def retrieve_experiences(self, query: str = "", *, language: str, repository_id: str | None,
-                             error_types: list[str], limit: int = 5) -> list[Experience]:
+                             error_types: list[str], limit: int = 5,
+                             capabilities: list[str] | None = None) -> list[Experience]:
         validate_integer(limit, "limit", 1)
         _validate_filters(language, repository_id)
         if language is None:
@@ -321,32 +357,14 @@ class ExperienceStore:
             " ".join([query, *error_types]).encode("utf-8")
         except UnicodeEncodeError:
             raise validation_error("Retrieval text must be valid Unicode.") from None
-        wanted = {_normalized(error) for error in error_types}
-        keywords = set(query.casefold().split())
-        ranked = []
+        if capabilities is not None and (not isinstance(capabilities, list) or any(
+                not isinstance(value, str) or not value.strip() for value in capabilities)):
+            raise validation_error("capabilities must contain nonblank identifiers.")
+        context = RetrievalContext(language, repository_id, frozenset(capabilities or []))
         with connect(self.database_path) as connection:
-            for row in connection.execute(f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN "
-                                          f"(SELECT source_id FROM experience_merge_sources){ORDER}"):
-                item = decode_row(row)
-                if item.language != language or item.scope == "project" and item.repository_id != repository_id:
-                    continue
-                actual = {_normalized(issue.error_type) for issue in item.issues}
-                if item.error_type:
-                    actual.add(_normalized(item.error_type))
-                overlap = len(actual & wanted)
-                if wanted and not overlap:
-                    continue
-                text = " ".join([item.task_summary, item.root_cause, item.solution,
-                                 *item.applicability, *item.tags]).casefold()
-                keyword_score = sum(word in text for word in keywords)
-                candidate = ((int(item.scope == "project"), overlap, keyword_score,
-                              item.created_at, item.id), item)
-                if len(ranked) < limit:
-                    heapq.heappush(ranked, candidate)
-                elif candidate[0] > ranked[0][0]:
-                    heapq.heapreplace(ranked, candidate)
-        ranked.sort(key=lambda pair: pair[0], reverse=True)
-        return [item for _, item in ranked[:limit]]
+            entries = (decode_row(row) for row in connection.execute(
+                f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({SUPERSEDED}){ORDER}"))
+            return rank_references(entries, context, query=query, error_types=error_types, limit=limit)
 
     def preview_merge(self, experience_ids: list[str]) -> dict:
         ids = _merge_ids(experience_ids)

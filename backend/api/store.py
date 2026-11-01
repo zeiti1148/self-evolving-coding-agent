@@ -10,8 +10,9 @@ from threading import RLock
 from uuid import uuid4
 
 from backend.shared import (
-    AgentResult, TaskCreateRequest, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse,
+    AgentEvent, AgentResult, TaskCreateRequest, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse,
 )
+from . import agent_events
 
 
 class TaskStorageError(Exception):
@@ -49,6 +50,7 @@ SCHEMA = (
     )""",
     "CREATE INDEX IF NOT EXISTS api_tasks_created_idx ON api_tasks(created_at DESC, id DESC)",
     "CREATE INDEX IF NOT EXISTS api_tasks_status_idx ON api_tasks(status)",
+    agent_events.SCHEMA,
 )
 
 
@@ -116,10 +118,31 @@ class TaskStore:
                 "error_message": "Task interrupted by a service restart; submit a new task to run again.",
             })
             self._write_status(connection, recovered)
+            agent_events.recover_roles(connection, current.task_id, recovered.finished_at)
 
     def initialize(self) -> None:
         with self._transaction():
             pass
+
+    def append_agent_event(self, task_id: str, event: AgentEvent) -> None:
+        event = AgentEvent.model_validate(event.model_dump())
+        with self._transaction() as connection:
+            current = self._status(self._row(connection, task_id))
+            existing = agent_events.read_events(connection, task_id)
+            if current.status != "running" or event.task_id != task_id:
+                raise ValueError("Role events require their own running task")
+            if event.sequence != len(existing)+1 or any(item.event_id == event.event_id for item in existing):
+                raise ValueError("Role events must have unique continuous sequence numbers")
+            if event.created_at < current.started_at or existing and event.created_at < existing[-1].created_at:
+                raise ValueError("Role event timestamps must follow task start and prior events")
+            agent_events.insert_event(connection, event)
+
+    def get_agent_events(self, task_id: str, *, after_sequence: int = 0, limit: int = 100) -> list[AgentEvent]:
+        if type(after_sequence) is not int or after_sequence < 0 or type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("Invalid event cursor or limit")
+        with self._transaction() as connection:
+            self._row(connection, task_id)
+            return [event for event in agent_events.read_events(connection, task_id) if event.sequence > after_sequence][:limit]
 
     def close(self) -> None:
         with self.lock:

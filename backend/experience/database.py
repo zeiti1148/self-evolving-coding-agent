@@ -91,6 +91,32 @@ def connect(path: Path) -> Iterator[sqlite3.Connection]:
                     CHECK (source_id != merged_id)
                 )""")
                 connection.execute("CREATE INDEX IF NOT EXISTS experience_merge_target_idx ON experience_merge_sources(merged_id)")
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_batches (
+                    batch_id TEXT PRIMARY KEY NOT NULL,
+                    source_task_id TEXT NOT NULL UNIQUE,
+                    payload_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )""")
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_batch_items (
+                    batch_id TEXT NOT NULL REFERENCES experience_batches(batch_id),
+                    ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
+                    experience_id TEXT NOT NULL UNIQUE REFERENCES experiences(id),
+                    PRIMARY KEY(batch_id, ordinal)
+                )""")
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_promotions (
+                    promotion_key TEXT PRIMARY KEY NOT NULL,
+                    source_id TEXT NOT NULL REFERENCES experiences(id),
+                    global_id TEXT NOT NULL UNIQUE REFERENCES experiences(id)
+                )""")
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_publication_heads (
+                    source_id TEXT PRIMARY KEY NOT NULL REFERENCES experiences(id),
+                    global_id TEXT NOT NULL UNIQUE REFERENCES experiences(id)
+                )""")
+                connection.execute("""CREATE TABLE IF NOT EXISTS experience_publication_revisions (
+                    previous_id TEXT PRIMARY KEY NOT NULL REFERENCES experiences(id),
+                    new_id TEXT NOT NULL UNIQUE REFERENCES experiences(id),
+                    CHECK(previous_id != new_id)
+                )""")
             with connection:
                 yield connection
     except (sqlite3.Error, OSError):

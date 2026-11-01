@@ -1,8 +1,8 @@
-import type { Experience, MockScenario, TaskCreateRequest, TaskStep } from './contracts'
-import { readCreatedTask, readExperiences, readSteps } from './validation'
+import type { AgentEvent, Experience, MockScenario, TaskCreateRequest, TaskStep } from './contracts'
+import { readAgentEvents, readCreatedTask, readExperiences, readSteps } from './validation'
 
 export const scenarios: MockScenario[] = ['success', 'tests-failed', 'stopped', 'save-failure', 'schedule-error']
-export interface MockTask { id: string; request: TaskCreateRequest; createdAt: number; stepMs: number; scenario: MockScenario; steps: TaskStep[]; experienceId: string }
+export interface MockTask { id: string; request: TaskCreateRequest; createdAt: number; stepMs: number; scenario: MockScenario; steps: TaskStep[]; experienceId: string; events?: AgentEvent[] }
 export interface MockState { version: 1; tasks: MockTask[]; experiences: Experience[] }
 function check(valid: unknown): asserts valid { if (!valid) throw new Error('Invalid demo cache') }
 function readMockTask(value: unknown): MockTask {
@@ -24,7 +24,8 @@ function readMockTask(value: unknown): MockTask {
   check(steps.length === names.length && new Set(steps.map(step => step.call.id)).size === steps.length)
   check(steps.every((step, index) => step.sequence === index + 1 && step.call.name === names[index]
     && step.result.success === !(index === 2 || index === 3 && task.scenario === 'stopped' || index === 4 && task.scenario === 'tests-failed')))
-  return { ...task, steps }
+  check(request.execution_mode === undefined || request.execution_mode === 'single' || request.execution_mode === 'multi')
+  return { ...task, steps, events: task.events ? readAgentEvents(task.events, task.id, 0) : [] }
 }
 
 export function restoreMockState(raw: string, fallback: MockState): { state: MockState; recoveryNotice: string | null } {

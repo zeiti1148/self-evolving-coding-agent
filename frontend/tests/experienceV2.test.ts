@@ -58,7 +58,7 @@ describe('registered repositories', () => {
       expect(wrapper.text()).toContain('python-orders')
       expect(wrapper.text()).toContain('def456')
       await wrapper.get('form').trigger('submit'); await flushPromises()
-      expect(client.createTask).toHaveBeenCalledWith({ task_description: projects[1]!.task_example, source_project: 'python-sample', max_steps: 20 }, expect.any(AbortSignal))
+      expect(client.createTask).toHaveBeenCalledWith({ task_description: projects[1]!.task_example, source_project: 'python-sample', max_steps: 20, execution_mode: 'single' }, expect.any(AbortSignal))
       expect(router.currentRoute.value.path).toBe(`/tasks/${idA}`)
     } finally { wrapper.unmount() }
   })

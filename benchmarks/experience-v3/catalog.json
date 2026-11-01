@@ -1,0 +1,58 @@
+[
+  {
+    "id": "java-checkout-complex",
+    "label": "Java checkout 六缺陷复杂修复",
+    "language": "java",
+    "repository_id": "v3-java-checkout",
+    "source": "benchmarks/experience-v3/java-checkout",
+    "task_example": "Repair checkout input handling while preserving normal behavior. Names: missing or blank -> guest; trim other names. Quantity: missing, blank, malformed, negative or above 999 -> 0; otherwise parse the trimmed integer. Selection: null/empty collection, negative index or index >= length -> none; otherwise return the selected value. Check combined prepare calls and pass all 18 unchanged tests. Do not modify tests or build configuration.",
+    "expected_tests": 18,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "python-checkout-complex",
+    "label": "Python checkout 六缺陷复杂修复",
+    "language": "python",
+    "repository_id": "v3-python-checkout",
+    "source": "benchmarks/experience-v3/python-checkout",
+    "task_example": "Repair checkout input handling while preserving normal behavior. Names: missing or blank -> guest; trim other names. Quantity: missing, blank, malformed, negative or above 999 -> 0; otherwise parse the trimmed integer. Selection: null/empty collection, negative index or index >= length -> none; otherwise return the selected value. Check combined prepare calls and pass all 18 unchanged tests. Do not modify tests or build configuration.",
+    "expected_tests": 18,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "java-booking-transfer",
+    "label": "Java booking 跨仓库业务适配",
+    "language": "java",
+    "repository_id": "v3-java-booking",
+    "source": "benchmarks/experience-v3/java-booking-transfer",
+    "task_example": "Repair booking input handling while preserving normal behavior. Names: missing or blank -> visitor; trim other names. Quantity: missing, blank or malformed -> 1; numeric values outside 1..30 must raise an error. Selection: null/empty collection, negative index or index >= length -> unassigned; otherwise return the selected value. Check combined prepare calls and pass all 12 unchanged tests. Do not modify tests or build configuration.",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "python-booking-transfer",
+    "label": "Python booking 跨仓库业务适配",
+    "language": "python",
+    "repository_id": "v3-python-booking",
+    "source": "benchmarks/experience-v3/python-booking-transfer",
+    "task_example": "Repair booking input handling while preserving normal behavior. Names: missing or blank -> visitor; trim other names. Quantity: missing, blank or malformed -> 1; numeric values outside 1..30 must raise an error. Selection: null/empty collection, negative index or index >= length -> unassigned; otherwise return the selected value. Check combined prepare calls and pass all 12 unchanged tests. Do not modify tests or build configuration.",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  }
+]

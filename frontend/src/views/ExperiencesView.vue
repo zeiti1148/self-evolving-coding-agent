@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { useRoute } from 'vue-router'
+import ExperienceDetail from '../components/ExperienceDetail.vue'
+import ExperiencePromotion from '../components/ExperiencePromotion.vue'
 import { useApiContext } from '../api/context'
-import type { Experience, ExperienceFilters, ExperienceScope, MergePreview, ProjectLanguage } from '../api/contracts'
+import type { Experience, ExperienceFilters, ExperienceScope, MergePreview, ProjectLanguage, ReuseStatus } from '../api/contracts'
 import AppIcon from '../components/AppIcon.vue'
 import ExperienceKnowledge from '../components/ExperienceKnowledge.vue'
 const { api } = useApiContext()
+const route = useRoute()
+const detailId = computed(() => typeof route?.query.id === 'string' ? route.query.id : '')
+const promotionId = ref('')
+const reuseStatus = ref<ReuseStatus | ''>('')
 const PAGE_SIZE = 5
 const items = shallowRef<Experience[]>([])
 const offset = ref(0)
@@ -54,10 +61,11 @@ function applyFilters() {
   if (mergeBusy.value) return
   filters.value = { ...(language.value ? { language: language.value } : {}),
     ...(scope.value ? { scope: scope.value } : {}),
+    ...(reuseStatus.value ? { reuse_status: reuseStatus.value } : {}),
     ...(repositoryId.value.trim() && scope.value !== 'global' ? { repository_id: repositoryId.value.trim() } : {}) }
-  selected.value = []; invalidatePreview(); void load(0)
+  promotionId.value = ''; selected.value = []; invalidatePreview(); void load(0)
 }
-function resetFilters() { language.value = ''; scope.value = ''; repositoryId.value = ''; applyFilters() }
+function resetFilters() { language.value = ''; scope.value = ''; repositoryId.value = ''; reuseStatus.value = ''; applyFilters() }
 async function prepareMerge() {
   if (!api.previewMerge || mergeBusy.value || selected.value.length < 2 || selected.value.length > 10) return
   invalidatePreview()
@@ -97,11 +105,14 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
 </script>
 <template>
   <div class="page-heading"><div><h1>经验记录</h1><p>按项目与语言查找修复知识，查看多个问题的处理顺序和验证证据。</p></div><RouterLink to="/" class="button secondary"><AppIcon name="plus" :size="17" />新建任务</RouterLink></div>
+  <ExperienceDetail v-if="detailId" :identifier="detailId" @promote="promotionId = $event" />
+  <ExperiencePromotion v-if="promotionId" :key="promotionId" :source-id="promotionId" @close="promotionId = ''" @published="load(0)" />
   <section class="panel experience-panel" aria-labelledby="experience-title">
     <div class="panel-heading split"><div class="heading-inline"><AppIcon name="book" /><h2 id="experience-title">已积累的经验</h2></div><span class="text-muted">按创建时间倒序</span></div>
     <form class="experience-filters" @submit.prevent="applyFilters">
       <div><label for="experience-language">语言</label><select id="experience-language" v-model="language" :disabled="mergeBusy"><option value="">全部语言</option><option value="java">Java</option><option value="python">Python</option></select></div>
       <div><label for="experience-scope">适用范围</label><select id="experience-scope" v-model="scope" :disabled="mergeBusy"><option value="">全部范围</option><option value="global">通用经验</option><option value="project">仓库专属</option></select></div>
+      <div><label for="experience-reuse-status">复用状态</label><select id="experience-reuse-status" v-model="reuseStatus" :disabled="mergeBusy"><option value="">全部状态</option><option value="active">已验证 / 已发布</option><option value="candidate">候选，尚未发布</option><option value="legacy_unreviewed">旧记录，尚未审阅</option></select></div>
       <div class="repository-filter"><label for="experience-repository">仓库 ID</label><input id="experience-repository" v-model="repositoryId" placeholder="输入完整仓库 ID" :disabled="mergeBusy || scope === 'global'" maxlength="200" /></div>
       <div class="filter-actions"><button class="button secondary small" type="submit" :disabled="loading || mergeBusy">应用筛选</button><button class="text-button" type="button" :disabled="mergeBusy" @click="resetFilters">重置</button></div>
     </form>
@@ -119,10 +130,10 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
     <div v-else class="experience-list"><article v-for="item in items" :key="item.id" class="experience-entry">
       <label v-if="mergeSupported" class="merge-selection"><input type="checkbox" :checked="selected.includes(item.id)" :disabled="mergeBusy || selected.length >= 10 && !selected.includes(item.id)" :aria-label="`选择合并：${item.task_summary}`" @change="toggleSelection(item.id)" />选择合并</label>
       <details class="experience-item" data-testid="experience-item"><summary><span class="experience-icon"><AppIcon name="code" :size="21" /></span><div class="experience-title"><h3>{{ item.task_summary }}</h3><p>{{ item.error_type || '未分类错误' }}<span class="separator">/</span>{{ date(item.created_at) }}</p><p>{{ item.language === 'python' ? 'Python' : 'Java' }}<span class="separator">/</span>{{ item.scope === 'project' ? `仓库专属：${item.repository_id}` : '通用经验' }}<span v-if="item.issues?.length" class="separator">/</span><span v-if="item.issues?.length">{{ item.issues.length }} 个问题</span></p><div class="tags"><span v-for="tag in item.tags" :key="tag">{{ tag }}</span></div></div><span class="expand-label">查看详情<AppIcon name="chevron" :size="16" /></span></summary>
-        <div class="experience-detail"><ExperienceKnowledge :value="item" /><div class="experience-provenance"><span>记录 ID <code>{{ item.id }}</code></span><RouterLink v-if="item.source_task_id" :to="`/tasks/${item.source_task_id}`">查看来源任务<AppIcon name="arrow" :size="14" /></RouterLink><span v-else>未关联单个来源任务</span></div></div>
+        <div class="experience-detail"><ExperienceKnowledge :value="item" /><div class="experience-actions"><RouterLink :to="{ path: '/experiences', query: { id: item.id } }">详情与来源图</RouterLink><button v-if="api.previewPromotion" class="button secondary small" data-testid="promote-experience" :disabled="!item.evidence?.length || item.reuse_status === 'candidate'" @click="promotionId = item.id">通用化预览</button></div><div class="experience-provenance"><span>记录 ID <code>{{ item.id }}</code></span><RouterLink v-if="item.source_task_id" :to="`/tasks/${item.source_task_id}`">查看来源任务<AppIcon name="arrow" :size="14" /></RouterLink><span v-else>未关联单个来源任务</span></div></div>
       </details>
     </article></div>
     <div class="pagination"><span>第 {{ Math.floor(offset / PAGE_SIZE) + 1 }} 页<span class="pagination-size">每页最多 {{ PAGE_SIZE }} 条</span></span><div><button class="button secondary small" type="button" :disabled="loading || offset === 0 || mergeBusy" @click="load(Math.max(0, offset - PAGE_SIZE))">上一页</button><button class="button secondary small" type="button" data-testid="next-page" :disabled="loading || !!error || !hasNext || mergeBusy" @click="load(offset + PAGE_SIZE)">下一页</button></div></div>
   </section>
-  <p class="library-note"><AppIcon name="book" :size="17" />仓库专属经验用于对应项目；通用经验按语言与异常匹配。</p>
+  <p class="library-note"><AppIcon name="book" :size="17" />仓库专属经验用于对应项目；只有已发布、同语言且满足能力条件的通用经验可跨仓库注入，目标任务仍须验证业务条件。</p>
 </template>

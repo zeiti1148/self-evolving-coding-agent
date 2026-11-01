@@ -80,6 +80,9 @@ class Settings:
         bundled = ROOT / "benchmarks/multi-issue/catalog.json"
         if bundled.is_file():
             definitions.update(load_catalog(bundled, ROOT))
+        v3_catalog = ROOT / "benchmarks/experience-v3/catalog.json"
+        if v3_catalog.is_file():
+            definitions.update(load_catalog(v3_catalog, ROOT))
         external = os.environ.get("PROJECT_REGISTRY")
         if external:
             definitions.update(load_catalog(path("PROJECT_REGISTRY", Path(external)), ROOT))

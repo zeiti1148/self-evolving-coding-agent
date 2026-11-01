@@ -91,3 +91,8 @@ temp/
 target/
 *.class
 .mvn/timing.properties
+
+# Local browser acceptance artifacts
+.playwright-cli/
+.playwright/
+output/playwright/

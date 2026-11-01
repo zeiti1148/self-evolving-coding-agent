@@ -50,7 +50,7 @@ describe('task submission', () => {
     await wrapper.get('form').trigger('submit')
     await wrapper.get('form').trigger('submit')
     expect(client.createTask).toHaveBeenCalledTimes(1)
-    expect(vi.mocked(client.createTask).mock.calls[0]?.[0]).toEqual({ task_description: '修复 null 输入', source_project: 'registered-java', max_steps: 20 })
+    expect(vi.mocked(client.createTask).mock.calls[0]?.[0]).toEqual({ task_description: '修复 null 输入', source_project: 'registered-java', max_steps: 20, execution_mode: 'single' })
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined()
     complete({ task_id: taskId, status: 'pending', created_at: '2026-10-20T00:00:00Z' })
     await flushPromises()
@@ -196,7 +196,7 @@ it('keeps a verified result visible while HTTP step loading fails and recovers o
   let failSteps = true
   const fetcher = vi.fn().mockImplementation((url: string) => Promise.resolve(url.endsWith('/steps')
     ? failSteps ? new Response('private traceback', { status: 500 }) : new Response(JSON.stringify(steps))
-    : new Response(JSON.stringify(task))))
+    : url.includes('/agents?') ? new Response('[]') : new Response(JSON.stringify(task))))
   const router = createRouter({ history: createMemoryHistory(), routes: [
     { path: '/tasks/:taskId', component: TaskView },
     { path: '/', component: { template: '<div />' } },

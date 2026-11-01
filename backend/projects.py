@@ -20,6 +20,14 @@ class ProjectDefinition(BaseModel):
     source: Path
     task_example: str = Field(default="", max_length=50_000)
     expected_tests: int | None = Field(default=None, ge=1)
+    capabilities: list[str] = Field(default_factory=list, max_length=30)
+
+    @field_validator("capabilities")
+    @classmethod
+    def validate_capabilities(cls, values):
+        if any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}", value) for value in values):
+            raise ValueError("capabilities must be exact registered identifiers")
+        return list(dict.fromkeys(values))
 
     @field_validator("source")
     @classmethod
@@ -70,4 +78,4 @@ def source_revision(path: Path, baseline: dict[str, str] | None = None) -> str:
 def public_project(project: ProjectDefinition, revision: str | None = None) -> dict:
     return {"id": project.id, "label": project.label, "language": project.language,
             "repository_id": project.repository_id, "source_revision": revision,
-            "task_example": project.task_example}
+            "task_example": project.task_example, "capabilities": project.capabilities}

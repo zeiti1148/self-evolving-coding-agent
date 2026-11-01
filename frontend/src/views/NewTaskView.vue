@@ -2,12 +2,13 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApiContext } from '../api/context'
-import type { MockScenario, RegisteredProject } from '../api/contracts'
+import type { ExecutionMode, MockScenario, RegisteredProject } from '../api/contracts'
 import AppIcon from '../components/AppIcon.vue'
 const context = useApiContext()
 const router = useRouter()
 const description = ref('')
 const maxSteps = ref<number | string>(20)
+const executionMode = ref<ExecutionMode>('single')
 const scenario = ref<MockScenario>('success')
 const submitting = ref(false)
 const error = ref('')
@@ -51,7 +52,7 @@ async function submit() {
   controller = new AbortController()
   if (context.mock) context.setScenario?.(scenario.value)
   try {
-    const task = await context.api.createTask({ task_description, source_project: projectId.value, max_steps }, controller.signal)
+    const task = await context.api.createTask({ task_description, source_project: projectId.value, max_steps, execution_mode: executionMode.value }, controller.signal)
     if (!controller.signal.aborted) await router.push(`/tasks/${task.task_id}`)
   } catch (cause) {
     if (!controller.signal.aborted) error.value = cause instanceof Error ? cause.message : '提交失败，请稍后重试。'
@@ -76,6 +77,9 @@ async function submit() {
         <div class="form-row"><div><label for="max-steps">最大决策轮数</label><input id="max-steps" v-model="maxSteps" type="number" min="1" max="100" step="1" :disabled="submitting" /><p class="field-hint">1–100 轮，工具步骤数量可能更多。</p></div>
           <div v-if="context.mock"><label for="scenario">演示场景</label><select id="scenario" v-model="scenario" :disabled="submitting"><option value="success">修复成功并保存经验</option><option value="tests-failed">最终测试未通过</option><option value="stopped">达到上限，停止执行</option><option value="save-failure">修复成功，经验保存失败</option><option value="schedule-error">任务调度失败</option></select></div></div>
         <div v-if="error" class="error-notice" role="alert"><AppIcon name="warning" />{{ error }}</div>
+        <label for="execution-mode">执行模式</label>
+        <select id="execution-mode" v-model="executionMode" :disabled="submitting"><option value="single">单 Agent</option><option value="multi">多 Agent 协作</option></select>
+        <p class="field-hint">{{ executionMode === 'multi' ? '诊断、修复、独立复核共享决策轮数；修改通过复核后应用，最终测试由程序执行。' : '单 Agent 分步调用工具，最终测试由程序独立执行。' }}</p>
       </div>
       <div class="form-footer"><span><AppIcon name="shield" :size="17" />原始样例保持不变</span><button class="button primary" type="submit" :disabled="submitting || loadingProjects || !!projectError || !selectedProject"><AppIcon :name="submitting ? 'clock' : 'play'" :size="17" />{{ submitting ? '正在提交…' : '提交任务' }}</button></div>
     </form>

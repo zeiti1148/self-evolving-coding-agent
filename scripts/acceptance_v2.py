@@ -24,7 +24,7 @@ from fastapi.testclient import TestClient
 from backend.agent.llm import ChatClient
 from backend.api.main import create_app
 from backend.config import Settings
-from backend.shared import ExperienceCreate, ToolCall
+from backend.shared import ToolCall
 from backend.tools.workspace import inventory
 
 
@@ -170,16 +170,10 @@ def run(live: bool, directory: Path) -> dict:
                 assert not baseline.success and baseline.error_code.value == "TEST_FAILED"
             submit(client, "java-fulfillment-multi")
             experience = submit(client, "python-fulfillment-multi")
-            # Derive two explicit component records from the same verified evidence,
-            # to exercise knowledge composition without inventing model executions.
-            components = []
-            for issues in [experience.issues[:1], experience.issues[1:]]:
-                payload = experience.model_dump(exclude={"id", "created_at"})
-                payload.update(task_summary="Verified component: " + ", ".join(issue.error_type for issue in issues),
-                               error_type=issues[0].error_type, issues=[issue.model_dump() for issue in issues],
-                               root_cause="\n".join(issue.root_cause for issue in issues),
-                               solution="\n".join(issue.solution for issue in issues))
-                components.append(app.state.experiences.save_experience(ExperienceCreate.model_validate(payload)))
+            # V3 owns batch/provenance fields. Exercise legacy single-result merging with
+            # two independently executed repairs instead of manufacturing component records.
+            repeated = submit(client, "python-fulfillment-multi")
+            components = [experience, repeated]
             body = {"experience_ids": [entry.id for entry in components]}
             preview = client.post("/api/experiences/merge-preview", json=body)
             assert preview.status_code == 200 and preview.json()["can_merge"]
@@ -187,7 +181,7 @@ def run(live: bool, directory: Path) -> dict:
             assert response.status_code == 200, response.text
             merged = response.json()
             assert client.post("/api/experiences/merge", json=body).json()["id"] == merged["id"]
-            report["merge"] = {"component_origin": experience.id, "components_derived_from_verified_record": True,
+            report["merge"] = {"source_task_ids": [entry.source_task_id for entry in components], "independently_generated_sources": True,
                                "source_ids": body["experience_ids"], "result": merged, "idempotent": True}
             if not live:
                 submit(client, "python-fulfillment-multi")

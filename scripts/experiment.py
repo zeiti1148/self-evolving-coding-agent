@@ -104,6 +104,28 @@ class FrozenSearchStore:
     def save_experience(self, data):
         return self.output.save_experience(data)
 
+    def save_experiences(self, items, *, source_task_id):
+        return self.output.save_experiences(items, source_task_id=source_task_id)
+
+    def retrieve_experiences(self, query="", *, language, repository_id, error_types, limit=5, capabilities=None):
+        from backend.experience.policy import RetrievalContext, rank_references
+        from backend.experience.store import _validate_filters
+        validate_integer(limit, "limit", 1)
+        _validate_filters(language, repository_id)
+        if language is None or not isinstance(query, str) or not isinstance(error_types, list) or any(
+                not isinstance(value, str) or not value.strip() for value in error_types):
+            raise validation_error("Invalid retrieval context.")
+        with closing(sqlite3.connect(self.frozen.as_uri() + "?mode=ro", uri=True)) as connection:
+            connection.row_factory = sqlite3.Row
+            connection.execute("PRAGMA query_only=ON")
+            excluded = "SELECT source_id FROM experience_merge_sources"
+            if connection.execute("SELECT 1 FROM sqlite_master WHERE name='experience_publication_revisions'").fetchone():
+                excluded += " UNION SELECT previous_id FROM experience_publication_revisions"
+            entries = (decode_row(row) for row in connection.execute(
+                f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({excluded}){ORDER}"))
+            return rank_references(entries, RetrievalContext(language, repository_id, frozenset(capabilities or [])),
+                                   query=query, error_types=error_types, limit=limit)
+
     def search_experiences(self, query, tags=None, error_type=None, limit=5):
         validate_integer(limit, "limit", 1)
         if not isinstance(query, str):
@@ -263,8 +285,10 @@ def run_trial(spec: dict, case: dict, settings: Settings, store, original: dict,
     started = time.monotonic()
     expected_ids = []
     if spec["use_experience"]:
-        expected_ids = [entry.id for entry in store.search_experiences(
-            "", tags=["java"], error_type=case["error_type"], limit=5)]
+        project = settings.project(case["id"])
+        expected_ids = [entry.id for entry in store.retrieve_experiences(
+            "", language=project.language, repository_id=project.repository_id,
+            error_types=[case["error_type"]], capabilities=project.capabilities, limit=5)]
     record["expected_reference_ids"] = expected_ids
 
     def make_agent(tools, _api_store):

@@ -9,9 +9,12 @@ export interface ToolResult {
 export interface TaskStep { sequence: number; call: ToolCall; result: ToolResult; completed_at: string }
 export type ProjectLanguage = 'java' | 'python'
 export type ExperienceScope = 'global' | 'project'
+export type ExecutionMode = 'single' | 'multi'
+export type ReuseStatus = 'active' | 'candidate' | 'legacy_unreviewed'
 export interface RegisteredProject {
   id: string; label: string; language: ProjectLanguage; repository_id: string
   source_revision: string | null; task_example: string
+  capabilities?: string[]
 }
 export interface RepairIssue { error_type: string; root_cause: string; solution: string; files: string[] }
 export interface VerificationEvidence {
@@ -24,9 +27,27 @@ export interface ExperienceKnowledge {
   schema_version?: number; language?: ProjectLanguage; scope?: ExperienceScope
   repository_id?: string | null; source_revision?: string | null; applicability?: string[]
   issues?: RepairIssue[]; evidence?: VerificationEvidence[]; merged_from?: string[]
+  batch_id?: string | null; reuse_status?: ReuseStatus; derived_from?: string[]
+  supersedes_id?: string | null; required_capabilities?: string[]
 }
 export interface Experience extends ExperienceKnowledge { id: string; created_at: string }
-export interface ExperienceFilters { language?: ProjectLanguage; repository_id?: string; scope?: ExperienceScope }
+export interface ExperienceFilters { language?: ProjectLanguage; repository_id?: string; scope?: ExperienceScope
+  reuse_status?: ReuseStatus; source_task_id?: string; active_only?: boolean }
+export interface AgentEvent {
+  event_id: string; task_id: string; agent_id: string; role: 'diagnosis' | 'repair' | 'review' | 'coordinator' | 'extractor'
+  phase: string; status: 'started' | 'completed' | 'failed' | 'stopped'; sequence: number
+  snapshot_revision: string | null; summary: string; created_at: string
+  usage: { reported_tokens: number | null; elapsed_ms: number }
+}
+export interface PromotionDraft {
+  task_summary: string; error_type: string | null; root_cause: string; solution: string; tags: string[]
+  language: ProjectLanguage; applicability: string[]; issues: RepairIssue[]; required_capabilities: string[]
+}
+export interface PromotionPreview {
+  can_publish: boolean; conflicts: string[]; source_id: string; current_global_id: string | null
+  draft: PromotionDraft | null; injection_preview: Record<string, unknown> | null
+}
+export interface ProvenanceGraph { nodes: Experience[]; edges: { source: string; target: string; relation: string }[]; truncated: boolean }
 export interface MergePreview {
   can_merge: boolean; conflicts: string[]; source_ids: string[]; preview: ExperienceKnowledge | null
 }
@@ -34,9 +55,10 @@ export interface AgentResult {
   task_id: string; status: TerminalStatus; summary: string; steps: ToolCall[]; tool_results: ToolResult[]
   repair_succeeded: boolean; tests_passed: boolean | null; changed_files: string[]
   experience_saved: boolean | null; experience_id: string | null
+  experience_ids?: string[]
   experience_save_error: string | null; error_message: string | null
 }
-export interface TaskCreateRequest { task_description: string; source_project: string; max_steps: number }
+export interface TaskCreateRequest { task_description: string; source_project: string; max_steps: number; execution_mode?: ExecutionMode }
 export interface TaskCreateResponse { task_id: string; status: 'pending'; created_at: string }
 export interface TaskStatusResponse {
   task_id: string; status: TaskStatus; steps_completed: number; created_at: string
@@ -51,5 +73,10 @@ export interface AgentApi {
   listProjects?(signal?: AbortSignal): Promise<RegisteredProject[]>
   previewMerge?(experienceIds: string[], signal?: AbortSignal): Promise<MergePreview>
   mergeExperiences?(experienceIds: string[], signal?: AbortSignal): Promise<Experience>
+  getAgentEvents?(taskId: string, afterSequence?: number, signal?: AbortSignal): Promise<AgentEvent[]>
+  getExperience?(id: string, signal?: AbortSignal): Promise<Experience>
+  getProvenance?(id: string, signal?: AbortSignal): Promise<ProvenanceGraph>
+  previewPromotion?(sourceId: string, signal?: AbortSignal): Promise<PromotionPreview>
+  publishGlobal?(sourceId: string, draft: PromotionDraft, supersedesId?: string | null, signal?: AbortSignal): Promise<Experience>
 }
 export type MockScenario = 'success' | 'tests-failed' | 'stopped' | 'save-failure' | 'schedule-error'

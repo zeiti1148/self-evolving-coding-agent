@@ -60,9 +60,12 @@ class ChatClient:
         if tools:
             payload.update(tools=tools, tool_choice="auto")
         references = []
-        if tools and len(messages) > 1:
+        role = None
+        if len(messages) > 1:
             try:
-                references = json.loads(messages[1]["content"]).get("reference_experiences", [])
+                facts = json.loads(messages[1]["content"])
+                references = facts.get("reference_experiences", [])
+                role = facts.get("agent_role")
             except (ValueError, KeyError, TypeError):
                 pass
         if self._client is None:
@@ -71,7 +74,7 @@ class ChatClient:
         for attempt in range(3):
             started = time.monotonic()
             trace = TransportTrace(started)
-            event = {"phase": "decision" if tools else "extraction", "attempt": attempt + 1,
+            event = {"phase": role or ("decision" if tools else "extraction"), "attempt": attempt + 1,
                      "transport_policy": "environment" if config.llm_trust_env else "direct",
                      "transport_events": trace.events,
                      "requested_model": config.llm_model, "success": False,

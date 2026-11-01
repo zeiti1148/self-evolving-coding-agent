@@ -101,19 +101,20 @@ def test_retrieval_repository_and_language_isolation_and_project_priority(store)
     other = store.save_experience(data(scope="project", repository_id="repo-b"))
     python = store.save_experience(data(language="python", tags=["python"], evidence=[evidence(language="python")]))
     found = store.retrieve_experiences(language="java", repository_id="repo-a", error_types=["NullPointerException"])
-    assert [record.id for record in found] == [local.id, global_rule.id]
+    assert [record.id for record in found] == [local.id]
     assert other.id not in {r.id for r in found} and python.id not in {r.id for r in found}
-    assert store.retrieve_experiences(language="java", repository_id=None, error_types=[]) == [global_rule]
+    assert global_rule.reuse_status == "legacy_unreviewed"
+    assert store.retrieve_experiences(language="java", repository_id=None, error_types=[]) == []
 
 
 def test_retrieval_matches_all_issue_types_and_ranks_overlap_before_recency(store):
-    multiple = store.save_experience(data(error_type=None, issues=[issue(), issue("NumberFormatException")]))
-    single = store.save_experience(data())
+    multiple = store.save_experience(data(scope="project", repository_id="repo-a", error_type=None, issues=[issue(), issue("NumberFormatException")]))
+    single = store.save_experience(data(scope="project", repository_id="repo-a"))
     store.save_experience(data(error_type="ArithmeticException", issues=[issue("ArithmeticException")]))
-    found = store.retrieve_experiences(language="java", repository_id=None,
+    found = store.retrieve_experiences(language="java", repository_id="repo-a",
                                        error_types=["NullPointerException", "NumberFormatException"])
     assert found == [multiple, single]
-    assert store.retrieve_experiences(language="java", repository_id=None, error_types=["NumberFormatException"]) == [multiple]
+    assert store.retrieve_experiences(language="java", repository_id="repo-a", error_types=["NumberFormatException"]) == [multiple]
 
 
 def test_filtered_list_applies_filters_before_pagination(store):
@@ -125,8 +126,8 @@ def test_filtered_list_applies_filters_before_pagination(store):
 
 
 def test_merge_is_previewed_preserves_sources_and_deduplicates_retrieval(store):
-    left = store.save_experience(data())
-    right = store.save_experience(data(error_type="NumberFormatException", issues=[issue("NumberFormatException")]))
+    left = store.save_experience(data(scope="project", repository_id="repo-a"))
+    right = store.save_experience(data(scope="project", repository_id="repo-a", error_type="NumberFormatException", issues=[issue("NumberFormatException")]))
     before = store.list_experiences()
     plan = store.preview_merge([right.id, left.id])
     assert plan["can_merge"] and not plan["conflicts"]
@@ -137,7 +138,7 @@ def test_merge_is_previewed_preserves_sources_and_deduplicates_retrieval(store):
     assert merged.source_task_id is None
     assert {item.source_task_id for item in merged.evidence} == {left.evidence[0].source_task_id, right.evidence[0].source_task_id}
     assert store.get_experience(left.id) == left and store.get_experience(right.id) == right
-    assert store.retrieve_experiences(language="java", repository_id=None, error_types=["NullPointerException"]) == [merged]
+    assert store.retrieve_experiences(language="java", repository_id="repo-a", error_types=["NullPointerException"]) == [merged]
     assert store.list_experiences(active_only=True) == [merged]
     assert store.search_experiences("") == [merged]
     assert len(store.list_experiences()) == 3

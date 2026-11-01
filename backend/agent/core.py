@@ -6,12 +6,15 @@ import logging
 import re
 import time
 import math
+import hashlib
 from collections.abc import Callable
 from uuid import uuid4
 
 from backend.shared import (AgentRequest, AgentResult, ApplicationError, ErrorCode,
                             ExperienceCreate, TaskStep, ToolCall, ToolResult)
 from .llm import LLM, TOOLS, parse_arguments, validate_message
+from backend.experience.policy import to_model_reference
+from .extraction import extract_and_save_experiences, verification_passed
 
 logger = logging.getLogger(__name__)
 ERROR_CLASS = re.compile(r"\b[A-Za-z_][A-Za-z0-9_]*(?:Exception|Error)\b")
@@ -68,6 +71,7 @@ class Agent:
         decisions = 0
         observed_errors = error_types_in(request.task_description, request.language)
         retrieval_events: list[dict] = []
+        injection_events: list[dict] = []
         if hasattr(self.llm, "set_deadline"):
             self.llm.set_deadline(deadline)
 
@@ -83,11 +87,11 @@ class Agent:
             try:
                 references = self.experiences.retrieve_experiences(
                     "", language=request.language, repository_id=request.repository_id,
-                    error_types=observed_errors, limit=5)
+                    error_types=observed_errors, limit=5, capabilities=request.capabilities)
                 retrieved_ids = list(dict.fromkeys([*retrieved_ids, *(entry.id for entry in references)]))
                 retrieval_events.append({"error_types": list(observed_errors),
                                          "experience_ids": [entry.id for entry in references]})
-                return [entry.model_dump(mode="json") for entry in references]
+                return [to_model_reference(entry) for entry in references]
             except Exception:
                 retrieval_error = "Experience retrieval was unavailable; task proceeded without references."
                 return []
@@ -114,11 +118,9 @@ class Agent:
             if added:
                 observed_errors.extend(added[:max(0, 20 - len(observed_errors))])
                 refreshed = retrieve()
-                if refreshed:
-                    # Keep the explicit model input and HTTP audit aligned on every request.
-                    payload = json.loads(messages[1]["content"])
-                    payload["reference_experiences"] = refreshed
-                    messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
+                payload = json.loads(messages[1]["content"])
+                payload["reference_experiences"] = refreshed
+                messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
 
         def execute(call: ToolCall, *, final: bool = False) -> ToolResult:
             nonlocal changed
@@ -141,6 +143,10 @@ class Agent:
             if retrieval_error:
                 result.metadata["experience_retrieval_error"] = retrieval_error
             if final:
+                if result.success and not verification_passed(result, request.language):
+                    result = ToolResult(call_id=call.id, tool_name=call.name, success=False,
+                        output=result.output, metadata=result.metadata, error_code=ErrorCode.TEST_FAILED,
+                        error_message="Final verification requires positive non-skipped tests for the registered runner.")
                 result.metadata["final_verification"] = True
             if isinstance(result.metadata.get("changed_files"), list):
                 changed = list(result.metadata["changed_files"])
@@ -163,6 +169,14 @@ class Agent:
             for _ in range(request.max_steps):
                 remaining()
                 decisions += 1
+                # Recheck eligibility at each model boundary; a concurrent merge/publication can supersede references.
+                payload = json.loads(messages[1]["content"])
+                payload["reference_experiences"] = retrieve()
+                payload["experience_usage_rule"] = "Check every applicability condition against the target business contract; never copy a source default blindly. Final target tests decide correctness."
+                messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
+                injection_events.append({"decision": decisions,
+                                         "experience_ids": [entry["id"] for entry in payload["reference_experiences"]],
+                                         "content_sha256": hashlib.sha256(json.dumps(payload["reference_experiences"], sort_keys=True).encode()).hexdigest()})
                 message = validate_message(self.llm.complete(messages, tools=TOOLS))
                 messages.append(message)
                 tool_calls = message.get("tool_calls", [])
@@ -211,57 +225,20 @@ class Agent:
             tests_passed, repair_succeeded = None, False
 
         experience_saved = None
-        experience_id = None
+        experience_ids = []
         experience_error = None
         if status == "succeeded":
             try:
-                remaining()
-                # A separate bounded extraction request after verification; no tools or new code changes.
-                extraction = self.llm.complete([
-                    {"role": "system", "content": "Extract a reusable repair experience. Return only a JSON object with task_summary, error_type, root_cause, solution, verification, tags, applicability and issues. error_type is the primary simple exception class name. applicability is an array of precise prerequisites and boundaries. issues is an ordered array of objects {error_type,root_cause,solution,files}, one per distinct problem fixed, in recommended repair order. Describe all supported issues, use relative file paths, and keep language-specific details correct. Use only supplied evidence. Do not invent test results or include secrets or hidden reasoning. The server sets language, repository scope, source and verification evidence."},
-                    {"role": "user", "content": json.dumps({"task": request.task_description, "summary": summary,
-                     "language": request.language, "observed_error_types": observed_errors,
-                     "changed_files": changed, "trace": [r.model_dump(mode="json") for r in results]}, ensure_ascii=False)},
-                ])
-                content = extraction.get("content", "").strip()
-                if content.startswith("```"):
-                    content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content)
-                data = json.loads(content)
-                if isinstance(data, dict) and "error_type" in data:
-                    data["error_type"] = normalize_error_type(data["error_type"])
-                data["source_task_id"] = request.task_id
-                expected_runner = "maven" if request.language == "java" else "pytest"
-                runner = results[-1].metadata.get("runner", expected_runner)
-                if runner != expected_runner:
-                    raise ValueError("Final verification runner differs from registered language")
-                data.update(schema_version=2, language=request.language,
-                            scope="project" if request.repository_id else "global",
-                            repository_id=request.repository_id, source_revision=request.source_revision,
-                            merged_from=[])
-                counts = results[-1].metadata
-                data["verification"] = f"Final {runner} verification passed: {counts.get('tests', 'unknown')} tests; call_id={calls[-1].id}."
-                data["evidence"] = ([{"source_task_id": request.task_id, "tool_call_id": calls[-1].id,
-                    "runner": runner, "tests": counts["tests"], "failures": counts.get("failures", 0),
-                    "errors": counts.get("errors", 0), "skipped": counts.get("skipped", 0)}]
-                    if type(counts.get("tests")) is int and counts["tests"] > 0 else [])
-                if not data.get("issues") and data.get("error_type"):
-                    data["issues"] = [{"error_type": data["error_type"], "root_cause": data.get("root_cause"),
-                                      "solution": data.get("solution"), "files": changed}]
-                for issue in data.get("issues", []):
-                    if isinstance(issue, dict):
-                        issue["error_type"] = normalize_error_type(issue.get("error_type"))
-                if isinstance(data.get("tags", []), list):
-                    data["tags"] = [request.language, *[tag for tag in data.get("tags", [])
-                                                     if tag not in {"java", "python"}]]
-                experience = self.experiences.save_experience(ExperienceCreate.model_validate(data))
-                experience_id, experience_saved = experience.id, True
+                saved = extract_and_save_experiences(self.llm, self.experiences, request,
+                    summary=summary, changed_files=changed, calls=calls, results=results, deadline=deadline)
+                experience_ids, experience_saved = [entry.id for entry in saved], True
             except Exception:
                 experience_saved = False
                 experience_error = "Experience extraction, validation or storage failed."
 
         result = AgentResult(task_id=request.task_id, status=status, summary=summary, steps=calls,
                            tool_results=results, repair_succeeded=repair_succeeded, tests_passed=tests_passed,
-                           changed_files=changed, experience_saved=experience_saved, experience_id=experience_id,
+                           changed_files=changed, experience_saved=experience_saved, experience_ids=experience_ids,
                            experience_save_error=experience_error, error_message=error_message)
         events = list(getattr(self.llm, "audit", []))
         self.last_run_audit = {"task_id": request.task_id, "experience_enabled": self.use_experience,
@@ -271,6 +248,7 @@ class Agent:
                               "language": request.language, "repository_id": request.repository_id,
                               "source_revision": request.source_revision, "observed_error_types": observed_errors,
                               "retrieval_events": retrieval_events,
+                              "injection_events": injection_events,
                               "final_verification_attempts": sum(bool(r.metadata.get("final_verification")) for r in results)}
         if hasattr(self.llm, "close"):
             try:

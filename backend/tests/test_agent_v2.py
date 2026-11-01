@@ -94,4 +94,4 @@ def test_mismatched_runner_cannot_create_misleading_evidence(tmp_path):
     def execute(workspace, call):
         return ToolResult(call_id=call.id, tool_name=call.name, success=True, metadata={"runner": "pytest", "tests": 12})
     result = Agent(model, execute, store).run(request)
-    assert result.repair_succeeded and result.experience_saved is False and not store.list_experiences()
+    assert not result.repair_succeeded and result.experience_saved is None and not store.list_experiences()

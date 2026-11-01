@@ -85,7 +85,7 @@ def test_database_fault_is_not_an_empty_library(tmp_path):
     settings.database_path.write_bytes(b"not a sqlite database")
     with TestClient(create_app(settings)) as client:
         response = client.get("/api/experiences")
-        assert response.status_code == 500
+        assert response.status_code == 503
         assert str(tmp_path) not in response.text
 
 

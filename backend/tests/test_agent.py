@@ -40,10 +40,12 @@ class SequenceLLM:
 
 @pytest.fixture
 def setup(tmp_path):
-    request = AgentRequest(task_id=str(uuid4()), workspace=tmp_path, task_description="Fix a NullPointerException", max_steps=4)
+    request = AgentRequest(task_id=str(uuid4()), workspace=tmp_path, task_description="Fix a NullPointerException", max_steps=4,
+                           repository_id="test-repository")
     store = ExperienceStore(tmp_path / "experiences.db")
     def execute(workspace, call):
-        return ToolResult(call_id=call.id, tool_name=call.name, success=True, output="  output\n", metadata={"tests": 2})
+        return ToolResult(call_id=call.id, tool_name=call.name, success=True, output="  output\n",
+                          metadata={"tests": 2, "changed_files": ["src/Main.java"]})
     return request, store, execute
 
 
@@ -96,7 +98,7 @@ def test_extraction_failure_preserves_success(setup, extract):
 
 def test_storage_failure_preserves_success(setup, monkeypatch):
     request, store, execute = setup
-    monkeypatch.setattr(store, "save_experience", lambda _: (_ for _ in ()).throw(RuntimeError("database secret")))
+    monkeypatch.setattr(store, "save_experiences", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("database secret")))
     result = Agent(SequenceLLM([{"role": "assistant", "content": "Done"}, extraction()]), execute, store).run(request)
     assert result.status == "succeeded" and result.experience_saved is False
     assert "secret" not in result.model_dump_json()
@@ -104,7 +106,7 @@ def test_storage_failure_preserves_success(setup, monkeypatch):
 
 def test_retrieved_experience_reaches_model_and_trace(setup):
     request, store, execute = setup
-    saved = store.save_experience(ExperienceCreate(**EXPERIENCE))
+    saved = store.save_experience(ExperienceCreate(**EXPERIENCE, scope="project", repository_id=request.repository_id))
     llm = SequenceLLM([{"role": "assistant", "content": "Done"}, extraction()])
     result = Agent(llm, execute, store).run(request)
     assert saved.id in llm.requests[0][1]["content"]
