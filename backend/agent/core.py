@@ -189,6 +189,7 @@ class Agent:
                     repair_succeeded = tests_passed is True
                     if repair_succeeded:
                         status = "succeeded"
+                        summary = f"程序独立运行最终验证，{final.metadata['tests']} 项测试全部通过，修复成功。"
                         break
                     recoverable = final.error_code == ErrorCode.TEST_FAILED and bool(
                         final.metadata.get("test_failures") or final.metadata.get("error_types"))
@@ -202,6 +203,7 @@ class Agent:
                         continue
                     status = "stopped" if recoverable else "failed"
                     error_message = "决策次数已用完，仍有测试未通过。" if recoverable else (final.error_message or "最终验证未通过。")
+                    summary = "程序最终测试未通过，修复尚未完成。" if tests_passed is False else "最终验证未完成，暂不能确认修复成功。"
                     break
                 for raw in tool_calls:
                     call = ToolCall(id=str(uuid4()), name=raw["function"]["name"],
@@ -216,6 +218,8 @@ class Agent:
                 repair_succeeded = tests_passed is True
                 status = "stopped"
                 error_message = "决策次数已用完。"
+                summary = "任务因决策次数用完而停止。" + ("最终测试已通过。" if tests_passed is True else
+                          "最终测试未通过。" if tests_passed is False else "最终验证未完成。")
         except ApplicationError as exc:
             status = "stopped" if exc.code == ErrorCode.AGENT_STOPPED else "failed"
             summary, error_message = "任务执行已停止。" if status == "stopped" else "任务执行失败。", exc.message

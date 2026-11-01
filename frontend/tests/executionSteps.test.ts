@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import ExecutionSteps from '../src/components/ExecutionSteps.vue'
 import { makeSteps } from '../src/api/fixtures'
-import type { TaskStatusResponse } from '../src/api/contracts'
+import type { TaskStatusResponse, TaskStep } from '../src/api/contracts'
 import { createExecutionExport } from '../src/features/taskExport'
 
 const steps = makeSteps(100000, 1, 'success')
@@ -12,6 +12,46 @@ const task: TaskStatusResponse = {
   finished_at: new Date(100007).toISOString(), result: null, error_message: 'fixture',
 }
 const button = (wrapper: ReturnType<typeof mount>, label: string) => wrapper.findAll('button').find(item => item.text() === label)!
+
+function testStep(sequence: number, final: boolean, success: boolean, errorCode = 'TEST_FAILED'): TaskStep {
+  const id = `test-${sequence}`
+  return { sequence, call: { id, name: 'run_tests', arguments: {} }, completed_at: task.finished_at!,
+    result: { call_id: id, tool_name: 'run_tests', success, output: 'original test output',
+      error_code: success ? null : errorCode, error_message: success ? null : '测试未通过',
+      metadata: { changed_files: final ? ['src/Main.java'] : [], final_verification: final,
+        tests: 18, failures: success ? 0 : 5, errors: success ? 0 : 9, skipped: 0 } } }
+}
+
+it('distinguishes original defects from passing final verification without hiding failed evidence', async () => {
+  const original = testStep(1, false, false), final = testStep(8, true, true)
+  const wrapper = mount(ExecutionSteps, { props: { task: { ...task, status: 'succeeded' }, steps: [original, final], mock: false } })
+  expect(wrapper.findAll('summary')[0]!.text()).toContain('修复前检查')
+  expect(wrapper.findAll('summary')[0]!.text()).toContain('发现原始缺陷')
+  expect(wrapper.findAll('summary')[1]!.text()).toContain('程序最终验证')
+  expect(wrapper.findAll('summary')[1]!.text()).toContain('测试通过')
+  await wrapper.get('select').setValue('unsuccessful')
+  expect(wrapper.findAll('.execution-list > li')).toHaveLength(1)
+  expect(wrapper.get('.tool-output').text()).toBe(original.result.output)
+  expect(original.result.success).toBe(false)
+  wrapper.unmount()
+})
+
+it.each(['COMMAND_FAILED', 'COMMAND_TIMEOUT'])('does not present %s as successful defect reproduction', errorCode => {
+  const wrapper = mount(ExecutionSteps, { props: { task, steps: [testStep(1, false, false, errorCode)], mock: false } })
+  expect(wrapper.find('summary').text()).not.toContain('发现原始缺陷')
+  expect(wrapper.find('summary').text()).toContain('测试执行异常')
+  wrapper.unmount()
+})
+
+it('keeps a failed final verification distinct from initial defects and unknown old records', () => {
+  const final = testStep(8, true, false), unknown = testStep(1, false, false)
+  unknown.result.metadata = {}
+  const wrapper = mount(ExecutionSteps, { props: { task, steps: [unknown, final], mock: false } })
+  expect(wrapper.findAll('summary')[0]!.text()).not.toContain('修复前检查')
+  expect(wrapper.findAll('summary')[1]!.text()).toContain('最终验证未通过')
+  expect(wrapper.findAll('.step-marker')[1]!.classes()).toContain('step-failed')
+  wrapper.unmount()
+})
 
 describe('execution log controls', () => {
   it('filters unsuccessful steps using original numbers and remembers manual expansion across updates', async () => {

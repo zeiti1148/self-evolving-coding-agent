@@ -40,9 +40,9 @@ function time(value: string | null) { return value ? new Date(value).toLocaleStr
   <div v-if="loading && !task" class="panel empty-state" role="status"><AppIcon name="clock" :size="28" /><p>正在读取任务状态…</p></div>
   <template v-if="task">
     <div class="task-metadata"><div><span>创建时间</span><strong>{{ time(task.created_at) }}</strong></div><div><span>开始时间</span><strong>{{ time(task.started_at) }}</strong></div><div><span>{{ terminal ? '结束时间' : '已完成步骤' }}</span><strong>{{ terminal ? time(task.finished_at) : `${task.steps_completed} 步` }}</strong></div></div>
-    <AgentTimeline :task-id="taskId" :status="task.status" />
-    <ExecutionSteps :task="task" :steps="steps" :mock="mock" :steps-loaded="stepsLoaded" />
     <ResultSummary v-if="task.result" :result="task.result" />
     <section v-else-if="terminal" class="panel result-body"><h2>任务未完成</h2><p class="error-notice">{{ task.error_message || '任务已结束，但没有返回完整执行结果。' }}</p><p class="text-muted">没有最终测试证据，不能确认修复成功。</p></section>
+    <AgentTimeline :task-id="taskId" :status="task.status" />
+    <ExecutionSteps :task="task" :steps="steps" :mock="mock" :steps-loaded="stepsLoaded" />
   </template>
 </template>

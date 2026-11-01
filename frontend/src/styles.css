@@ -154,6 +154,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); out
 .execution-list > li:not(:last-child)::before { content: ''; position: absolute; top: 29px; bottom: 0; left: 13px; width: 1px; background: var(--line); }
 .step-marker { position: relative; background: var(--success-bg); color: var(--success); width: 27px; height: 27px; border: 1px solid var(--success-border); border-radius: 50%; display: grid; place-items: center; font-size: 11px; flex-shrink: 0; margin-top: 10px; }
 .step-marker.step-failed { color: var(--danger); background: var(--danger-bg); border-color: var(--danger-border); }
+.step-marker.step-original-defect { color: var(--warning); background: var(--warning-bg); border-color: var(--warning-border); }
+.step-explanation, .step-test-counts { margin: 0; padding: 10px 22px 0; line-height: 1.8; font-size: 13px; }
+.step-explanation { color: var(--muted); }
+.process-summary { margin: 16px 0; font-size: 13px; overflow-wrap: anywhere; }
+.process-summary > summary { color: var(--muted); cursor: pointer; }
+.process-summary > p { white-space: pre-wrap; }
 .step-detail { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; }
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
