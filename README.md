@@ -21,6 +21,8 @@ Java/Python checkout 来源各有 18 项固定测试，booking 目标各有 12 �
 
 2026-11-01 阶段汇报：[阶段三正文与下一阶段计划](docs/reports/stage-3-2026-11-01.md) · [9 页 PPT](docs/presentations/coding-agent-v3-stage-report.pptx) · [逐页讲稿](docs/presentations/v3-stage-report-speech.md) · [本次回归与交付记录](docs/reports/delivery-2026-11-01.md)。上传前重跑后端 498 项、前端 87 项测试、生产构建与接口联调，结果均通过。
 
+课堂汇报可使用 [通俗版 PPT](docs/presentations/coding-agent-v3-stage-report-simple.pptx) 和 [通俗版讲稿](docs/presentations/v3-stage-report-simple-speech.md)：用姓名、数量和列表问题说明功能，减少术语，保留相同测试数据与验证范围。
+
 Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依赖；可通过 `PYTHON_EXECUTABLE` 指定解释器。工作副本不复制 `.env*`、Git 元数据和常见私钥文件；测试、依赖和构建配置保持只读。
 
 ## 已合并的第二阶段基线
