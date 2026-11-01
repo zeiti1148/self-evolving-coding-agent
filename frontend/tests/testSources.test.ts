@@ -56,6 +56,7 @@ describe('task test source viewer', () => {
     await wrapper.findAll('.source-file-list a')[1]!.trigger('click')
     await flushPromises()
     expect(router.currentRoute.value.query.file).toBe(files[1]!.path)
+    expect(client.listTestSources).toHaveBeenCalledTimes(1)
     expect(client.getTestSource).toHaveBeenLastCalledWith(taskId, files[1]!.path, expect.any(AbortSignal))
     const url = router.currentRoute.value.fullPath
     wrapper.unmount()

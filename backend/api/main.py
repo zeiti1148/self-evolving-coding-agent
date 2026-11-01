@@ -25,6 +25,7 @@ from backend.tools import ToolService, WorkspaceManager
 from .store import TaskStorageError, TaskStore
 from .experience_routes import register_experience_routes, MergeRequest
 from .test_source_routes import register_test_source_routes
+from .code_diff_routes import register_code_diff_routes
 from backend.shared import AgentEvent
 
 
@@ -73,7 +74,15 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         if failed:
             raise HTTPException(503, "任务记录失败，请恢复存储后重启服务。")
 
+    def save_code_snapshot(task_id: str):
+        try:
+            manager.capture_changes(manager.root / task_id)
+        except Exception:
+            # Optional viewing evidence must not overwrite a repair/test outcome.
+            logger.warning("Could not preserve code comparison for task=%s", task_id)
+
     def fail_task(task_id: str, message: str):
+        save_code_snapshot(task_id)
         try:
             tasks.finish(task_id, error=message.strip()[:5000] or "任务执行失败。")
         except (TaskStorageError, KeyError, ValueError):
@@ -106,6 +115,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
                                language=project.language, repository_id=project.repository_id,
                                source_revision=revision, capabilities=project.capabilities,
                                execution_mode=request.execution_mode), **callbacks)
+            save_code_snapshot(task_id)
             tasks.finish(task_id, result=result, audit=getattr(agent, "last_run_audit", {}))
         except ApplicationError as exc:
             fail_task(task_id, exc.message)
@@ -162,6 +172,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
 
     register_experience_routes(app, experiences)
     register_test_source_routes(app, tasks, manager, ensure_recorded)
+    register_code_diff_routes(app, tasks, manager, ensure_recorded)
 
     @app.get("/api/projects")
     def get_projects():

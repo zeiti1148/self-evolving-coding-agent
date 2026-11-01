@@ -1,6 +1,7 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
 import { readAgentEvents, readCreatedTask, readExperience, readExperiences, readMergedExperience, readMergePreview, readProjects, readPromotionPreview, readProvenance, readSteps, readTask } from './validation'
 import { readTestSource, readTestSources } from './validation'
+import { readCodeChanges, readCodeDiff } from './codeDiffValidation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -18,6 +19,10 @@ const fieldLabels: Record<string, string> = {
 
 function errorMessage(status: number, payload: unknown, path: string): string {
   if (status >= 500) return '服务暂时不可用，请稍后重试。'
+  if (status === 404 && /\/code-(changes|diff)(?:\?|$)/.test(path)) {
+    const detail = payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : null
+    return typeof detail === 'string' && /[\u4e00-\u9fff]/.test(detail) ? detail : '代码对比暂不可用，请确认任务工作副本仍在，并重启已更新的后端。'
+  }
   if (status === 404 && /\/test-sources?(?:\?|$)/.test(path)) {
     const detail = payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : null
     return typeof detail === 'string' && /[\u4e00-\u9fff]/.test(detail) ? detail
@@ -84,6 +89,8 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
     listTestSources: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/test-sources`, data => readTestSources(data, id), 'GET', undefined, signal),
+    listCodeChanges: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/code-changes`, data => readCodeChanges(data, id), 'GET', undefined, signal),
+    getCodeDiff: (id, path, signal) => request(`/api/tasks/${encodeURIComponent(id)}/code-diff?${new URLSearchParams({ path })}`, data => readCodeDiff(data, id, path), 'GET', undefined, signal),
     getTestSource: (id, path, signal) => request(`/api/tasks/${encodeURIComponent(id)}/test-source?${new URLSearchParams({ path })}`, data => readTestSource(data, id, path), 'GET', undefined, signal),
     listExperiences: (limit = 20, offset = 0, signal, filters = {}) => {
       const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })

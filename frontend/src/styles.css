@@ -372,5 +372,31 @@ details[open] > summary .step-outcome svg, details[open] > summary .expand-label
 .source-code-block code { font: inherit; }
 .source-line-numbers { user-select: none; color: var(--code-muted); text-align: right; border-right: 1px solid var(--line); flex: 0 0 auto; }
 .source-content { flex: 1 0 auto; }
+.diff-task-info { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 20px; font-size: 12px; }
+.diff-task-info .source-task-id { margin: 0; }
+.diff-notice { margin: 0 0 20px; }
+.diff-file-kind { display: block; margin-top: 4px; font-size: 11px; }
+.diff-counts { display: flex; flex-wrap: wrap; gap: 16px; margin: 10px 0 0; font-size: 12px; }
+.diff-added-count { color: var(--success); }
+.diff-removed-count { color: var(--danger); }
+.diff-view-picker { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 16px; }
+.diff-view-picker button[aria-pressed='true'] { color: var(--accent); border-color: var(--accent); background: var(--surface-soft); }
+.diff-wrap-control { display: flex; align-items: center; gap: 8px; margin: 0 24px 12px; font-size: 12px; color: var(--muted); }
+.diff-wrap-control input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+.diff-format-note { margin: 0 20px 18px; }
+.diff-scroll { overflow: auto; max-height: 70vh; background: var(--code-bg); color: var(--code-ink); border-radius: 0 0 10px 10px; }
+.diff-table { border-collapse: collapse; min-width: 100%; font: 12px/1.8 'Cascadia Code', Consolas, monospace; }
+.diff-table.wrapped { width: 100%; table-layout: fixed; }
+.diff-table.wrapped .diff-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff-row td { vertical-align: top; }
+.diff-table th { text-align: left; padding: 8px 12px; font-family: inherit; color: var(--code-muted); font-weight: 400; white-space: nowrap; }
+.diff-hunk td { padding: 8px 14px; background: var(--surface-soft); color: var(--muted); font-family: inherit; }
+.diff-line-number { min-width: 38px; text-align: right; padding: 0 10px; color: var(--code-muted); user-select: none; }
+.diff-marker { padding: 0 8px; user-select: none; }
+.diff-text { white-space: pre; tab-size: 4; padding: 0 18px 0 5px; }
+.diff-row.added { background: rgba(41, 166, 107, .19); }
+.diff-row.removed { background: rgba(224, 73, 87, .19); }
+.diff-row.added .diff-marker { color: #7ee6aa; }
+.diff-row.removed .diff-marker { color: #ff9aa3; }
 @media (max-width: 900px) { .source-layout { grid-template-columns: minmax(0, 1fr); } .source-file-list { max-height: 180px; } }
 @media (max-width: 680px) { .source-reader-heading { padding: 18px 16px 12px; } .source-link-bar { padding: 0 16px 12px; } .source-verification { padding: 0 16px 16px; } .source-code-block pre { padding: 14px 10px; } }

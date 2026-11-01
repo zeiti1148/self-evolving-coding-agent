@@ -515,3 +515,20 @@ Experience 支持 schema_version 1/2/3，新增 batch_id、reuse_status、derive
 最多列出 1000 个文件；单文件最多 200000 字节，须为 UTF-8 文本。`content` 保留缩进、原始换行和末尾空白。成功响应带 `Cache-Control: no-store`。任务、文件或工作副本不可用为 404；拒绝链接路径为 403；测试文件已改动为 409；超出大小限制为 413；编码不支持为 415。
 
 Vue 直接访问地址为 `/#/tasks/{id}/tests?file=相对路径`。省略 `file` 时打开首个测试文件；复制链接时包含所选文件。模拟前端不生成虚构源码。链接依赖可访问的前后端、持久化任务和工作副本，本机 `127.0.0.1` 地址不会自动成为公开分享地址。
+
+## 任务代码对比链接
+
+| 方法 | 路径 | 返回 |
+| --- | --- | --- |
+| GET | `/api/tasks/{id}/code-changes` | task_id、status、mode、notice、files、omitted_files |
+| GET | `/api/tasks/{id}/code-diff?path=相对路径` | 单文件前后原文、SHA-256、增删计数及带原行号/新行号的 hunks |
+
+文件清单包含 path、change_type（modified/added/deleted）、前后 SHA-256、available 和 unavailable_reason。完整契约见 `backend/shared/code_diff.py`。前后原文保留缩进、换行与末尾空白；不存在的版本为 null，空文件为 `""`。差异按文字行生成；只有换行或末尾换行变化时 `format_only=true`，不伪造文字增删。
+
+新任务创建副本时保存限量原文，结束时原子写入一次前后快照，存放在工具不可写入的 `.records` 下。`mode=snapshot` 始终返回该历史快照，后续修改原项目或工作副本不改变它。快照保存失败只影响对比可用性，不覆盖已有修复或测试结论。重启中断、缺少结束快照的新任务返回 409，不拿当前文件冒充最终版本。
+
+旧任务为 `mode=recorded_writes`：原项目内容必须与任务创建时基线哈希相同；修复后内容必须有成功的 write_file 记录，并与保留副本相同。不能核对时显示 unavailable，不从最新源码或模型说明推测。旧任务的对比来源在页面明确标注。
+
+仅支持 Java/Python 业务代码，测试、配置、凭据和其他路径不可通过该接口读取。单版本单文件上限 200000 字节，每侧快照总原文上限 2000000 字节；单任务最多展示 100 个改动文件，超出的数量通过 omitted_files 告知。在线差异限制每个版本 4000 行，超过返回 413。快照损坏/版本不符/任务未结束返回 409；任务或文件不存在返回 404。成功响应带 `Cache-Control: no-store`。
+
+Vue 地址：`/#/tasks/{id}/changes?file=相对路径`，可选 `view=before` 或 `view=after` 指定原文版本。默认展示带三行上下文的增删对比，支持长行折行。两种查看页面共用任务与工作副本归属检查。同任务切换文件复用目录索引，正文仍重新读取；切换任务会清空索引并取消旧请求。

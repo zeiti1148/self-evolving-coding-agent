@@ -11,6 +11,18 @@ export type ProjectLanguage = 'java' | 'python'
 export interface TestSourceInfo { path: string; language: ProjectLanguage; sha256: string }
 export interface TestSourceIndex { task_id: string; files: TestSourceInfo[] }
 export interface TestSourceFile extends TestSourceInfo { task_id: string; content: string; size_bytes: number }
+export interface CodeChangeInfo {
+  path: string; change_type: 'modified' | 'added' | 'deleted'; before_sha256: string | null; after_sha256: string | null
+  available: boolean; unavailable_reason: string | null
+}
+export type CodeDiffMode = 'snapshot' | 'recorded_writes'
+export interface CodeChangesIndex { task_id: string; status: TaskStatus; mode: CodeDiffMode; notice: string; files: CodeChangeInfo[]; omitted_files: number }
+export interface DiffLine { kind: 'context' | 'added' | 'removed'; old_line: number | null; new_line: number | null; content: string }
+export interface DiffHunk { old_start: number; old_lines: number; new_start: number; new_lines: number; lines: DiffLine[] }
+export interface CodeDiffFile extends CodeChangeInfo {
+  task_id: string; mode: CodeDiffMode; notice: string; before_content: string | null; after_content: string | null
+  additions: number; deletions: number; format_only: boolean; hunks: DiffHunk[]
+}
 export type ExperienceScope = 'global' | 'project'
 export type ExecutionMode = 'single' | 'multi'
 export type ReuseStatus = 'active' | 'candidate' | 'legacy_unreviewed'
@@ -74,6 +86,8 @@ export interface AgentApi {
   getSteps(taskId: string, signal?: AbortSignal): Promise<TaskStepsResponse>
   listTestSources?(taskId: string, signal?: AbortSignal): Promise<TestSourceIndex>
   getTestSource?(taskId: string, path: string, signal?: AbortSignal): Promise<TestSourceFile>
+  listCodeChanges?(taskId: string, signal?: AbortSignal): Promise<CodeChangesIndex>
+  getCodeDiff?(taskId: string, path: string, signal?: AbortSignal): Promise<CodeDiffFile>
   listExperiences(limit?: number, offset?: number, signal?: AbortSignal, filters?: ExperienceFilters): Promise<Experience[]>
   listProjects?(signal?: AbortSignal): Promise<RegisteredProject[]>
   previewMerge?(experienceIds: string[], signal?: AbortSignal): Promise<MergePreview>
