@@ -9,10 +9,11 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Query, Response
 
-from backend.shared import ApplicationError, ErrorCode
+from backend.shared import ApplicationError
 from backend.shared.models import TestSourceFile, TestSourceIndex, TestSourceInfo
 from backend.tools.workspace import Workspace, WorkspaceManager, ignored_path
 from .store import TaskStore
+from .task_files import task_workspace
 
 
 MAX_SOURCE_BYTES = 200_000
@@ -37,25 +38,7 @@ def source_language(path: str) -> str | None:
 def register_test_source_routes(app: FastAPI, tasks: TaskStore, manager: WorkspaceManager,
                                 ensure_recorded: Callable) -> None:
     def workspace(task_id: UUID) -> Workspace:
-        key = str(task_id)
-        ensure_recorded(key)
-        try:
-            request = tasks.get_request(key)
-        except KeyError:
-            raise HTTPException(404, "未找到该任务。") from None
-        try:
-            record = manager.get(manager.root / key)
-            # The UUID, persisted ownership record and original request must agree.
-            expected = manager.projects.get(request.source_project) if request else None
-            if expected is None or record.source != expected.resolve():
-                raise HTTPException(404, "无法确认该任务工作副本的归属。")
-            return record
-        except ApplicationError as exc:
-            if exc.code == ErrorCode.PATH_OUTSIDE_WORKSPACE:
-                raise HTTPException(403, "不允许通过链接读取测试源码。") from None
-            raise HTTPException(404, "任务工作副本尚未创建、已被清理或无法读取。") from None
-        except (OSError, ValueError):
-            raise HTTPException(404, "无法读取任务工作副本。") from None
+        return task_workspace(task_id, tasks, manager, ensure_recorded)
 
     @app.get("/api/tasks/{task_id}/test-sources", response_model=TestSourceIndex)
     def list_sources(task_id: UUID, response: Response):

@@ -89,6 +89,7 @@ class Workspace:
     source: Path
     baseline: dict[str, str]
     lock: RLock = field(default_factory=RLock)
+    before_code: dict[str, str | None] | None = None
 
 
 class WorkspaceManager:
@@ -125,11 +126,13 @@ class WorkspaceManager:
                 shutil.copytree(source, target, symlinks=True, ignore=copy_ignored)
                 if inventory(target) != baseline:
                     raise ApplicationError(ErrorCode.WORKSPACE_CREATE_FAILED, "复制过程中源文件发生变化。")
+                from .code_changes import capture_before
+                before_code = capture_before(target, baseline)
                 record_path = self._record_path(task_id)
                 reject_links(record_path)
                 record_path.parent.mkdir(exist_ok=True)
-                record_path.write_text(json.dumps({"source": str(source), "baseline": baseline}), encoding="utf-8")
-                self.records[target] = Workspace(target, source, baseline)
+                record_path.write_text(json.dumps({"source": str(source), "baseline": baseline, "before_code": before_code}, ensure_ascii=False), encoding="utf-8")
+                self.records[target] = Workspace(target, source, baseline, before_code=before_code)
             return target
         except ApplicationError:
             raise
@@ -154,7 +157,11 @@ class WorkspaceManager:
                     baseline = data["baseline"]
                     if not isinstance(baseline, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in baseline.items()):
                         raise ValueError("invalid manifest")
-                    self.records[path] = Workspace(path, source, baseline)
+                    before_code = data.get("before_code")
+                    if before_code is not None and (not isinstance(before_code, dict) or not all(
+                            key in baseline and (value is None or isinstance(value, str)) for key, value in before_code.items())):
+                        raise ValueError("invalid original source snapshot")
+                    self.records[path] = Workspace(path, source, baseline, before_code=before_code)
                 return self.records[path]
         except ApplicationError:
             raise
@@ -194,9 +201,16 @@ class WorkspaceManager:
             # Revalidate the actual absolute target immediately before recursive deletion.
             self.get(workspace)
             inventory(record.path)
+            from .code_changes import snapshot_path
+            changes = snapshot_path(self, record)
             try:
                 shutil.rmtree(record.path)
                 self._record_path(record.path.name).unlink()
+                changes.unlink(missing_ok=True)
                 self.records.pop(record.path, None)
             except OSError as exc:
                 raise ApplicationError(ErrorCode.WORKSPACE_CLEANUP_FAILED, "无法清理任务工作目录。") from exc
+
+    def capture_changes(self, workspace: Path) -> None:
+        from .code_changes import freeze_changes
+        freeze_changes(self, self.get(workspace))
