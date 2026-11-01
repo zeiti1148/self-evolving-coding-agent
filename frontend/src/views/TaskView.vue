@@ -8,6 +8,7 @@ import AppIcon from '../components/AppIcon.vue'
 import StatusBadge from '../components/StatusBadge.vue'
 import ResultSummary from '../components/ResultSummary.vue'
 import ExecutionSteps from '../components/ExecutionSteps.vue'
+import AgentTimeline from '../components/AgentTimeline.vue'
 const route = useRoute()
 const { api, mock } = useApiContext()
 const taskId = computed(() => String(route.params.taskId ?? ''))
@@ -34,11 +35,12 @@ function time(value: string | null) { return value ? new Date(value).toLocaleStr
 </script>
 <template>
   <div class="page-heading"><div><h1>任务执行</h1><p>跟踪已完成的工具调用，检查修改后的验证结果。</p></div><RouterLink to="/" class="button secondary"><AppIcon name="plus" :size="17" />新建任务</RouterLink></div>
-  <div class="task-overview panel"><div class="task-identity"><span class="section-icon"><AppIcon name="terminal" :size="24" /></span><div><h2>Java 代码修复任务</h2><div class="task-id"><code>{{ taskId }}</code><button type="button" class="text-button" @click="copyId">{{ copied ? '已复制' : '复制 ID' }}</button></div></div></div><StatusBadge v-if="task" :status="task.status" /><span v-else class="text-muted">{{ loading ? '正在读取…' : '暂不可用' }}</span></div>
+  <div class="task-overview panel"><div class="task-identity"><span class="section-icon"><AppIcon name="terminal" :size="24" /></span><div><h2>代码修复任务</h2><div class="task-id"><code>{{ taskId }}</code><button type="button" class="text-button" @click="copyId">{{ copied ? '已复制' : '复制 ID' }}</button></div></div></div><StatusBadge v-if="task" :status="task.status" /><span v-else class="text-muted">{{ loading ? '正在读取…' : '暂不可用' }}</span></div>
   <div v-if="error" class="error-notice error-with-action" role="alert"><span>{{ error }}</span><button class="button secondary small" type="button" @click="retry">重新读取</button></div>
   <div v-if="loading && !task" class="panel empty-state" role="status"><AppIcon name="clock" :size="28" /><p>正在读取任务状态…</p></div>
   <template v-if="task">
     <div class="task-metadata"><div><span>创建时间</span><strong>{{ time(task.created_at) }}</strong></div><div><span>开始时间</span><strong>{{ time(task.started_at) }}</strong></div><div><span>{{ terminal ? '结束时间' : '已完成步骤' }}</span><strong>{{ terminal ? time(task.finished_at) : `${task.steps_completed} 步` }}</strong></div></div>
+    <AgentTimeline :task-id="taskId" :status="task.status" />
     <ExecutionSteps :task="task" :steps="steps" :mock="mock" :steps-loaded="stepsLoaded" />
     <ResultSummary v-if="task.result" :result="task.result" />
     <section v-else-if="terminal" class="panel result-body"><h2>任务未完成</h2><p class="error-notice">{{ task.error_message || '任务已结束，但没有返回完整执行结果。' }}</p><p class="text-muted">没有最终测试证据，不能确认修复成功。</p></section>

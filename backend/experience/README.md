@@ -1,12 +1,12 @@
 # SQLite 经验模块
 
-本模块实现第一阶段的经验保存、关键词/标签/错误类型检索、列表分页。
+本模块实现 V3 原子多经验保存、隔离检索、合并、显式通用发布、来源图及旧数据兼容。
 复用 `backend.shared` 的公共模型和错误码，不依赖 Agent、工具、FastAPI 或前端。
-不负责经验提取，也不判断 Java 修复是否成功；成功验证和保存时机由 Agent 控制。
+不负责经验提取，也不独立执行 Java/Python 验证；成功验证和保存时机由 Agent 控制。
 
 ## 接入方式
 
-Agent/API 可直接导入契约中的三个同步函数，签名与 `docs/interfaces.md` 一致：
+以下三个历史函数供管理与兼容使用；模型注入必须使用后述隔离检索。管理/API 可导入，签名与 `docs/interfaces.md` 一致：
 
 ```python
 from backend.experience import save_experience, search_experiences, list_experiences
@@ -48,7 +48,7 @@ store = ExperienceStore(Path("data/experiences.db"))
 - 导入和构造对象均不创建文件；第一次操作创建目录、表和时间排序索引。
 - 每次操作在当前线程创建连接，事务结束后关闭连接。连接不会跨线程共享。
 - 写入失败回滚；数据库忙时最多等待 5 秒，再转换为存储错误。
-- 重复初始化保留已有数据；目前没有升级旧表结构的迁移机制。
+- 兼容初始化保留旧列/数据，补 details、批次/合并/发布索引及相应约束。升级前用 scripts/backup_database.py 备份，详见 docs/experience-v3.md。
 - 标签以 JSON 文本存储；SQL 注册局部 Python 匹配函数，不依赖 SQLite JSON 扩展。
 - 数据库和解释器/虚拟环境已由仓库现有忽略规则排除，不要提交运行数据。
 
@@ -73,8 +73,7 @@ store = ExperienceStore(Path("data/experiences.db"))
 limit 必须是正整数，offset 必须是非负整数，且不超过 SQLite 有符号 64 位整数范围；
 布尔值、浮点数和数字字符串不会被隐式转换。
 
-第一版适合小型经验库，文本匹配可能扫描候选行；没有向量检索、相关度排名、更新、
-删除、去重或重试幂等接口。对同一内容调用两次保存会产生两条不同 UUID 的记录。
+历史管理搜索适合小型经验库，可能扫描候选行；不做向量检索。普通 save_experience 保留原语义，不用于成功提取批次。新 save_experiences 按任务及内容指纹去重，合并/发布也各自事务幂等。
 
 ## 错误处理
 
@@ -138,3 +137,14 @@ npm.cmd run check:integration
    `Path('/tmp/tasks/example')`，Windows 上不是绝对路径，导致基线 57 通过、1 失败。
    这是新增实现之前复现的问题；共享模型与共享测试保持未修改，需由维护者将测试
    样例改为跨平台绝对路径（如基于 tmp_path）后验证。
+
+## V3 模型检索及知识工作流
+
+- `retrieve_experiences(..., language, repository_id, capabilities, error_types)` 是唯一模型检索入口；只取当前仓库 active project 与同语言、能力符合的 active global，排除所有被替代记录。
+- `policy.to_model_reference` 对通用记录使用白名单，移除私有来源字段；旧 global 默认 legacy_unreviewed，不因 V1/V2 迁移被自动信任。
+- `save_experiences` 校验整个 1–5 条数组，BEGIN IMMEDIATE 原子写入记录和批次索引；相同来源任务/内容重复返回原 ID，内容不同冲突。程序的最终测试证据由调用方绑定。
+- `preview_merge`/`merge_experiences` 检查范围、适用条件、能力、跨来源规则及顺序冲突，并去重问题和测试调用。
+- `preview_promotion` 不落库；`publish_global(source_id, draft, supersedes_id=...)` 显式发布新记录、保留来源，要求当前发布版本。
+- `get_provenance` 有界查询合并/通用化/修订关系；缺失和循环不伪装为空。
+
+更多字段和 API 见 [V3 说明](../../docs/experience-v3.md)、[公共接口](../../docs/interfaces.md)。批次、合并与发布不能承诺任意自然语言规则语义通用；目标仓库仍需独立验证。

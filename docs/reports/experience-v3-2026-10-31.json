@@ -1,0 +1,1657 @@
+{
+  "date": "2026-10-31",
+  "branch": "experience-collaboration-v3",
+  "base_commit": "8b4aa9394ea54f2392f636798d1befb94f77d2ac",
+  "database_backup": {
+    "source": "D:\\中级实训\\self-evolving-coding-agent\\data\\app.db",
+    "exists": false,
+    "backup": null,
+    "note": "Configured database does not exist; no source database created or modified."
+  },
+  "verification": {
+    "baseline_backend": 392,
+    "baseline_frontend": 78,
+    "final_backend": 498,
+    "final_backend_seconds": 132.96,
+    "final_frontend": 87,
+    "frontend_build": true,
+    "contract_integration": {
+      "scenarios": 5,
+      "objects": 66,
+      "sqlite_rows": 7
+    },
+    "v2_acceptance": true,
+    "v3_acceptance": true
+  },
+  "scripted": {
+    "run_id": "ee762327-9513-46bb-beb0-c9a024ea20d7",
+    "mode": "scripted",
+    "created_at": "2026-10-31T04:58:10.241460+00:00",
+    "finished_at": "2026-10-31T04:59:37.460377+00:00",
+    "checks": {
+      "merge_idempotent": true,
+      "merge_conflict_rejected": true,
+      "natural_multi_experience_batches": true,
+      "source_isolation_in_every_request": true,
+      "same_language_only": true,
+      "target_business_contracts": true,
+      "capability_rejected": true,
+      "candidate_and_legacy_not_injected": true,
+      "single_compatibility": true,
+      "shared_budget_stopped": true,
+      "role_failure_explicit": true,
+      "batch_failure_atomic": true,
+      "restart_history": true,
+      "original_fixtures_unchanged": true
+    },
+    "merges": [
+      {
+        "inputs": [
+          "4022e259-21c7-4d3c-91b8-26915cfe4a3d",
+          "d7f8f23d-64c2-401c-82d5-79de26f7441c"
+        ],
+        "result": {
+          "task_summary": "Merged repair knowledge: Normalize missing and blank text / Validate integer syntax and range",
+          "error_type": null,
+          "root_cause": "1. Missing receiver\n2. Blank normalized text\n3. Malformed or missing numeric text\n4. Parsed number outside business bounds",
+          "solution": "1. Check missing input before normalization\n2. Check emptiness after normalization\n3. Handle the supported parse failures\n4. Validate bounds after parsing",
+          "verification": "Final maven verification passed: 18 tests; call_id=e844330a-d57c-443a-9da4-6511ba57e6b0.",
+          "tags": [
+            "java",
+            "input-validation"
+          ],
+          "source_task_id": null,
+          "schema_version": 3,
+          "language": "java",
+          "scope": "project",
+          "repository_id": "v3-java-checkout",
+          "source_revision": "git:8b4aa9394ea54f2392f636798d1befb94f77d2ac;tree:330a94835042397c6191e5fd9566ab9789b35879a7ec2b15e308924beaa6187e",
+          "applicability": [
+            "Use only for the registered checkout input contract.",
+            "Text defaults, number bounds and selection fallbacks must preserve the original tested business policy."
+          ],
+          "issues": [
+            {
+              "error_type": "NullPointerException",
+              "root_cause": "Missing receiver",
+              "solution": "Check missing input before normalization",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/Names.java"
+              ]
+            },
+            {
+              "error_type": "NullPointerException",
+              "root_cause": "Blank normalized text",
+              "solution": "Check emptiness after normalization",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/Names.java"
+              ]
+            },
+            {
+              "error_type": "NumberFormatException",
+              "root_cause": "Malformed or missing numeric text",
+              "solution": "Handle the supported parse failures",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/Quantities.java"
+              ]
+            },
+            {
+              "error_type": "NumberFormatException",
+              "root_cause": "Parsed number outside business bounds",
+              "solution": "Validate bounds after parsing",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/Quantities.java"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "f80f80d4-2e9b-4ac1-843e-3693d35cae8c",
+              "tool_call_id": "e844330a-d57c-443a-9da4-6511ba57e6b0",
+              "runner": "maven",
+              "tests": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [
+            "4022e259-21c7-4d3c-91b8-26915cfe4a3d",
+            "d7f8f23d-64c2-401c-82d5-79de26f7441c"
+          ],
+          "batch_id": null,
+          "reuse_status": "active",
+          "derived_from": [],
+          "supersedes_id": null,
+          "required_capabilities": [],
+          "id": "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+          "created_at": "2026-10-31T04:58:29.561162Z"
+        }
+      },
+      {
+        "inputs": [
+          "f7d4a6a4-c64e-42c7-a21b-5c054678879a",
+          "818f3e6d-e43e-45fb-9ac3-13a4e55afcde"
+        ],
+        "result": {
+          "task_summary": "Merged repair knowledge: Validate integer syntax and range / Normalize missing and blank text",
+          "error_type": null,
+          "root_cause": "1. Malformed or missing numeric text\n2. Parsed number outside business bounds\n3. Missing receiver\n4. Blank normalized text",
+          "solution": "1. Handle the supported parse failures\n2. Validate bounds after parsing\n3. Check missing input before normalization\n4. Check emptiness after normalization",
+          "verification": "Final pytest verification passed: 18 tests; call_id=2fae1ebb-7e7e-48f7-b36d-83cad1fa05ad.",
+          "tags": [
+            "python",
+            "input-validation"
+          ],
+          "source_task_id": null,
+          "schema_version": 3,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "v3-python-checkout",
+          "source_revision": "git:8b4aa9394ea54f2392f636798d1befb94f77d2ac;tree:4ae916e732ff9bea5c59bf83ea93b76145de8f41669746edff2963bcd5640de6",
+          "applicability": [
+            "Use only for the registered checkout input contract.",
+            "Text defaults, number bounds and selection fallbacks must preserve the original tested business policy."
+          ],
+          "issues": [
+            {
+              "error_type": "ValueError",
+              "root_cause": "Malformed or missing numeric text",
+              "solution": "Handle the supported parse failures",
+              "files": [
+                "checkout/quantities.py"
+              ]
+            },
+            {
+              "error_type": "ValueError",
+              "root_cause": "Parsed number outside business bounds",
+              "solution": "Validate bounds after parsing",
+              "files": [
+                "checkout/quantities.py"
+              ]
+            },
+            {
+              "error_type": "AttributeError",
+              "root_cause": "Missing receiver",
+              "solution": "Check missing input before normalization",
+              "files": [
+                "checkout/names.py"
+              ]
+            },
+            {
+              "error_type": "AttributeError",
+              "root_cause": "Blank normalized text",
+              "solution": "Check emptiness after normalization",
+              "files": [
+                "checkout/names.py"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "6b4b707d-1b4e-4c1e-9189-437bbe16768c",
+              "tool_call_id": "2fae1ebb-7e7e-48f7-b36d-83cad1fa05ad",
+              "runner": "pytest",
+              "tests": 18,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [
+            "818f3e6d-e43e-45fb-9ac3-13a4e55afcde",
+            "f7d4a6a4-c64e-42c7-a21b-5c054678879a"
+          ],
+          "batch_id": null,
+          "reuse_status": "active",
+          "derived_from": [],
+          "supersedes_id": null,
+          "required_capabilities": [],
+          "id": "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+          "created_at": "2026-10-31T04:58:52.580589Z"
+        }
+      }
+    ],
+    "publications": [
+      {
+        "task_summary": "Validate input preconditions while preserving the target business contract",
+        "error_type": null,
+        "root_cause": "Unchecked input preconditions can violate a caller's contract.",
+        "solution": "Validate missing and blank text, integer syntax and range, and collection/index preconditions separately. Choose fallback values and numeric rejection rules from the target's original tests; never copy source defaults.",
+        "verification": "Source verified by independent tests; every target must independently validate its own contract.",
+        "tags": [],
+        "source_task_id": null,
+        "schema_version": 3,
+        "language": "java",
+        "scope": "global",
+        "repository_id": null,
+        "source_revision": null,
+        "applicability": [
+          "Apply only after confirming equivalent input preconditions in the target.",
+          "Confirm target-specific defaults, rejection policies and boundary rules against its original tests."
+        ],
+        "issues": [
+          {
+            "error_type": "NullPointerException",
+            "root_cause": "An input precondition for NullPointerException needs validation.",
+            "solution": "Validate the input, preserve valid behavior, and honor the target contract.",
+            "files": []
+          },
+          {
+            "error_type": "NumberFormatException",
+            "root_cause": "An input precondition for NumberFormatException needs validation.",
+            "solution": "Validate the input, preserve valid behavior, and honor the target contract.",
+            "files": []
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "f80f80d4-2e9b-4ac1-843e-3693d35cae8c",
+            "tool_call_id": "e844330a-d57c-443a-9da4-6511ba57e6b0",
+            "runner": "maven",
+            "tests": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": null,
+        "reuse_status": "active",
+        "derived_from": [
+          "d5d1ac5b-1e13-4990-80ca-8c5769e5920f"
+        ],
+        "supersedes_id": null,
+        "required_capabilities": [
+          "text-input",
+          "integer-input",
+          "indexed-selection"
+        ],
+        "id": "c969bb1a-2560-4af8-9e6e-aaa6ff951f27",
+        "created_at": "2026-10-31T04:59:11.716233Z"
+      },
+      {
+        "task_summary": "Validate input preconditions while preserving the target business contract",
+        "error_type": null,
+        "root_cause": "Unchecked input preconditions can violate a caller's contract.",
+        "solution": "Validate missing and blank text, integer syntax and range, and collection/index preconditions separately. Choose fallback values and numeric rejection rules from the target's original tests; never copy source defaults.",
+        "verification": "Source verified by independent tests; every target must independently validate its own contract.",
+        "tags": [],
+        "source_task_id": null,
+        "schema_version": 3,
+        "language": "python",
+        "scope": "global",
+        "repository_id": null,
+        "source_revision": null,
+        "applicability": [
+          "Apply only after confirming equivalent input preconditions in the target.",
+          "Confirm target-specific defaults, rejection policies and boundary rules against its original tests."
+        ],
+        "issues": [
+          {
+            "error_type": "ValueError",
+            "root_cause": "An input precondition for ValueError needs validation.",
+            "solution": "Validate the input, preserve valid behavior, and honor the target contract.",
+            "files": []
+          },
+          {
+            "error_type": "AttributeError",
+            "root_cause": "An input precondition for AttributeError needs validation.",
+            "solution": "Validate the input, preserve valid behavior, and honor the target contract.",
+            "files": []
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "6b4b707d-1b4e-4c1e-9189-437bbe16768c",
+            "tool_call_id": "2fae1ebb-7e7e-48f7-b36d-83cad1fa05ad",
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": null,
+        "reuse_status": "active",
+        "derived_from": [
+          "a7a2d394-509f-4389-9ba2-e0938d1864ac"
+        ],
+        "supersedes_id": null,
+        "required_capabilities": [
+          "text-input",
+          "integer-input",
+          "indexed-selection"
+        ],
+        "id": "0c2fdf5a-cd51-409d-8fae-0f14f3864584",
+        "created_at": "2026-10-31T04:59:11.740216Z"
+      }
+    ],
+    "tasks": [
+      {
+        "label": "java-source",
+        "project": "java-checkout-complex",
+        "task_id": "f80f80d4-2e9b-4ac1-843e-3693d35cae8c",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "4022e259-21c7-4d3c-91b8-26915cfe4a3d",
+          "d7f8f23d-64c2-401c-82d5-79de26f7441c",
+          "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+        ],
+        "error_message": null,
+        "retrieved_ids": [],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          }
+        ],
+        "actual_injected_ids": [],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "maven",
+            "tests": 18,
+            "failures": 5,
+            "errors": 9,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": false,
+            "runner": "maven",
+            "tests": 18,
+            "failures": 2,
+            "errors": 8,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "maven",
+            "tests": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 22,
+        "decisions": 6,
+        "elapsed_seconds": 18.984
+      },
+      {
+        "label": "java-after-merge",
+        "project": "java-checkout-complex",
+        "task_id": "4e498bd6-3d4e-4d2e-9f5c-2af9737c01f1",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "a8cd25db-877b-48ff-af8f-ba8b3f3833d7",
+          "91192a37-1311-444b-b070-38581b922b7e",
+          "a94da319-661b-4009-a2a7-72530c8b4f14"
+        ],
+        "error_message": null,
+        "retrieved_ids": [
+          "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+          "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+              "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+            ],
+            "content_sha256": [
+              "8d78e489155dffcad9bc9d17c4a223fbd8cd71b3b53efd2ae02ba5e05e3e81a5",
+              "150c9dbb7280dd9e27e496ed54bd40d104fa5c38ec9fedb1893ec1ab83e9b050"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+              "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+            ],
+            "content_sha256": [
+              "8d78e489155dffcad9bc9d17c4a223fbd8cd71b3b53efd2ae02ba5e05e3e81a5",
+              "150c9dbb7280dd9e27e496ed54bd40d104fa5c38ec9fedb1893ec1ab83e9b050"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+              "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+            ],
+            "content_sha256": [
+              "8d78e489155dffcad9bc9d17c4a223fbd8cd71b3b53efd2ae02ba5e05e3e81a5",
+              "150c9dbb7280dd9e27e496ed54bd40d104fa5c38ec9fedb1893ec1ab83e9b050"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+              "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+            ],
+            "content_sha256": [
+              "8d78e489155dffcad9bc9d17c4a223fbd8cd71b3b53efd2ae02ba5e05e3e81a5",
+              "150c9dbb7280dd9e27e496ed54bd40d104fa5c38ec9fedb1893ec1ab83e9b050"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+              "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+            ],
+            "content_sha256": [
+              "8d78e489155dffcad9bc9d17c4a223fbd8cd71b3b53efd2ae02ba5e05e3e81a5",
+              "150c9dbb7280dd9e27e496ed54bd40d104fa5c38ec9fedb1893ec1ab83e9b050"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "d5d1ac5b-1e13-4990-80ca-8c5769e5920f",
+              "6cbcd7a9-090b-44a7-b268-a23ea1ba432d"
+            ],
+            "content_sha256": [
+              "8d78e489155dffcad9bc9d17c4a223fbd8cd71b3b53efd2ae02ba5e05e3e81a5",
+              "150c9dbb7280dd9e27e496ed54bd40d104fa5c38ec9fedb1893ec1ab83e9b050"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "6cbcd7a9-090b-44a7-b268-a23ea1ba432d",
+          "d5d1ac5b-1e13-4990-80ca-8c5769e5920f"
+        ],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "maven",
+            "tests": 18,
+            "failures": 5,
+            "errors": 9,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": false,
+            "runner": "maven",
+            "tests": 18,
+            "failures": 2,
+            "errors": 8,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "maven",
+            "tests": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 22,
+        "decisions": 6,
+        "elapsed_seconds": 18.047
+      },
+      {
+        "label": "python-source",
+        "project": "python-checkout-complex",
+        "task_id": "6b4b707d-1b4e-4c1e-9189-437bbe16768c",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "f7d4a6a4-c64e-42c7-a21b-5c054678879a",
+          "818f3e6d-e43e-45fb-9ac3-13a4e55afcde",
+          "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+        ],
+        "error_message": null,
+        "retrieved_ids": [],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          }
+        ],
+        "actual_injected_ids": [],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 14,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 10,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 22,
+        "decisions": 6,
+        "elapsed_seconds": 4.875
+      },
+      {
+        "label": "python-after-merge",
+        "project": "python-checkout-complex",
+        "task_id": "56496132-b806-4874-a65c-a4ce8e222c16",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "84cc730c-3855-4298-b290-5b98bec2919b",
+          "968f3ec3-701f-4e17-8faa-d13c00f06f5d",
+          "2976e6fb-603e-49df-ac9c-9e249053cce7"
+        ],
+        "error_message": null,
+        "retrieved_ids": [
+          "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+          "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+              "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+            ],
+            "content_sha256": [
+              "7c44eb9f9be301694c298169b68454b34994faf99669b966fb09ba57df70d715",
+              "13f38a4f2d6f40c34aa7761fcda2fb170956987c85d4f5ca0041615343f53e5b"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+              "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+            ],
+            "content_sha256": [
+              "7c44eb9f9be301694c298169b68454b34994faf99669b966fb09ba57df70d715",
+              "13f38a4f2d6f40c34aa7761fcda2fb170956987c85d4f5ca0041615343f53e5b"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+              "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+            ],
+            "content_sha256": [
+              "7c44eb9f9be301694c298169b68454b34994faf99669b966fb09ba57df70d715",
+              "13f38a4f2d6f40c34aa7761fcda2fb170956987c85d4f5ca0041615343f53e5b"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+              "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+            ],
+            "content_sha256": [
+              "7c44eb9f9be301694c298169b68454b34994faf99669b966fb09ba57df70d715",
+              "13f38a4f2d6f40c34aa7761fcda2fb170956987c85d4f5ca0041615343f53e5b"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+              "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+            ],
+            "content_sha256": [
+              "7c44eb9f9be301694c298169b68454b34994faf99669b966fb09ba57df70d715",
+              "13f38a4f2d6f40c34aa7761fcda2fb170956987c85d4f5ca0041615343f53e5b"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+              "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+            ],
+            "content_sha256": [
+              "7c44eb9f9be301694c298169b68454b34994faf99669b966fb09ba57df70d715",
+              "13f38a4f2d6f40c34aa7761fcda2fb170956987c85d4f5ca0041615343f53e5b"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "a7a2d394-509f-4389-9ba2-e0938d1864ac",
+          "f4f429d6-4b01-4e15-b43f-fee7ca3275b8"
+        ],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 14,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 10,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 18,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 22,
+        "decisions": 6,
+        "elapsed_seconds": 4.672
+      },
+      {
+        "label": "java-before-publication",
+        "project": "java-booking-transfer",
+        "task_id": "602b5df8-cb09-4d52-96a9-d428a76b2735",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "056c0a7d-0faf-4daf-a8ac-55b860852098",
+          "583b576b-ac07-4f30-a36f-120bc11db33c",
+          "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf"
+        ],
+        "error_message": null,
+        "retrieved_ids": [],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          }
+        ],
+        "actual_injected_ids": [],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 2,
+            "errors": 7,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 14,
+        "decisions": 4,
+        "elapsed_seconds": 11.515
+      },
+      {
+        "label": "python-before-publication",
+        "project": "python-booking-transfer",
+        "task_id": "a4d77af6-cf37-4ad2-9666-5016b093d0cc",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+          "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+          "7ccc4a55-06e8-47e0-80cd-a62a1f760c86"
+        ],
+        "error_message": null,
+        "retrieved_ids": [],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          }
+        ],
+        "actual_injected_ids": [],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 14,
+        "decisions": 4,
+        "elapsed_seconds": 2.781
+      },
+      {
+        "label": "java-after-publication",
+        "project": "java-booking-transfer",
+        "task_id": "079f8fbb-140e-4888-85e1-db75fe5f2d81",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "9ec3cfaf-587f-4b15-ae7f-497f19789a3f",
+          "af9e864f-e9aa-44fd-8e41-a7175c8205ed",
+          "b20d2ea4-36c6-4387-a6e4-f3f0a5d3eb57"
+        ],
+        "error_message": null,
+        "retrieved_ids": [
+          "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf",
+          "583b576b-ac07-4f30-a36f-120bc11db33c",
+          "056c0a7d-0faf-4daf-a8ac-55b860852098",
+          "c969bb1a-2560-4af8-9e6e-aaa6ff951f27"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf",
+              "583b576b-ac07-4f30-a36f-120bc11db33c",
+              "056c0a7d-0faf-4daf-a8ac-55b860852098",
+              "c969bb1a-2560-4af8-9e6e-aaa6ff951f27"
+            ],
+            "content_sha256": [
+              "8f058d6054e3fcc80963b3495d628ac357a2d6b970cf4047fe128c3da5e715b8",
+              "d83d73b2410cdd197c99d4a6dddf312e95965636a85bdbd7e75c2b7d55f4be73",
+              "ab5561b9bc843f64bd6cafe16fdc5d03908d48e2c47d6af191d97a4db3b1a595",
+              "2f3349570c2b851c3bd4be3a23fe6d634004d5fa793df6165900368d17c0837a"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf",
+              "583b576b-ac07-4f30-a36f-120bc11db33c",
+              "056c0a7d-0faf-4daf-a8ac-55b860852098",
+              "c969bb1a-2560-4af8-9e6e-aaa6ff951f27"
+            ],
+            "content_sha256": [
+              "8f058d6054e3fcc80963b3495d628ac357a2d6b970cf4047fe128c3da5e715b8",
+              "d83d73b2410cdd197c99d4a6dddf312e95965636a85bdbd7e75c2b7d55f4be73",
+              "ab5561b9bc843f64bd6cafe16fdc5d03908d48e2c47d6af191d97a4db3b1a595",
+              "2f3349570c2b851c3bd4be3a23fe6d634004d5fa793df6165900368d17c0837a"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf",
+              "583b576b-ac07-4f30-a36f-120bc11db33c",
+              "056c0a7d-0faf-4daf-a8ac-55b860852098",
+              "c969bb1a-2560-4af8-9e6e-aaa6ff951f27"
+            ],
+            "content_sha256": [
+              "8f058d6054e3fcc80963b3495d628ac357a2d6b970cf4047fe128c3da5e715b8",
+              "d83d73b2410cdd197c99d4a6dddf312e95965636a85bdbd7e75c2b7d55f4be73",
+              "ab5561b9bc843f64bd6cafe16fdc5d03908d48e2c47d6af191d97a4db3b1a595",
+              "2f3349570c2b851c3bd4be3a23fe6d634004d5fa793df6165900368d17c0837a"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf",
+              "583b576b-ac07-4f30-a36f-120bc11db33c",
+              "056c0a7d-0faf-4daf-a8ac-55b860852098",
+              "c969bb1a-2560-4af8-9e6e-aaa6ff951f27"
+            ],
+            "content_sha256": [
+              "8f058d6054e3fcc80963b3495d628ac357a2d6b970cf4047fe128c3da5e715b8",
+              "d83d73b2410cdd197c99d4a6dddf312e95965636a85bdbd7e75c2b7d55f4be73",
+              "ab5561b9bc843f64bd6cafe16fdc5d03908d48e2c47d6af191d97a4db3b1a595",
+              "2f3349570c2b851c3bd4be3a23fe6d634004d5fa793df6165900368d17c0837a"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "056c0a7d-0faf-4daf-a8ac-55b860852098",
+          "583b576b-ac07-4f30-a36f-120bc11db33c",
+          "79b694ec-c45f-4fcb-bdc3-bf1c32e7c1bf",
+          "c969bb1a-2560-4af8-9e6e-aaa6ff951f27"
+        ],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 2,
+            "errors": 7,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 14,
+        "decisions": 4,
+        "elapsed_seconds": 10.953
+      },
+      {
+        "label": "python-after-publication",
+        "project": "python-booking-transfer",
+        "task_id": "c6f0eb96-1766-4e09-b697-3a547aa0b51d",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "39bc9856-5a88-4155-9e8e-0bd9e128d80f",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428",
+          "852d6dc6-378c-454d-bce4-ae937147cd20"
+        ],
+        "error_message": null,
+        "retrieved_ids": [
+          "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+          "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+          "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+          "0c2fdf5a-cd51-409d-8fae-0f14f3864584"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+              "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+              "0c2fdf5a-cd51-409d-8fae-0f14f3864584"
+            ],
+            "content_sha256": [
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3",
+              "5487404170145f238c6fd8de9603cf254cee8bad1902fc0c9976808e1ce9f915",
+              "0f06fa78ea84862086f6631d749000beb8a2de041e7d1b6632694a1541fba1d5"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+              "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+              "0c2fdf5a-cd51-409d-8fae-0f14f3864584"
+            ],
+            "content_sha256": [
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3",
+              "5487404170145f238c6fd8de9603cf254cee8bad1902fc0c9976808e1ce9f915",
+              "0f06fa78ea84862086f6631d749000beb8a2de041e7d1b6632694a1541fba1d5"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+              "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+              "0c2fdf5a-cd51-409d-8fae-0f14f3864584"
+            ],
+            "content_sha256": [
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3",
+              "5487404170145f238c6fd8de9603cf254cee8bad1902fc0c9976808e1ce9f915",
+              "0f06fa78ea84862086f6631d749000beb8a2de041e7d1b6632694a1541fba1d5"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+              "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+              "0c2fdf5a-cd51-409d-8fae-0f14f3864584"
+            ],
+            "content_sha256": [
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3",
+              "5487404170145f238c6fd8de9603cf254cee8bad1902fc0c9976808e1ce9f915",
+              "0f06fa78ea84862086f6631d749000beb8a2de041e7d1b6632694a1541fba1d5"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "01b79660-2e2f-4758-9b3e-d51e2b7a991b",
+          "0c2fdf5a-cd51-409d-8fae-0f14f3864584",
+          "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+          "7ccc4a55-06e8-47e0-80cd-a62a1f760c86"
+        ],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 14,
+        "decisions": 4,
+        "elapsed_seconds": 2.906
+      },
+      {
+        "label": "capability-mismatch",
+        "project": "python-booking-restricted",
+        "task_id": "5e13f605-8ba5-4afa-9cf9-cf7791953627",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "3842d340-3eeb-4e22-a1e3-d2518e2aacac",
+          "19455578-1855-4e02-9ff6-a87494aeada7",
+          "d9262deb-fe50-4bba-8ffd-1fbf364c0d4e"
+        ],
+        "error_message": null,
+        "retrieved_ids": [],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "repair",
+            "experience_ids": [],
+            "content_sha256": []
+          },
+          {
+            "role": "review",
+            "experience_ids": [],
+            "content_sha256": []
+          }
+        ],
+        "actual_injected_ids": [],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 14,
+        "decisions": 4,
+        "elapsed_seconds": 3.078
+      },
+      {
+        "label": "single-compatibility",
+        "project": "python-booking-transfer",
+        "task_id": "abf6c16a-cf9c-4e4e-bc9b-76551d3f4676",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9"
+        ],
+        "error_message": null,
+        "retrieved_ids": [
+          "edf9d5a7-12f5-471b-9912-fb31f88db428",
+          "852d6dc6-378c-454d-bce4-ae937147cd20",
+          "39bc9856-5a88-4155-9e8e-0bd9e128d80f",
+          "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+          "31e1cf89-4ba4-4719-bd2f-1f14df818096"
+        ],
+        "actual_injections": [
+          {
+            "role": "single",
+            "experience_ids": [
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20",
+              "39bc9856-5a88-4155-9e8e-0bd9e128d80f",
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096"
+            ],
+            "content_sha256": [
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901",
+              "a0491b57833768c58088540b9df313018c5a9a7c0b18d288b3e201e9020bdace",
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3"
+            ]
+          },
+          {
+            "role": "single",
+            "experience_ids": [
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20",
+              "39bc9856-5a88-4155-9e8e-0bd9e128d80f",
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096"
+            ],
+            "content_sha256": [
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901",
+              "a0491b57833768c58088540b9df313018c5a9a7c0b18d288b3e201e9020bdace",
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3"
+            ]
+          },
+          {
+            "role": "single",
+            "experience_ids": [
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20",
+              "39bc9856-5a88-4155-9e8e-0bd9e128d80f",
+              "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+              "31e1cf89-4ba4-4719-bd2f-1f14df818096"
+            ],
+            "content_sha256": [
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901",
+              "a0491b57833768c58088540b9df313018c5a9a7c0b18d288b3e201e9020bdace",
+              "a5731142a722c55e293a3df302623ae76712b8d70ca7c35b4f49ca8f218acadd",
+              "1c6713ec133fb3afbbca72ccd84a09743261e5092da37141a322b4d8d15cd2f3"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "31e1cf89-4ba4-4719-bd2f-1f14df818096",
+          "39bc9856-5a88-4155-9e8e-0bd9e128d80f",
+          "7ccc4a55-06e8-47e0-80cd-a62a1f760c86",
+          "852d6dc6-378c-454d-bce4-ae937147cd20",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428"
+        ],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 0,
+        "decisions": 3,
+        "elapsed_seconds": 1.922
+      },
+      {
+        "label": "shared-budget-exhaustion",
+        "project": "python-booking-transfer",
+        "task_id": "10520521-1bb4-46fa-983f-cc85f89a4893",
+        "status": "stopped",
+        "repair_succeeded": false,
+        "tests_passed": null,
+        "experience_saved": null,
+        "experience_ids": [],
+        "error_message": "Shared decision budget exhausted.",
+        "retrieved_ids": [
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428",
+          "852d6dc6-378c-454d-bce4-ae937147cd20"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+          "852d6dc6-378c-454d-bce4-ae937147cd20",
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428"
+        ],
+        "test_progression": [],
+        "role_event_count": 4,
+        "decisions": 2,
+        "elapsed_seconds": 1.281
+      },
+      {
+        "label": "role-exception",
+        "project": "python-booking-transfer",
+        "task_id": "3ab93bb7-1599-4d31-aca4-a971404c631c",
+        "status": "failed",
+        "repair_succeeded": false,
+        "tests_passed": null,
+        "experience_saved": null,
+        "experience_ids": [],
+        "error_message": "A collaboration role or coordinator operation failed.",
+        "retrieved_ids": [
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428",
+          "852d6dc6-378c-454d-bce4-ae937147cd20"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+          "852d6dc6-378c-454d-bce4-ae937147cd20",
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428"
+        ],
+        "test_progression": [],
+        "role_event_count": 8,
+        "decisions": 4,
+        "elapsed_seconds": 1.734
+      },
+      {
+        "label": "atomic-save-failure",
+        "project": "python-booking-transfer",
+        "task_id": "7fc6b62d-7fd6-4f48-9e31-52b2ef06ae36",
+        "status": "succeeded",
+        "repair_succeeded": true,
+        "tests_passed": true,
+        "experience_saved": false,
+        "experience_ids": [],
+        "error_message": null,
+        "retrieved_ids": [
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428",
+          "852d6dc6-378c-454d-bce4-ae937147cd20"
+        ],
+        "actual_injections": [
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "diagnosis",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "repair",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          },
+          {
+            "role": "review",
+            "experience_ids": [
+              "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+              "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+              "56fea5a3-e484-4724-97f9-465c51cf0020",
+              "edf9d5a7-12f5-471b-9912-fb31f88db428",
+              "852d6dc6-378c-454d-bce4-ae937147cd20"
+            ],
+            "content_sha256": [
+              "d4f96ec55820823d26c147b32a090f8ccb1185d0d531c72a7d9957bcaf3db2d5",
+              "417ba0218f99204b8b5d1b4ad29e9e9be8af872c317788f12529e6b23b01d9f2",
+              "78daae071a1b426f7d45ea1fa3237be184e4c0d5c83b85ee5f2d66ec9e640cfa",
+              "9e5bb3c675f07ba8d649862564239ad4175b28ad2c2281a89c15cb287377989f",
+              "bb4e69bd4e9b6110685cf0a2643e362cb040f4074ebb4f6a48aa593632663901"
+            ]
+          }
+        ],
+        "actual_injected_ids": [
+          "56fea5a3-e484-4724-97f9-465c51cf0020",
+          "6dcc68e2-9f04-48f7-9282-50047cf6c5c9",
+          "852d6dc6-378c-454d-bce4-ae937147cd20",
+          "c1ed222d-bf4e-46ee-9a69-647830c19cf9",
+          "edf9d5a7-12f5-471b-9912-fb31f88db428"
+        ],
+        "test_progression": [
+          {
+            "passed": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null,
+            "exit_code": 1
+          },
+          {
+            "passed": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true,
+            "exit_code": 0
+          }
+        ],
+        "role_event_count": 14,
+        "decisions": 4,
+        "elapsed_seconds": 2.985
+      }
+    ]
+  },
+  "live": {
+    "run_id": "a5a36655-7bb9-4f5d-a36f-977d048cad23",
+    "mode": "live",
+    "model": "",
+    "created_at": "2026-10-31T04:47:35.092464+00:00",
+    "tasks": [],
+    "merges": [],
+    "publications": [],
+    "checks": {},
+    "status": "not_run",
+    "passed": null,
+    "interpretation": "Scripted responses validate orchestration only. No controlled efficiency comparison was performed.",
+    "reason": "Missing configured LLM_API_BASE_URL, LLM_API_KEY or LLM_MODEL; no model calls made."
+  },
+  "browser": {
+    "mode": "scripted-model-real-browser-api",
+    "restart_verified": true,
+    "console_errors": 0,
+    "screenshots": [
+      "output/playwright/v3-published-light.png",
+      "output/playwright/v3-published-dark.png",
+      "output/playwright/v3-target-roles.png"
+    ],
+    "published_global_id": "0237cf8b-84d2-489a-bed7-64f75792fc1c",
+    "tasks": [
+      {
+        "task_id": "8ca0d26c-3004-4230-8abd-7880a0247a51",
+        "status": "succeeded",
+        "execution_mode": "single",
+        "experience_ids": [
+          "bcc1e595-2092-4cf0-aca5-306dc5be49c6",
+          "96767874-7e38-4f6f-9de3-82a1110f9719",
+          "c2cc49fa-b727-4225-8141-e274d306563c"
+        ],
+        "final_test_counts": {
+          "runner": "pytest",
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "role_event_count": 0,
+        "actual_injected_ids": []
+      },
+      {
+        "task_id": "3d139fe5-a7d6-44ae-a0a2-47c9acaab045",
+        "status": "succeeded",
+        "execution_mode": "multi",
+        "experience_ids": [
+          "ce6d55f6-6bf7-4c74-aa81-a4396be3e3f9",
+          "fe9c3cb3-6c09-4945-b183-224532462599",
+          "a9a9708a-285a-43da-b411-dde23ce2372e"
+        ],
+        "final_test_counts": {
+          "runner": "pytest",
+          "tests": 12,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "role_event_count": 14,
+        "actual_injected_ids": [
+          "0237cf8b-84d2-489a-bed7-64f75792fc1c"
+        ]
+      },
+      {
+        "task_id": "58b9fce1-f52d-4951-b46a-1968f791e2f5",
+        "status": "succeeded",
+        "execution_mode": "multi",
+        "experience_ids": [
+          "0274415d-91fe-45dc-ab7c-359fb056eb04",
+          "112e1fee-69a9-49db-b4c9-3046bdd3ac47",
+          "0dc27bc3-5037-43d1-a79f-16df80027ddb"
+        ],
+        "final_test_counts": {
+          "runner": "pytest",
+          "tests": 18,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        "role_event_count": 14,
+        "actual_injected_ids": []
+      }
+    ]
+  },
+  "limitations": [
+    "Live models not configured; no live model calls or efficacy claims.",
+    "Single local API instance, trusted repositories, cooperative time budget.",
+    "Same-language reuse only; capabilities do not prove semantic applicability.",
+    "No controlled efficiency comparison. Shared final-test evidence is counted once."
+  ]
+}

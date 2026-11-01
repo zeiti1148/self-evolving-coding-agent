@@ -1,0 +1,36 @@
+{
+  "java-fulfillment-multi": [
+    {
+      "error_type": "NullPointerException",
+      "path": "src/main/java/dev/selfevolving/benchmark/RecipientNames.java",
+      "content": "package dev.selfevolving.benchmark;\n\npublic class RecipientNames {\n    public String normalize(String name) {\n        return name == null ? \"guest\" : name.trim();\n    }\n}\n"
+    },
+    {
+      "error_type": "NumberFormatException",
+      "path": "src/main/java/dev/selfevolving/benchmark/QuantityParser.java",
+      "content": "package dev.selfevolving.benchmark;\n\npublic class QuantityParser {\n    public int parse(String text) {\n        if (text == null || text.trim().isEmpty()) return 0;\n        try {\n            return Math.max(0, Integer.parseInt(text.trim()));\n        } catch (NumberFormatException exception) {\n            return 0;\n        }\n    }\n}\n"
+    },
+    {
+      "error_type": "IndexOutOfBoundsException",
+      "path": "src/main/java/dev/selfevolving/benchmark/ItemSelector.java",
+      "content": "package dev.selfevolving.benchmark;\n\nimport java.util.List;\n\npublic class ItemSelector {\n    public String select(List<String> items, int index) {\n        return index < 0 || index >= items.size() ? \"none\" : items.get(index);\n    }\n}\n"
+    }
+  ],
+  "python-fulfillment-multi": [
+    {
+      "error_type": "AttributeError",
+      "path": "fulfillment/names.py",
+      "content": "def recipient_name(name):\n    return \"guest\" if name is None else name.strip()\n"
+    },
+    {
+      "error_type": "ValueError",
+      "path": "fulfillment/quantities.py",
+      "content": "def parse_quantity(text):\n    try:\n        return max(0, int(text))\n    except (TypeError, ValueError):\n        return 0\n"
+    },
+    {
+      "error_type": "IndexError",
+      "path": "fulfillment/items.py",
+      "content": "def select_item(items, index):\n    return items[index] if 0 <= index < len(items) else \"none\"\n"
+    }
+  ]
+}

@@ -19,7 +19,7 @@ watch(() => route.params.taskId, id => {
   <a class="skip-link" href="#main-content" @click.prevent="mainContent?.focus()">跳到主要内容</a>
   <div class="app-shell">
     <aside class="sidebar">
-      <RouterLink class="brand" to="/" aria-label="Coding Agent 首页"><span class="brand-mark"><AppIcon name="terminal" :size="23" /></span><span><strong>Coding Agent</strong><small>Java 修复工作台</small></span></RouterLink>
+      <RouterLink class="brand" to="/" aria-label="Coding Agent 首页"><span class="brand-mark"><AppIcon name="terminal" :size="23" /></span><span><strong>Coding Agent</strong><small>代码修复工作台</small></span></RouterLink>
       <div class="workspace-label">工作空间</div>
       <nav aria-label="主要导航">
         <RouterLink to="/" class="nav-link" exact-active-class="active"><AppIcon name="plus" />新建任务</RouterLink>
@@ -27,7 +27,7 @@ watch(() => route.params.taskId, id => {
         <span v-else class="nav-link unavailable" title="提交任务后查看执行过程"><AppIcon name="play" />任务执行</span>
         <RouterLink to="/experiences" class="nav-link" active-class="active"><AppIcon name="book" />经验记录</RouterLink>
       </nav>
-      <div class="sidebar-bottom"><div class="project-mark"><AppIcon name="code" /><span>Self-Evolving<br /><strong>Coding Agent</strong></span></div><p>从修复过程积累经验<br />为下一次任务提供参考</p><span class="version">实训原型 / M3</span></div>
+      <div class="sidebar-bottom"><div class="project-mark"><AppIcon name="code" /><span>Self-Evolving<br /><strong>Coding Agent</strong></span></div><p>从修复过程积累经验<br />为下一次任务提供参考</p><span class="version">实训原型 / V3</span></div>
     </aside>
     <div class="workspace">
       <header class="topbar">

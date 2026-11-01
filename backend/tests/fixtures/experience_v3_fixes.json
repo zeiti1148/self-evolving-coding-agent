@@ -1,0 +1,58 @@
+{
+  "java-checkout-complex": [
+    {
+      "path": "src/main/java/dev/selfevolving/benchmark/Names.java",
+      "content": "package dev.selfevolving.benchmark;\npublic class Names { public String normalize(String value) { return value == null || value.trim().isEmpty() ? \"guest\" : value.trim(); } }\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/benchmark/Quantities.java",
+      "content": "package dev.selfevolving.benchmark;\npublic class Quantities {\n    public int parse(String value) {\n        int count;\n        try { count = value == null ? 0 : Integer.parseInt(value.trim()); }\n        catch (NumberFormatException error) { return 0; }\n        return count < 0 || count > 999 ? 0 : count;\n    }\n}\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/benchmark/Items.java",
+      "content": "package dev.selfevolving.benchmark;\nimport java.util.List;\npublic class Items { public String select(List<String> values, int index) { return values == null || index < 0 || index >= values.size() ? \"none\" : values.get(index); } }\n"
+    }
+  ],
+  "java-booking-transfer": [
+    {
+      "path": "src/main/java/dev/selfevolving/benchmark/Names.java",
+      "content": "package dev.selfevolving.benchmark;\npublic class Names { public String normalize(String value) { return value == null || value.trim().isEmpty() ? \"visitor\" : value.trim(); } }\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/benchmark/Quantities.java",
+      "content": "package dev.selfevolving.benchmark;\npublic class Quantities {\n    public int parse(String value) {\n        int count;\n        try { count = value == null ? 1 : Integer.parseInt(value.trim()); }\n        catch (NumberFormatException error) { return 1; }\n        if (count < 1 || count > 30) throw new IllegalArgumentException(\"quantity must be in 1..30\");\n        return count;\n    }\n}\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/benchmark/Items.java",
+      "content": "package dev.selfevolving.benchmark;\nimport java.util.List;\npublic class Items { public String select(List<String> values, int index) { return values == null || index < 0 || index >= values.size() ? \"unassigned\" : values.get(index); } }\n"
+    }
+  ],
+  "python-checkout-complex": [
+    {
+      "path": "checkout/names.py",
+      "content": "def normalize(value):\n    return value.strip() if value is not None and value.strip() else \"guest\"\n"
+    },
+    {
+      "path": "checkout/quantities.py",
+      "content": "def parse(value):\n    try:\n        count = int(value.strip()) if value is not None else 0\n    except (ValueError, AttributeError):\n        return 0\n    return count if 0 <= count <= 999 else 0\n"
+    },
+    {
+      "path": "checkout/items.py",
+      "content": "def select(values, index):\n    if values is None or index < 0 or index >= len(values):\n        return \"none\"\n    return values[index]\n"
+    }
+  ],
+  "python-booking-transfer": [
+    {
+      "path": "booking/names.py",
+      "content": "def normalize(value):\n    return value.strip() if value is not None and value.strip() else \"visitor\"\n"
+    },
+    {
+      "path": "booking/quantities.py",
+      "content": "def parse(value):\n    try:\n        count = int(value.strip()) if value is not None else 1\n    except (ValueError, AttributeError):\n        return 1\n    if not 1 <= count <= 30:\n        raise ValueError(\"quantity must be in 1..30\")\n    return count\n"
+    },
+    {
+      "path": "booking/items.py",
+      "content": "def select(values, index):\n    if values is None or index < 0 or index >= len(values):\n        return \"unassigned\"\n    return values[index]\n"
+    }
+  ]
+}

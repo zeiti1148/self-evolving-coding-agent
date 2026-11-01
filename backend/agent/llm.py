@@ -18,7 +18,7 @@ TOOL_DESCRIPTIONS = {
     "read_file": "Read a UTF-8 file using relative POSIX paths. Preserves whitespace.",
     "write_file": "Atomically replace a source file. Tests and build configuration are read-only.",
     "run_command": "Only java/javac -version, mvn -version, mvn compile, mvn test are permitted.",
-    "run_tests": "Run the original Maven tests. Read error codes and output before deciding what to fix.",
+    "run_tests": "Run original acceptance tests with the registered Java/Maven or Python/pytest runner. Read test_failures, error_types and output, and repair every failure. Tests and build configuration are read-only.",
 }
 TOOLS = [{"type": "function", "function": {"name": name, "description": TOOL_DESCRIPTIONS[name],
           "parameters": model.model_json_schema()}} for name, model in ARGUMENTS.items()]
@@ -60,9 +60,12 @@ class ChatClient:
         if tools:
             payload.update(tools=tools, tool_choice="auto")
         references = []
-        if tools and len(messages) > 1:
+        role = None
+        if len(messages) > 1:
             try:
-                references = json.loads(messages[1]["content"]).get("reference_experiences", [])
+                facts = json.loads(messages[1]["content"])
+                references = facts.get("reference_experiences", [])
+                role = facts.get("agent_role")
             except (ValueError, KeyError, TypeError):
                 pass
         if self._client is None:
@@ -71,7 +74,7 @@ class ChatClient:
         for attempt in range(3):
             started = time.monotonic()
             trace = TransportTrace(started)
-            event = {"phase": "decision" if tools else "extraction", "attempt": attempt + 1,
+            event = {"phase": role or ("decision" if tools else "extraction"), "attempt": attempt + 1,
                      "transport_policy": "environment" if config.llm_trust_env else "direct",
                      "transport_events": trace.events,
                      "requested_model": config.llm_model, "success": False,

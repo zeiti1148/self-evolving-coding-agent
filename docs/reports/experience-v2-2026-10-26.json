@@ -1,0 +1,1243 @@
+{
+  "date": "2026-10-26",
+  "baseline_commit": "6527421",
+  "regression": {
+    "backend_passed": 348,
+    "frontend_passed": 67,
+    "typecheck": "passed",
+    "build": "passed",
+    "integration": "passed",
+    "legacy_java_greeting_tests": 2,
+    "legacy_java_profile_tests": 3
+  },
+  "scripted": {
+    "source_report": ".cache/acceptance-v2/20261026T034258Z-27ef59bb/report.json",
+    "source_report_sha256": "15267a7f04194dd37a1d1f68facb2c7ff59a4dd409e9d7ee431c277fe7a7ed36",
+    "code_version": {
+      "commit": "3a96d34ff5bcabd791b5ff54b8f769d958a7f741",
+      "dirty": false,
+      "source_sha256": {
+        "backend/agent/__init__.py": "5aa9bfae8acfc59d2b4497cd60a03b056db1993afae64d7ca2f451fa60f99efd",
+        "backend/agent/core.py": "5d98022ae5685c26aa74a56d15d29c068b972ad1d4eb8ae4104976276bc6816b",
+        "backend/agent/llm.py": "f7a4a61425c63e82e37883e4da26e3692c6342d0fdb04f78becc862f1cf365db",
+        "backend/agent/transport.py": "90d6bd01c60cbc6023e4f1b8ed52805f100ef29a6bb11695b4f4adc2ea61dcaa",
+        "backend/api/__init__.py": "0355f3abfb2d3ebcd351519230154f2e62bf0b97458d2dc233a0ec3385df4786",
+        "backend/api/main.py": "aac0d1f4428d0acddf58b31b4a9b2b346f324eb6d58ad8d19cbda24e53bd62bb",
+        "backend/api/store.py": "996420316977fe24b54ff329bdd45f9c7c02b40911da011a914416c466165536",
+        "backend/config.py": "30a54fcdd5b7e134737d87126f227a6232909d22e443284cfc17c72fd6fc4ce6",
+        "backend/experience/__init__.py": "a4fc60b57809d19a75005f7b5349d9e66c4d1ddfe399e933bfa3bb434797c65e",
+        "backend/experience/database.py": "e3d06e6a6985c9d3cf845d92aed85193305380d988111da5a24482de11cb6dd3",
+        "backend/experience/store.py": "87a3e651dc88591b83d2d0de66fd4f2bb29b4106892bd8272fbe4bafe444d714",
+        "backend/projects.py": "30b2d20d663482fbe7197e02e44e0227ce8020456074062e4a5395e0b0334c58",
+        "backend/shared/__init__.py": "1146e85fae1cacec40695511ae4e40a55eb7ae7dc3175e199dfe56fe415db5f2",
+        "backend/shared/errors.py": "669cb5360dbdf4fa1633024cf9ab3524675556795897f1e576797bd4a8adbabb",
+        "backend/shared/models.py": "8118cdf284b5badd6647eaa1480eb2d18dbd466d6f375a758993442127f491ab",
+        "backend/tools/__init__.py": "66991e3ab28f324aabd15e1f6b9bb07a51082a5f09f421b751e48c85e030543f",
+        "backend/tools/process.py": "195eff912bd4eef226ae568f55a9a25fd62c414e122f6df5cbb9b40ccbcb4370",
+        "backend/tools/service.py": "212b8ed3dbbadaaa9274dfd68eb5da3453aee05f3abe50869f7245a33ff1702b",
+        "backend/tools/workspace.py": "cb0f89c1b60e043b700e9f8bddf21d2a45fbf9a8073ed65536688be32477be43"
+      }
+    },
+    "created_at": "2026-10-26T03:42:58.356983+00:00",
+    "finished_at": "2026-10-26T03:43:23.748927+00:00",
+    "passed": true,
+    "repository_isolation": true,
+    "originals_unchanged": true,
+    "baselines": {
+      "java-fulfillment-multi": {
+        "runner": "maven",
+        "tests": 12,
+        "failures": 1,
+        "errors": 8,
+        "skipped": 0,
+        "error_types": [
+          "ArrayIndexOutOfBoundsException",
+          "AssertionFailedError",
+          "IndexOutOfBoundsException",
+          "NullPointerException",
+          "NumberFormatException"
+        ]
+      },
+      "python-fulfillment-multi": {
+        "runner": "pytest",
+        "tests": 12,
+        "failures": 9,
+        "errors": 0,
+        "skipped": 0,
+        "error_types": [
+          "AssertionError",
+          "AttributeError",
+          "IndexError",
+          "TypeError",
+          "ValueError"
+        ]
+      }
+    },
+    "tasks": [
+      {
+        "project": "java-fulfillment-multi",
+        "task_id": "1995c167-a04a-4cbc-bd6f-152a1851ea6d",
+        "status": "succeeded",
+        "decision_rounds": 6,
+        "tool_calls": 7,
+        "model_http_requests": 0,
+        "elapsed_ms": 15046,
+        "final_verification_attempts": 2,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_id": "6372198b-0b67-4806-ba86-3dea21d1a6d6",
+        "changed_files": [
+          "src/main/java/dev/selfevolving/benchmark/ItemSelector.java",
+          "src/main/java/dev/selfevolving/benchmark/QuantityParser.java",
+          "src/main/java/dev/selfevolving/benchmark/RecipientNames.java"
+        ],
+        "model_reference_ids": [],
+        "test_runs": [
+          {
+            "success": false,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 1,
+            "errors": 8,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": false,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 1,
+            "errors": 7,
+            "skipped": 0,
+            "final_verification": true
+          },
+          {
+            "success": true,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": true,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          }
+        ],
+        "model_requests": [],
+        "experience": {
+          "task_summary": "Repair multi-issue fulfillment input handling",
+          "error_type": "NullPointerException",
+          "root_cause": "Unvalidated independent inputs reach unsafe operations",
+          "solution": "Validate each input before its dependent operation and preserve normal behavior",
+          "verification": "Final maven verification passed: 12 tests; call_id=504cf3af-cf92-422a-b0a8-07b70424d591.",
+          "tags": [
+            "java",
+            "input-validation"
+          ],
+          "source_task_id": "1995c167-a04a-4cbc-bd6f-152a1851ea6d",
+          "schema_version": 2,
+          "language": "java",
+          "scope": "project",
+          "repository_id": "java-fulfillment",
+          "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:f29834044b5dce0b8c946caf0a2d9d544c7e499ddac24d2ed1f9b33f2dec3371",
+          "applicability": [
+            "Fulfillment name, quantity and item selection inputs with the existing fallback contract"
+          ],
+          "issues": [
+            {
+              "error_type": "NullPointerException",
+              "root_cause": "Unchecked input in src/main/java/dev/selfevolving/benchmark/RecipientNames.java",
+              "solution": "Validate the input before use in src/main/java/dev/selfevolving/benchmark/RecipientNames.java",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/RecipientNames.java"
+              ]
+            },
+            {
+              "error_type": "NumberFormatException",
+              "root_cause": "Unchecked input in src/main/java/dev/selfevolving/benchmark/QuantityParser.java",
+              "solution": "Validate the input before use in src/main/java/dev/selfevolving/benchmark/QuantityParser.java",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/QuantityParser.java"
+              ]
+            },
+            {
+              "error_type": "IndexOutOfBoundsException",
+              "root_cause": "Unchecked input in src/main/java/dev/selfevolving/benchmark/ItemSelector.java",
+              "solution": "Validate the input before use in src/main/java/dev/selfevolving/benchmark/ItemSelector.java",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/ItemSelector.java"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "1995c167-a04a-4cbc-bd6f-152a1851ea6d",
+              "tool_call_id": "504cf3af-cf92-422a-b0a8-07b70424d591",
+              "runner": "maven",
+              "tests": 12,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [],
+          "id": "6372198b-0b67-4806-ba86-3dea21d1a6d6",
+          "created_at": "2026-10-26T03:43:18.579184Z"
+        }
+      },
+      {
+        "project": "python-fulfillment-multi",
+        "task_id": "218fc270-37b8-4fc5-8bdc-6925e4311cac",
+        "status": "succeeded",
+        "decision_rounds": 6,
+        "tool_calls": 7,
+        "model_http_requests": 0,
+        "elapsed_ms": 2344,
+        "final_verification_attempts": 2,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_id": "a3be90b9-24f1-4c4b-a45e-d1eb478b382c",
+        "changed_files": [
+          "fulfillment/items.py",
+          "fulfillment/names.py",
+          "fulfillment/quantities.py"
+        ],
+        "model_reference_ids": [],
+        "test_runs": [
+          {
+            "success": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 8,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          },
+          {
+            "success": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          }
+        ],
+        "model_requests": [],
+        "experience": {
+          "task_summary": "Repair multi-issue fulfillment input handling",
+          "error_type": "AttributeError",
+          "root_cause": "Unvalidated independent inputs reach unsafe operations",
+          "solution": "Validate each input before its dependent operation and preserve normal behavior",
+          "verification": "Final pytest verification passed: 12 tests; call_id=64941ee8-a209-4624-820a-298f829de24b.",
+          "tags": [
+            "python",
+            "input-validation"
+          ],
+          "source_task_id": "218fc270-37b8-4fc5-8bdc-6925e4311cac",
+          "schema_version": 2,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "python-fulfillment",
+          "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:9eeb4a9b631aef2c999ab9b69baa705189c4a94e4eeeb8b3fcc4b521efd9b733",
+          "applicability": [
+            "Fulfillment name, quantity and item selection inputs with the existing fallback contract"
+          ],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "root_cause": "Unchecked input in fulfillment/names.py",
+              "solution": "Validate the input before use in fulfillment/names.py",
+              "files": [
+                "fulfillment/names.py"
+              ]
+            },
+            {
+              "error_type": "ValueError",
+              "root_cause": "Unchecked input in fulfillment/quantities.py",
+              "solution": "Validate the input before use in fulfillment/quantities.py",
+              "files": [
+                "fulfillment/quantities.py"
+              ]
+            },
+            {
+              "error_type": "IndexError",
+              "root_cause": "Unchecked input in fulfillment/items.py",
+              "solution": "Validate the input before use in fulfillment/items.py",
+              "files": [
+                "fulfillment/items.py"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "218fc270-37b8-4fc5-8bdc-6925e4311cac",
+              "tool_call_id": "64941ee8-a209-4624-820a-298f829de24b",
+              "runner": "pytest",
+              "tests": 12,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [],
+          "id": "a3be90b9-24f1-4c4b-a45e-d1eb478b382c",
+          "created_at": "2026-10-26T03:43:21.057219Z"
+        }
+      },
+      {
+        "project": "python-fulfillment-multi",
+        "task_id": "b94ff566-ec87-4921-a8cd-935dd9ac91f6",
+        "status": "succeeded",
+        "decision_rounds": 6,
+        "tool_calls": 7,
+        "model_http_requests": 0,
+        "elapsed_ms": 2250,
+        "final_verification_attempts": 2,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_id": "86a0f64c-2f44-4039-b87b-5b9e3bf3d781",
+        "changed_files": [
+          "fulfillment/items.py",
+          "fulfillment/names.py",
+          "fulfillment/quantities.py"
+        ],
+        "model_reference_ids": [
+          "040cdf59-0702-4816-ae46-4b9645c0c187",
+          "a3be90b9-24f1-4c4b-a45e-d1eb478b382c"
+        ],
+        "test_runs": [
+          {
+            "success": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 9,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": false,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 8,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          },
+          {
+            "success": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          }
+        ],
+        "model_requests": [],
+        "experience": {
+          "task_summary": "Repair multi-issue fulfillment input handling",
+          "error_type": "AttributeError",
+          "root_cause": "Unvalidated independent inputs reach unsafe operations",
+          "solution": "Validate each input before its dependent operation and preserve normal behavior",
+          "verification": "Final pytest verification passed: 12 tests; call_id=6dbb24f8-0412-4817-b7bb-dba85a9db9ff.",
+          "tags": [
+            "python",
+            "input-validation"
+          ],
+          "source_task_id": "b94ff566-ec87-4921-a8cd-935dd9ac91f6",
+          "schema_version": 2,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "python-fulfillment",
+          "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:9eeb4a9b631aef2c999ab9b69baa705189c4a94e4eeeb8b3fcc4b521efd9b733",
+          "applicability": [
+            "Fulfillment name, quantity and item selection inputs with the existing fallback contract"
+          ],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "root_cause": "Unchecked input in fulfillment/names.py",
+              "solution": "Validate the input before use in fulfillment/names.py",
+              "files": [
+                "fulfillment/names.py"
+              ]
+            },
+            {
+              "error_type": "ValueError",
+              "root_cause": "Unchecked input in fulfillment/quantities.py",
+              "solution": "Validate the input before use in fulfillment/quantities.py",
+              "files": [
+                "fulfillment/quantities.py"
+              ]
+            },
+            {
+              "error_type": "IndexError",
+              "root_cause": "Unchecked input in fulfillment/items.py",
+              "solution": "Validate the input before use in fulfillment/items.py",
+              "files": [
+                "fulfillment/items.py"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "b94ff566-ec87-4921-a8cd-935dd9ac91f6",
+              "tool_call_id": "6dbb24f8-0412-4817-b7bb-dba85a9db9ff",
+              "runner": "pytest",
+              "tests": 12,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [],
+          "id": "86a0f64c-2f44-4039-b87b-5b9e3bf3d781",
+          "created_at": "2026-10-26T03:43:23.623205Z"
+        }
+      }
+    ],
+    "merge": {
+      "component_origin": "a3be90b9-24f1-4c4b-a45e-d1eb478b382c",
+      "components_derived_from_verified_record": true,
+      "source_ids": [
+        "398ae49e-583e-4381-ab31-d34ca56b2987",
+        "585b1598-84b6-4a38-9986-0ecdf2139e13"
+      ],
+      "result": {
+        "task_summary": "Merged repair knowledge: Verified component: AttributeError / Verified component: ValueError, IndexError",
+        "error_type": null,
+        "root_cause": "1. Unchecked input in fulfillment/names.py\n2. Unchecked input in fulfillment/quantities.py\n3. Unchecked input in fulfillment/items.py",
+        "solution": "1. Validate the input before use in fulfillment/names.py\n2. Validate the input before use in fulfillment/quantities.py\n3. Validate the input before use in fulfillment/items.py",
+        "verification": "Final pytest verification passed: 12 tests; call_id=64941ee8-a209-4624-820a-298f829de24b.",
+        "tags": [
+          "python",
+          "input-validation"
+        ],
+        "source_task_id": null,
+        "schema_version": 2,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "python-fulfillment",
+        "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:9eeb4a9b631aef2c999ab9b69baa705189c4a94e4eeeb8b3fcc4b521efd9b733",
+        "applicability": [
+          "Fulfillment name, quantity and item selection inputs with the existing fallback contract"
+        ],
+        "issues": [
+          {
+            "error_type": "AttributeError",
+            "root_cause": "Unchecked input in fulfillment/names.py",
+            "solution": "Validate the input before use in fulfillment/names.py",
+            "files": [
+              "fulfillment/names.py"
+            ]
+          },
+          {
+            "error_type": "ValueError",
+            "root_cause": "Unchecked input in fulfillment/quantities.py",
+            "solution": "Validate the input before use in fulfillment/quantities.py",
+            "files": [
+              "fulfillment/quantities.py"
+            ]
+          },
+          {
+            "error_type": "IndexError",
+            "root_cause": "Unchecked input in fulfillment/items.py",
+            "solution": "Validate the input before use in fulfillment/items.py",
+            "files": [
+              "fulfillment/items.py"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "218fc270-37b8-4fc5-8bdc-6925e4311cac",
+            "tool_call_id": "64941ee8-a209-4624-820a-298f829de24b",
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [
+          "398ae49e-583e-4381-ab31-d34ca56b2987",
+          "585b1598-84b6-4a38-9986-0ecdf2139e13"
+        ],
+        "id": "040cdf59-0702-4816-ae46-4b9645c0c187",
+        "created_at": "2026-10-26T03:43:21.237545Z"
+      },
+      "idempotent": true,
+      "delivered_to_followup_task": true
+    }
+  },
+  "live": {
+    "source_report": ".cache/acceptance-v2/20261026T034258Z-f92cdb8e/report.json",
+    "source_report_sha256": "657b515abf07516153e56c8f7ae710eb4dc1556be976a9cf498acd55ee070e69",
+    "code_version": {
+      "commit": "3a96d34ff5bcabd791b5ff54b8f769d958a7f741",
+      "dirty": false,
+      "source_sha256": {
+        "backend/agent/__init__.py": "5aa9bfae8acfc59d2b4497cd60a03b056db1993afae64d7ca2f451fa60f99efd",
+        "backend/agent/core.py": "5d98022ae5685c26aa74a56d15d29c068b972ad1d4eb8ae4104976276bc6816b",
+        "backend/agent/llm.py": "f7a4a61425c63e82e37883e4da26e3692c6342d0fdb04f78becc862f1cf365db",
+        "backend/agent/transport.py": "90d6bd01c60cbc6023e4f1b8ed52805f100ef29a6bb11695b4f4adc2ea61dcaa",
+        "backend/api/__init__.py": "0355f3abfb2d3ebcd351519230154f2e62bf0b97458d2dc233a0ec3385df4786",
+        "backend/api/main.py": "aac0d1f4428d0acddf58b31b4a9b2b346f324eb6d58ad8d19cbda24e53bd62bb",
+        "backend/api/store.py": "996420316977fe24b54ff329bdd45f9c7c02b40911da011a914416c466165536",
+        "backend/config.py": "30a54fcdd5b7e134737d87126f227a6232909d22e443284cfc17c72fd6fc4ce6",
+        "backend/experience/__init__.py": "a4fc60b57809d19a75005f7b5349d9e66c4d1ddfe399e933bfa3bb434797c65e",
+        "backend/experience/database.py": "e3d06e6a6985c9d3cf845d92aed85193305380d988111da5a24482de11cb6dd3",
+        "backend/experience/store.py": "87a3e651dc88591b83d2d0de66fd4f2bb29b4106892bd8272fbe4bafe444d714",
+        "backend/projects.py": "30b2d20d663482fbe7197e02e44e0227ce8020456074062e4a5395e0b0334c58",
+        "backend/shared/__init__.py": "1146e85fae1cacec40695511ae4e40a55eb7ae7dc3175e199dfe56fe415db5f2",
+        "backend/shared/errors.py": "669cb5360dbdf4fa1633024cf9ab3524675556795897f1e576797bd4a8adbabb",
+        "backend/shared/models.py": "8118cdf284b5badd6647eaa1480eb2d18dbd466d6f375a758993442127f491ab",
+        "backend/tools/__init__.py": "66991e3ab28f324aabd15e1f6b9bb07a51082a5f09f421b751e48c85e030543f",
+        "backend/tools/process.py": "195eff912bd4eef226ae568f55a9a25fd62c414e122f6df5cbb9b40ccbcb4370",
+        "backend/tools/service.py": "212b8ed3dbbadaaa9274dfd68eb5da3453aee05f3abe50869f7245a33ff1702b",
+        "backend/tools/workspace.py": "cb0f89c1b60e043b700e9f8bddf21d2a45fbf9a8073ed65536688be32477be43"
+      }
+    },
+    "created_at": "2026-10-26T03:42:58.358987+00:00",
+    "finished_at": "2026-10-26T03:43:51.192192+00:00",
+    "passed": true,
+    "repository_isolation": true,
+    "originals_unchanged": true,
+    "baselines": {
+      "java-fulfillment-multi": {
+        "runner": "maven",
+        "tests": 12,
+        "failures": 1,
+        "errors": 8,
+        "skipped": 0,
+        "error_types": [
+          "ArrayIndexOutOfBoundsException",
+          "AssertionFailedError",
+          "IndexOutOfBoundsException",
+          "NullPointerException",
+          "NumberFormatException"
+        ]
+      },
+      "python-fulfillment-multi": {
+        "runner": "pytest",
+        "tests": 12,
+        "failures": 9,
+        "errors": 0,
+        "skipped": 0,
+        "error_types": [
+          "AssertionError",
+          "AttributeError",
+          "IndexError",
+          "TypeError",
+          "ValueError"
+        ]
+      }
+    },
+    "tasks": [
+      {
+        "project": "java-fulfillment-multi",
+        "task_id": "676247f7-cfcd-4ec0-9263-7057a7581835",
+        "status": "succeeded",
+        "decision_rounds": 5,
+        "tool_calls": 11,
+        "model_http_requests": 6,
+        "elapsed_ms": 24000,
+        "final_verification_attempts": 1,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_id": "5647ce36-fbb2-4302-9926-c716bfd54cf9",
+        "changed_files": [
+          "src/main/java/dev/selfevolving/benchmark/ItemSelector.java",
+          "src/main/java/dev/selfevolving/benchmark/QuantityParser.java",
+          "src/main/java/dev/selfevolving/benchmark/RecipientNames.java"
+        ],
+        "model_reference_ids": [],
+        "test_runs": [
+          {
+            "success": true,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": true,
+            "runner": "maven",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          }
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "3f1e8a8d-0710-4d65-ad4a-265b392f6ee5",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 1378,
+              "completion_tokens": 88,
+              "total_tokens": 1466
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "c9427a63-361c-46d8-a99e-c05dd11705af",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 1715,
+              "completion_tokens": 226,
+              "total_tokens": 1941
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "efe11ad5-bfd2-40f3-9e6a-f98b027c6c24",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 3014,
+              "completion_tokens": 552,
+              "total_tokens": 3566
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "893006a2-73f6-43e7-a1d4-796e678b0035",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 3974,
+              "completion_tokens": 65,
+              "total_tokens": 4039
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "3f84722c-a40a-4f1a-a0df-848a0dfb6341",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 4979,
+              "completion_tokens": 186,
+              "total_tokens": 5165
+            }
+          },
+          {
+            "phase": "extraction",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "9caa7f27-4ae4-4fd3-b38b-30825a89df46",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 4299,
+              "completion_tokens": 1660,
+              "total_tokens": 5959
+            }
+          }
+        ],
+        "experience": {
+          "task_summary": "Repair three independent delivery-request failures: RecipientNames must return guest for null names, QuantityParser must return 0 for null/blank/invalid/negative quantities, and ItemSelector must return none for null/empty lists and invalid indexes, while preserving normal behavior and passing all 12 tests including FulfillmentService composition.",
+          "error_type": "NullPointerException",
+          "root_cause": "The component methods assumed valid input and directly called name.trim(), Integer.parseInt(text.trim()), or items.get(index), so null names, invalid or null quantities, and invalid or out-of-range indexes propagated exceptions instead of returning the required default values.",
+          "solution": "Add input guards to the three application source components: RecipientNames.normalize returns guest for null and otherwise keeps trim behavior; QuantityParser.parse returns 0 for null, blank/whitespace, non-numeric, or negative input and parses valid trimmed integers normally; ItemSelector.select returns none for null/empty lists, negative indexes, or indexes beyond the list size and otherwise returns the item. FulfillmentService required no change because its composition now yields guest|0|none for a fully invalid request.",
+          "verification": "Final maven verification passed: 12 tests; call_id=b7b5c70c-bb0d-458e-8f5e-3dab94eac2ed.",
+          "tags": [
+            "java",
+            "null-safety",
+            "input-validation",
+            "NumberFormatException",
+            "IndexOutOfBoundsException",
+            "NullPointerException",
+            "default-values",
+            "maven",
+            "junit5"
+          ],
+          "source_task_id": "676247f7-cfcd-4ec0-9263-7057a7581835",
+          "schema_version": 2,
+          "language": "java",
+          "scope": "project",
+          "repository_id": "java-fulfillment",
+          "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:f29834044b5dce0b8c946caf0a2d9d544c7e499ddac24d2ed1f9b33f2dec3371",
+          "applicability": [
+            "Applies to the Java 17 Maven project using JUnit 5 and Maven Surefire with classes in package dev.selfevolving.benchmark.",
+            "RecipientNames.normalize must return guest for null input and preserve trim behavior for non-null input.",
+            "QuantityParser.parse must return 0 for null, blank/whitespace, non-numeric, or negative input, and must preserve normal parsing of valid trimmed integers.",
+            "ItemSelector.select must return none for null or empty lists, negative indexes, and indexes beyond the list size, and must return the selected item for valid indexes.",
+            "FulfillmentService.prepare composes the three components and must produce guest|0|none for a fully invalid request without changes to FulfillmentService.",
+            "Only application source files were changed; the test file was not changed."
+          ],
+          "issues": [
+            {
+              "error_type": "NullPointerException",
+              "root_cause": "RecipientNames.normalize directly dereferenced the input with name.trim(), so a null recipient name caused a NullPointerException.",
+              "solution": "Check for null and return guest; otherwise keep the existing trim behavior for non-null names.",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/RecipientNames.java"
+              ]
+            },
+            {
+              "error_type": "NumberFormatException",
+              "root_cause": "QuantityParser.parse directly called Integer.parseInt(text.trim()), so null, blank/whitespace, and non-numeric text caused NumberFormatException; negative values were also not normalized to zero.",
+              "solution": "Return 0 for null, blank/whitespace, non-numeric, or negative input; parse valid trimmed integers normally and clamp negative parsed values to 0.",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/QuantityParser.java"
+              ]
+            },
+            {
+              "error_type": "IndexOutOfBoundsException",
+              "root_cause": "ItemSelector.select directly called items.get(index), so null/empty lists and negative or out-of-range indexes caused IndexOutOfBoundsException.",
+              "solution": "Return none for null/empty lists, negative indexes, and indexes beyond the list size; return the item normally for valid indexes.",
+              "files": [
+                "src/main/java/dev/selfevolving/benchmark/ItemSelector.java"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "676247f7-cfcd-4ec0-9263-7057a7581835",
+              "tool_call_id": "b7b5c70c-bb0d-458e-8f5e-3dab94eac2ed",
+              "runner": "maven",
+              "tests": 12,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [],
+          "id": "5647ce36-fbb2-4302-9926-c716bfd54cf9",
+          "created_at": "2026-10-26T03:43:27.525877Z"
+        }
+      },
+      {
+        "project": "python-fulfillment-multi",
+        "task_id": "9effa0da-8966-4cef-bab7-b8cd00614fae",
+        "status": "succeeded",
+        "decision_rounds": 5,
+        "tool_calls": 11,
+        "model_http_requests": 6,
+        "elapsed_ms": 23250,
+        "final_verification_attempts": 1,
+        "tests_passed": true,
+        "experience_saved": true,
+        "experience_id": "49a220c4-e817-402f-9316-5a956fec8686",
+        "changed_files": [
+          "fulfillment/items.py",
+          "fulfillment/names.py",
+          "fulfillment/quantities.py"
+        ],
+        "model_reference_ids": [],
+        "test_runs": [
+          {
+            "success": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": null
+          },
+          {
+            "success": true,
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "final_verification": true
+          }
+        ],
+        "model_requests": [
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "9b14e900-eac8-4dce-846a-a9c7e921e503",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 1383,
+              "completion_tokens": 47,
+              "total_tokens": 1430
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "79678aa9-d28a-49da-9e1c-e82c51fc17f2",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 1564,
+              "completion_tokens": 176,
+              "total_tokens": 1740
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "d623436a-5ab9-458b-a403-6334f9fdd986",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 2631,
+              "completion_tokens": 588,
+              "total_tokens": 3219
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "7b22f788-9ef4-4b87-8bb7-325c8b77b1eb",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 3547,
+              "completion_tokens": 23,
+              "total_tokens": 3570
+            }
+          },
+          {
+            "phase": "decision",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "03d112c6-c07f-425e-84d9-c7f8d95d236f",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 3841,
+              "completion_tokens": 210,
+              "total_tokens": 4051
+            }
+          },
+          {
+            "phase": "extraction",
+            "requested_model": "deepseek-flash",
+            "returned_model": "deepseek-flash",
+            "http_status": 200,
+            "success": true,
+            "response_id": "d37c5893-1d5e-4401-994d-0e5fdfad09d1",
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "usage": {
+              "prompt_tokens": 2507,
+              "completion_tokens": 2804,
+              "total_tokens": 5311
+            }
+          }
+        ],
+        "experience": {
+          "task_summary": "Repair three input-normalization defects in the fulfillment helpers so missing or invalid inputs return safe sentinel values while normal inputs keep their existing behavior. After fixing recipient_name, parse_quantity, and select_item, the combined prepare call works and all 12 pytest tests pass.",
+          "error_type": "AttributeError",
+          "root_cause": "The helpers directly dereference, convert, or index their inputs without validating missing values, non-numeric text, negative quantities, or index bounds, so invalid inputs raise AttributeError, ValueError/TypeError, or IndexError.",
+          "solution": "Add defensive handling in each helper: recipient_name returns \"guest\" for None or non-string names and still trims normal strings; parse_quantity catches ValueError/TypeError for blank, non-numeric, and None input, returns 0, and clamps negative values to 0; select_item returns \"none\" for negative, empty, or out-of-range indexes and returns the item for valid indexes. service.prepare remains unchanged because its combined behavior is fixed by hardening the three helpers.",
+          "verification": "Final pytest verification passed: 12 tests; call_id=98d7bf47-72af-4236-9376-eb9d21cdf772.",
+          "tags": [
+            "python",
+            "defensive-input-handling",
+            "exception-normalization",
+            "boundary-checks",
+            "pytest"
+          ],
+          "source_task_id": "9effa0da-8966-4cef-bab7-b8cd00614fae",
+          "schema_version": 2,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "python-fulfillment",
+          "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:9eeb4a9b631aef2c999ab9b69baa705189c4a94e4eeeb8b3fcc4b521efd9b733",
+          "applicability": [
+            "Applies to the Python fulfillment helpers in fulfillment/names.py, fulfillment/quantities.py, fulfillment/items.py, and their use through fulfillment/service.py.",
+            "recipient_name: return \"guest\" when name is None or not a string; normal string names should still be stripped.",
+            "parse_quantity: return 0 for blank strings, non-numeric text, None, and negative quantities; valid numeric strings, including whitespace-wrapped values such as \" 3 \", should return the integer value.",
+            "select_item: return \"none\" for empty collections, indexes >= len(items), and negative indexes; valid non-negative in-range indexes should return the selected item.",
+            "Combined prepare contract: after fixes, prepare(None, \"bad\", [], 2) should return \"guest|0|none\"."
+          ],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "root_cause": "recipient_name calls name.strip() without checking for None or non-string input, so a missing recipient raises AttributeError.",
+              "solution": "Return \"guest\" when name is None or not a string; otherwise strip and return the normal string name.",
+              "files": [
+                "fulfillment/names.py"
+              ]
+            },
+            {
+              "error_type": "ValueError",
+              "root_cause": "parse_quantity calls int(text) directly, so blank or non-numeric text raises ValueError, None raises TypeError, and negative values are returned unchanged.",
+              "solution": "Normalize blank, non-numeric, and None input to 0 by catching ValueError/TypeError, and clamp negative parsed values to 0 while preserving valid numeric parsing.",
+              "files": [
+                "fulfillment/quantities.py"
+              ]
+            },
+            {
+              "error_type": "IndexError",
+              "root_cause": "select_item indexes directly into items without checking collection length or rejecting negative indexes, so empty or out-of-range indexes raise IndexError and negative indexes select from the end.",
+              "solution": "Return \"none\" for negative indexes, empty collections, or indexes >= len(items); otherwise return items[index].",
+              "files": [
+                "fulfillment/items.py"
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "9effa0da-8966-4cef-bab7-b8cd00614fae",
+              "tool_call_id": "98d7bf47-72af-4236-9376-eb9d21cdf772",
+              "runner": "pytest",
+              "tests": 12,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ],
+          "merged_from": [],
+          "id": "49a220c4-e817-402f-9316-5a956fec8686",
+          "created_at": "2026-10-26T03:43:50.962577Z"
+        }
+      }
+    ],
+    "merge": {
+      "component_origin": "49a220c4-e817-402f-9316-5a956fec8686",
+      "components_derived_from_verified_record": true,
+      "source_ids": [
+        "43ef8148-3956-4f39-8f65-5288819c7019",
+        "1b9d468d-d6da-4281-8257-7da7c4194ac1"
+      ],
+      "result": {
+        "task_summary": "Merged repair knowledge: Verified component: AttributeError / Verified component: ValueError, IndexError",
+        "error_type": null,
+        "root_cause": "1. recipient_name calls name.strip() without checking for None or non-string input, so a missing recipient raises AttributeError.\n2. parse_quantity calls int(text) directly, so blank or non-numeric text raises ValueError, None raises TypeError, and negative values are returned unchanged.\n3. select_item indexes directly into items without checking collection length or rejecting negative indexes, so empty or out-of-range indexes raise IndexError and negative indexes select from the end.",
+        "solution": "1. Return \"guest\" when name is None or not a string; otherwise strip and return the normal string name.\n2. Normalize blank, non-numeric, and None input to 0 by catching ValueError/TypeError, and clamp negative parsed values to 0 while preserving valid numeric parsing.\n3. Return \"none\" for negative indexes, empty collections, or indexes >= len(items); otherwise return items[index].",
+        "verification": "Final pytest verification passed: 12 tests; call_id=98d7bf47-72af-4236-9376-eb9d21cdf772.",
+        "tags": [
+          "python",
+          "defensive-input-handling",
+          "exception-normalization",
+          "boundary-checks",
+          "pytest"
+        ],
+        "source_task_id": null,
+        "schema_version": 2,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "python-fulfillment",
+        "source_revision": "git:3a96d34ff5bcabd791b5ff54b8f769d958a7f741;tree:9eeb4a9b631aef2c999ab9b69baa705189c4a94e4eeeb8b3fcc4b521efd9b733",
+        "applicability": [
+          "Applies to the Python fulfillment helpers in fulfillment/names.py, fulfillment/quantities.py, fulfillment/items.py, and their use through fulfillment/service.py.",
+          "recipient_name: return \"guest\" when name is None or not a string; normal string names should still be stripped.",
+          "parse_quantity: return 0 for blank strings, non-numeric text, None, and negative quantities; valid numeric strings, including whitespace-wrapped values such as \" 3 \", should return the integer value.",
+          "select_item: return \"none\" for empty collections, indexes >= len(items), and negative indexes; valid non-negative in-range indexes should return the selected item.",
+          "Combined prepare contract: after fixes, prepare(None, \"bad\", [], 2) should return \"guest|0|none\"."
+        ],
+        "issues": [
+          {
+            "error_type": "AttributeError",
+            "root_cause": "recipient_name calls name.strip() without checking for None or non-string input, so a missing recipient raises AttributeError.",
+            "solution": "Return \"guest\" when name is None or not a string; otherwise strip and return the normal string name.",
+            "files": [
+              "fulfillment/names.py"
+            ]
+          },
+          {
+            "error_type": "ValueError",
+            "root_cause": "parse_quantity calls int(text) directly, so blank or non-numeric text raises ValueError, None raises TypeError, and negative values are returned unchanged.",
+            "solution": "Normalize blank, non-numeric, and None input to 0 by catching ValueError/TypeError, and clamp negative parsed values to 0 while preserving valid numeric parsing.",
+            "files": [
+              "fulfillment/quantities.py"
+            ]
+          },
+          {
+            "error_type": "IndexError",
+            "root_cause": "select_item indexes directly into items without checking collection length or rejecting negative indexes, so empty or out-of-range indexes raise IndexError and negative indexes select from the end.",
+            "solution": "Return \"none\" for negative indexes, empty collections, or indexes >= len(items); otherwise return items[index].",
+            "files": [
+              "fulfillment/items.py"
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "9effa0da-8966-4cef-bab7-b8cd00614fae",
+            "tool_call_id": "98d7bf47-72af-4236-9376-eb9d21cdf772",
+            "runner": "pytest",
+            "tests": 12,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [
+          "1b9d468d-d6da-4281-8257-7da7c4194ac1",
+          "43ef8148-3956-4f39-8f65-5288819c7019"
+        ],
+        "id": "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+        "created_at": "2026-10-26T03:43:51.138965Z"
+      },
+      "idempotent": true
+    }
+  },
+  "live_reuse": {
+    "project": "python-fulfillment-multi",
+    "task_id": "abde8fcd-a175-4ffc-8f02-d3efaf89df00",
+    "status": "succeeded",
+    "decision_rounds": 5,
+    "tool_calls": 11,
+    "model_http_requests": 6,
+    "elapsed_ms": 24406,
+    "final_verification_attempts": 1,
+    "tests_passed": true,
+    "experience_saved": true,
+    "experience_id": "00c70bcc-3c52-4bf3-87e2-af1c5047c041",
+    "changed_files": [
+      "fulfillment/items.py",
+      "fulfillment/names.py",
+      "fulfillment/quantities.py"
+    ],
+    "model_reference_ids": [
+      "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+      "49a220c4-e817-402f-9316-5a956fec8686"
+    ],
+    "test_runs": [
+      {
+        "success": true,
+        "runner": "pytest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "final_verification": null
+      },
+      {
+        "success": true,
+        "runner": "pytest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "final_verification": true
+      }
+    ],
+    "model_requests": [
+      {
+        "phase": "decision",
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "http_status": 200,
+        "success": true,
+        "response_id": "24b172b6-f8d0-49d5-9223-95eb90772a18",
+        "request_experience_ids": [
+          "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+          "49a220c4-e817-402f-9316-5a956fec8686"
+        ],
+        "request_experience_hashes": [
+          "5ac5d6e265f5cb27ce64390aa06ed00ef191bce430713b974f24fc12ea3f72c8",
+          "b685a8cff30acaf69f2bb0be7665b3f8c8dd08f1864d47693221e61fce38e235"
+        ],
+        "usage": {
+          "prompt_tokens": 3439,
+          "completion_tokens": 64,
+          "total_tokens": 3503
+        }
+      },
+      {
+        "phase": "decision",
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "http_status": 200,
+        "success": true,
+        "response_id": "4d3c3b9d-262a-4d94-9e15-f5ed3533b359",
+        "request_experience_ids": [
+          "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+          "49a220c4-e817-402f-9316-5a956fec8686"
+        ],
+        "request_experience_hashes": [
+          "5ac5d6e265f5cb27ce64390aa06ed00ef191bce430713b974f24fc12ea3f72c8",
+          "b685a8cff30acaf69f2bb0be7665b3f8c8dd08f1864d47693221e61fce38e235"
+        ],
+        "usage": {
+          "prompt_tokens": 3685,
+          "completion_tokens": 176,
+          "total_tokens": 3861
+        }
+      },
+      {
+        "phase": "decision",
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "http_status": 200,
+        "success": true,
+        "response_id": "e1e0fb8a-10a3-46de-99c4-34153105cf0a",
+        "request_experience_ids": [
+          "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+          "49a220c4-e817-402f-9316-5a956fec8686"
+        ],
+        "request_experience_hashes": [
+          "5ac5d6e265f5cb27ce64390aa06ed00ef191bce430713b974f24fc12ea3f72c8",
+          "b685a8cff30acaf69f2bb0be7665b3f8c8dd08f1864d47693221e61fce38e235"
+        ],
+        "usage": {
+          "prompt_tokens": 4986,
+          "completion_tokens": 413,
+          "total_tokens": 5399
+        }
+      },
+      {
+        "phase": "decision",
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "http_status": 200,
+        "success": true,
+        "response_id": "98d95152-e4e8-4fcc-94d4-9a361a80b93c",
+        "request_experience_ids": [
+          "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+          "49a220c4-e817-402f-9316-5a956fec8686"
+        ],
+        "request_experience_hashes": [
+          "5ac5d6e265f5cb27ce64390aa06ed00ef191bce430713b974f24fc12ea3f72c8",
+          "b685a8cff30acaf69f2bb0be7665b3f8c8dd08f1864d47693221e61fce38e235"
+        ],
+        "usage": {
+          "prompt_tokens": 5868,
+          "completion_tokens": 39,
+          "total_tokens": 5907
+        }
+      },
+      {
+        "phase": "decision",
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "http_status": 200,
+        "success": true,
+        "response_id": "74905fee-a86a-4fe5-a365-a29a64850c8c",
+        "request_experience_ids": [
+          "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+          "49a220c4-e817-402f-9316-5a956fec8686"
+        ],
+        "request_experience_hashes": [
+          "5ac5d6e265f5cb27ce64390aa06ed00ef191bce430713b974f24fc12ea3f72c8",
+          "b685a8cff30acaf69f2bb0be7665b3f8c8dd08f1864d47693221e61fce38e235"
+        ],
+        "usage": {
+          "prompt_tokens": 6224,
+          "completion_tokens": 178,
+          "total_tokens": 6402
+        }
+      },
+      {
+        "phase": "extraction",
+        "requested_model": "deepseek-flash",
+        "returned_model": "deepseek-flash",
+        "http_status": 200,
+        "success": true,
+        "response_id": "e5a5c472-644c-4db9-a3e4-3a052296fd00",
+        "request_experience_ids": [],
+        "request_experience_hashes": [],
+        "usage": {
+          "prompt_tokens": 3001,
+          "completion_tokens": 3211,
+          "total_tokens": 6212
+        }
+      }
+    ],
+    "source_report": ".cache/acceptance-v2/20261026T034258Z-f92cdb8e/reuse-live.json",
+    "source_report_sha256": "be82a89f7f1f95ca3e327655e984d8ae1ed7f1722670a359a8ef00cfdcbfd8f7",
+    "merged_experience_id": "3da0c0c3-ac2c-44d8-929b-d188278b7789",
+    "source_component_ids": [
+      "43ef8148-3956-4f39-8f65-5288819c7019",
+      "1b9d468d-d6da-4281-8257-7da7c4194ac1"
+    ]
+  },
+  "ui": {
+    "url": "http://127.0.0.1:5174",
+    "api_url": "http://127.0.0.1:8002",
+    "task_id": "2e6ecf01-2e45-41a8-976a-36cc76637c82",
+    "experience_id": "971d6e6c-c73e-4d3e-9f0a-926cf863a0a0",
+    "project": "python-fulfillment-multi",
+    "status": "succeeded",
+    "tests": 12,
+    "checks": [
+      "real project selection",
+      "task submission and polling",
+      "11 completed tools and 3 changed files",
+      "language filtering",
+      "merge preview with 3 issues",
+      "merge confirmation and original sources retained"
+    ]
+  }
+}

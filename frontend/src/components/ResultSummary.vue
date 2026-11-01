@@ -17,7 +17,7 @@ defineProps<{ result: AgentResult }>()
       <p v-if="result.error_message" class="error-notice">{{ result.error_message }}</p>
       <p v-if="result.experience_save_error" class="warning-notice">{{ result.experience_save_error }}</p>
       <div class="changed-files"><h3>修改的文件 <span class="count-chip">{{ result.changed_files.length }}</span></h3><ul v-if="result.changed_files.length"><li v-for="file in result.changed_files" :key="file"><AppIcon name="file" :size="17" /><code>{{ file }}</code></li></ul><p v-else class="text-muted">没有记录文件修改。</p></div>
-      <div v-if="result.experience_saved" class="saved-experience"><div><AppIcon name="book" /><span>这次修复已进入经验库。<small>记录 ID：{{ result.experience_id }}</small></span></div><RouterLink to="/experiences" class="button secondary">查看经验记录<AppIcon name="arrow" :size="16" /></RouterLink></div>
+      <div v-if="result.experience_saved" class="saved-experience"><div><AppIcon name="book" /><span>这次修复已进入经验库。</span></div><ul class="experience-links"><li v-for="(id, index) in (result.experience_ids ?? (result.experience_id ? [result.experience_id] : []))" :key="id"><RouterLink :to="{ path: '/experiences', query: { id } }">经验 {{ index + 1 }} <code>{{ id }}</code></RouterLink></li></ul></div>
     </div>
   </section>
 </template>
