@@ -37,6 +37,19 @@ npm.cmd --prefix frontend run dev
 
 真实模型验证使用生产入口 `backend.api.main:app` 与根目录模型配置，单独运行 `scripts/acceptance_v3.py --live`。本次环境未配置模型，报告标为 `not_run`；不把上述脚本角色当成真实模型效果，不作效率提升结论。详见 [测试报告](reports/experience-v3-2026-10-31.md)。
 
+## 通过链接查看测试源码
+
+1. 打开一个已有任务，在“最终结果”或展开的测试步骤中点击 **查看测试源码**。
+2. 源码页显示该任务工作副本中的测试文件，可切换文件、按行阅读。长代码可在代码区域横向滚动，代码按原文显示。
+3. 点击 **复制源码链接**。粘贴到新标签页后直接回到同一任务、同一文件；也可手动复制页面中的“直接访问链接”。
+4. 刷新后文件选择仍保留。点击 **返回任务** 查看真正的测试输出和最终结果；打开源码不会重新执行测试。
+
+本机当前 Java 演示链接：
+
+[查看结算样例的 ServiceTest.java](http://127.0.0.1:5173/#/tasks/c03a8ff3-3ac0-4d61-a998-7f46fbf20024/tests?file=src/test/java/dev/selfevolving/benchmark/ServiceTest.java)
+
+该示例任务存放在 `.cache/v3-demo-20261101-191543`，不是通用数据包；其他机器需先创建自己的任务，再从页面复制链接。前后端服务需要保持运行，工作副本需要保留。测试文件被改动、工作副本已清理或链接中的文件不属于该任务时，页面会明确提示，不显示另一份源码冒充原文件。
+
 ## 历史 single 成功流程
 
 1. 根目录运行 `.venv/Scripts/python.exe -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --workers 1`。

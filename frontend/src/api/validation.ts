@@ -1,4 +1,5 @@
 import type { AgentEvent, AgentResult, Experience, ExperienceKnowledge, MergePreview, PromotionDraft, PromotionPreview, ProvenanceGraph, RegisteredProject, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse, ToolCall, ToolResult } from './contracts'
+import type { TestSourceFile, TestSourceIndex, TestSourceInfo } from './contracts'
 
 // Guard the fields consumed by the UI. Public Pydantic models remain authoritative.
 type Data = Record<string, unknown>
@@ -25,6 +26,30 @@ function sameIds(actual: readonly string[], expected: readonly string[]): boolea
   const wanted = new Set(expected.map(id => id.toLowerCase()))
   return normalized.length === expected.length && new Set(normalized).size === normalized.length
     && wanted.size === expected.length && normalized.every(id => wanted.has(id))
+}
+function readSourceInfo(value: unknown): TestSourceInfo {
+  const data = object(value)
+  check(text(data.path) && data.path.length <= 1000 && !/[\\:\u0000-\u001f]/.test(data.path)
+    && data.path.split('/').every(part => part !== '' && part !== '.' && part !== '..'))
+  check(data.language === 'java' || data.language === 'python')
+  check(typeof data.sha256 === 'string' && /^[a-f0-9]{64}$/.test(data.sha256))
+  return data as unknown as TestSourceInfo
+}
+export function readTestSources(value: unknown, taskId: string): TestSourceIndex {
+  const data = object(value)
+  check(uuid(data.task_id) && data.task_id === taskId)
+  const files = list(data.files, readSourceInfo)
+  check(files.length <= 1000 && new Set(files.map(file => file.path)).size === files.length)
+  return { task_id: taskId, files }
+}
+export function readTestSource(value: unknown, taskId: string, path: string): TestSourceFile {
+  const data = object(value)
+  readSourceInfo(data)
+  check(uuid(data.task_id) && data.task_id === taskId && data.path === path)
+  check(typeof data.content === 'string' && data.content.length <= 200000 && !data.content.includes('\u0000'))
+  check(Number.isInteger(data.size_bytes) && Number(data.size_bytes) >= 0 && Number(data.size_bytes) <= 200000
+    && new TextEncoder().encode(data.content).length === data.size_bytes)
+  return data as unknown as TestSourceFile
 }
 function readCall(value: unknown): ToolCall {
   const data: Data = { arguments: {}, ...object(value) }

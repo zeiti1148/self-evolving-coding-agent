@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 import type { AgentResult } from '../api/contracts'
 import { testCounts } from '../features/testPresentation'
 import AppIcon from './AppIcon.vue'
-const props = defineProps<{ result: AgentResult }>()
+const props = defineProps<{ result: AgentResult; testSourceAvailable?: boolean }>()
 const verificationCounts = computed(() => {
   const final = props.result.tool_results.at(-1)
   return final?.metadata.final_verification === true ? testCounts(final) : null
@@ -22,6 +22,7 @@ const conclusion = computed(() => {
     <div class="panel-heading"><span class="section-icon"><AppIcon name="check" /></span><h2 id="result-title">最终结果</h2></div>
     <div class="result-body">
       <p class="result-summary">{{ conclusion }}</p>
+      <p v-if="testSourceAvailable"><RouterLink :to="`/tasks/${result.task_id}/tests`" class="source-entry-link"><AppIcon name="code" :size="17" />查看测试源码</RouterLink></p>
       <p v-if="verificationCounts" class="field-hint">最终验证：共 {{ verificationCounts.tests }} 项测试 · 失败 {{ verificationCounts.failures }} 项 · 异常 {{ verificationCounts.errors }} 项 · 跳过 {{ verificationCounts.skipped }} 项</p>
       <div class="fact-grid">
         <div><span>代码修复</span><strong :class="result.repair_succeeded ? 'text-success' : 'text-muted'">{{ result.repair_succeeded ? '修复成功' : '未确认修复成功' }}</strong></div>

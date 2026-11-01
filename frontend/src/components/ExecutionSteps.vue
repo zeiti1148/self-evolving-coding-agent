@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import type { TaskStatusResponse, TaskStep } from '../api/contracts'
 import { downloadExecution } from '../features/taskExport'
 import { originalDefect, testCounts, testOutcome, testPhase } from '../features/testPresentation'
 import AppIcon from './AppIcon.vue'
-const props = withDefaults(defineProps<{ task: TaskStatusResponse; steps: TaskStep[]; mock: boolean; stepsLoaded?: boolean }>(), { stepsLoaded: true })
+const props = withDefaults(defineProps<{ task: TaskStatusResponse; steps: TaskStep[]; mock: boolean; stepsLoaded?: boolean; testSourceAvailable?: boolean }>(), { stepsLoaded: true })
 const filter = ref('all')
 const expanded = ref(new Set<number>())
 const downloadError = ref('')
@@ -48,6 +49,7 @@ function time(value: string) { return new Date(value).toLocaleString('zh-CN', { 
       <div class="step-marker" :class="{ 'step-failed': !step.result.success && !originalDefect(step, steps), 'step-original-defect': originalDefect(step, steps) }">{{ step.sequence }}</div>
       <details class="step-detail" :open="expanded.has(step.sequence)"><summary @click.prevent="toggle(step.sequence)"><div><strong>{{ step.call.name === 'run_tests' ? testLabels[testPhase(step, steps)] : labels[step.call.name] ?? step.call.name }}</strong><code class="tool-name">{{ step.call.name }}</code></div><span class="step-outcome" :class="step.result.success ? 'text-success' : originalDefect(step, steps) ? 'text-warning' : 'text-danger'">{{ testOutcome(step, steps) }}<AppIcon name="chevron" :size="15" /></span></summary>
         <p v-if="step.call.name === 'run_tests'" class="step-explanation">{{ testExplanation(step) }}</p>
+        <p v-if="step.call.name === 'run_tests' && testSourceAvailable"><RouterLink :to="`/tasks/${task.task_id}/tests`" class="source-entry-link"><AppIcon name="code" :size="17" />查看测试源码</RouterLink></p>
         <p v-if="testCounts(step.result)" class="step-test-counts">共 {{ testCounts(step.result)!.tests }} 项测试 · 失败 {{ testCounts(step.result)!.failures }} 项 · 异常 {{ testCounts(step.result)!.errors }} 项 · 跳过 {{ testCounts(step.result)!.skipped }} 项</p>
         <p class="step-time">完成于 {{ time(step.completed_at) }}</p>
         <h3 class="output-label">调用参数</h3><pre class="parameter-output">{{ JSON.stringify(step.call.arguments, null, 2) }}</pre>

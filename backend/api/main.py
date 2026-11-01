@@ -24,6 +24,7 @@ from backend.shared import (AgentRequest, ApplicationError, Experience, TaskCrea
 from backend.tools import ToolService, WorkspaceManager
 from .store import TaskStorageError, TaskStore
 from .experience_routes import register_experience_routes, MergeRequest
+from .test_source_routes import register_test_source_routes
 from backend.shared import AgentEvent
 
 
@@ -160,6 +161,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             raise HTTPException(404, "未找到该任务。") from None
 
     register_experience_routes(app, experiences)
+    register_test_source_routes(app, tasks, manager, ensure_recorded)
 
     @app.get("/api/projects")
     def get_projects():

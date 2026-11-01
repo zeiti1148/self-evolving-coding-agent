@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import App from './App.vue'
 import NewTaskView from './views/NewTaskView.vue'
 import TaskView from './views/TaskView.vue'
+import TestSourceView from './views/TestSourceView.vue'
 import ExperiencesView from './views/ExperiencesView.vue'
 import { apiContextKey, createApiContext } from './api/context'
 import './styles.css'
@@ -11,6 +12,7 @@ const context = createApiContext(import.meta.env)
 const router = createRouter({ history: createWebHashHistory(), routes: [
   { path: '/', component: NewTaskView, meta: { title: '新建任务' } },
   { path: '/tasks/:taskId', component: TaskView, meta: { title: '任务执行' } },
+  { path: '/tasks/:taskId/tests', component: TestSourceView, meta: { title: '测试源码' } },
   { path: '/experiences', component: ExperiencesView, meta: { title: '经验记录' } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ], scrollBehavior: () => ({ top: 0 }) })

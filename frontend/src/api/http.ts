@@ -1,5 +1,6 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
 import { readAgentEvents, readCreatedTask, readExperience, readExperiences, readMergedExperience, readMergePreview, readProjects, readPromotionPreview, readProvenance, readSteps, readTask } from './validation'
+import { readTestSource, readTestSources } from './validation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -12,10 +13,16 @@ const fieldLabels: Record<string, string> = {
   task_summary: '规则名称', root_cause: '根因', solution: '修复方案', applicability: '适用条件',
   error_type: '异常类型', issues: '相关问题', files: '文件', tags: '标签', required_capabilities: '目标所需能力',
   limit: '每页数量', offset: '起始位置', after_sequence: '起始序号', source_task_id: '来源任务', active_only: '仅显示有效经验',
+  path: '测试文件',
 }
 
 function errorMessage(status: number, payload: unknown, path: string): string {
   if (status >= 500) return '服务暂时不可用，请稍后重试。'
+  if (status === 404 && /\/test-sources?(?:\?|$)/.test(path)) {
+    const detail = payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : null
+    return typeof detail === 'string' && /[\u4e00-\u9fff]/.test(detail) ? detail
+      : '测试源码暂不可用，请确认任务工作副本仍在，并重启已更新的后端。'
+  }
   if (status === 404 && path.startsWith('/api/projects')) return '项目登记接口不可用，请启动支持项目目录的后端。'
   if (status === 404) return path.startsWith('/api/experiences')
     ? '经验接口不存在，请确认后端地址和接口是否已实现。'
@@ -76,6 +83,8 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     createTask: (body, signal) => request('/api/tasks', readCreatedTask, 'POST', body, signal),
     getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
+    listTestSources: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/test-sources`, data => readTestSources(data, id), 'GET', undefined, signal),
+    getTestSource: (id, path, signal) => request(`/api/tasks/${encodeURIComponent(id)}/test-source?${new URLSearchParams({ path })}`, data => readTestSource(data, id, path), 'GET', undefined, signal),
     listExperiences: (limit = 20, offset = 0, signal, filters = {}) => {
       const params = new URLSearchParams({ limit: String(limit), offset: String(offset) })
       for (const key of ['language', 'repository_id', 'scope', 'reuse_status', 'source_task_id', 'active_only'] as const) if (filters[key] !== undefined) params.set(key, String(filters[key]))

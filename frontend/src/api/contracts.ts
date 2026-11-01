@@ -8,6 +8,9 @@ export interface ToolResult {
 }
 export interface TaskStep { sequence: number; call: ToolCall; result: ToolResult; completed_at: string }
 export type ProjectLanguage = 'java' | 'python'
+export interface TestSourceInfo { path: string; language: ProjectLanguage; sha256: string }
+export interface TestSourceIndex { task_id: string; files: TestSourceInfo[] }
+export interface TestSourceFile extends TestSourceInfo { task_id: string; content: string; size_bytes: number }
 export type ExperienceScope = 'global' | 'project'
 export type ExecutionMode = 'single' | 'multi'
 export type ReuseStatus = 'active' | 'candidate' | 'legacy_unreviewed'
@@ -69,6 +72,8 @@ export interface AgentApi {
   createTask(request: TaskCreateRequest, signal?: AbortSignal): Promise<TaskCreateResponse>
   getTask(taskId: string, signal?: AbortSignal): Promise<TaskStatusResponse>
   getSteps(taskId: string, signal?: AbortSignal): Promise<TaskStepsResponse>
+  listTestSources?(taskId: string, signal?: AbortSignal): Promise<TestSourceIndex>
+  getTestSource?(taskId: string, path: string, signal?: AbortSignal): Promise<TestSourceFile>
   listExperiences(limit?: number, offset?: number, signal?: AbortSignal, filters?: ExperienceFilters): Promise<Experience[]>
   listProjects?(signal?: AbortSignal): Promise<RegisteredProject[]>
   previewMerge?(experienceIds: string[], signal?: AbortSignal): Promise<MergePreview>
