@@ -233,10 +233,12 @@ class Agent:
         experience_saved = None
         experience_ids = []
         experience_error = None
+        extraction_diagnostic = {"status": "not_attempted"}
         if status == "succeeded":
             try:
                 saved = extract_and_save_experiences(self.llm, self.experiences, request,
-                    summary=summary, changed_files=changed, calls=calls, results=results, deadline=deadline)
+                    summary=summary, changed_files=changed, calls=calls, results=results, deadline=deadline,
+                    diagnostic=extraction_diagnostic)
                 experience_ids, experience_saved = [entry.id for entry in saved], True
             except Exception:
                 experience_saved = False
@@ -255,6 +257,7 @@ class Agent:
                               "source_revision": request.source_revision, "observed_error_types": observed_errors,
                               "retrieval_events": retrieval_events,
                               "injection_events": injection_events,
+                              "experience_extraction": extraction_diagnostic,
                               "final_verification_attempts": sum(bool(r.metadata.get("final_verification")) for r in results)}
         if hasattr(self.llm, "close"):
             try:

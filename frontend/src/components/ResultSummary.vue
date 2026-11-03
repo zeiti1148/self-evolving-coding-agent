@@ -22,6 +22,7 @@ const conclusion = computed(() => {
     <div class="panel-heading"><span class="section-icon"><AppIcon name="check" /></span><h2 id="result-title">最终结果</h2></div>
     <div class="result-body">
       <p class="result-summary">{{ conclusion }}</p>
+      <slot name="evidence" />
       <p v-if="testSourceAvailable"><RouterLink :to="`/tasks/${result.task_id}/tests`" class="source-entry-link"><AppIcon name="code" :size="17" />查看测试源码</RouterLink></p>
       <p v-if="codeDiffAvailable"><RouterLink :to="`/tasks/${result.task_id}/changes`" class="source-entry-link"><AppIcon name="file" :size="17" />查看修复前后对比</RouterLink></p>
       <p v-if="verificationCounts" class="field-hint">最终验证：共 {{ verificationCounts.tests }} 项测试 · 失败 {{ verificationCounts.failures }} 项 · 异常 {{ verificationCounts.errors }} 项 · 跳过 {{ verificationCounts.skipped }} 项</p>

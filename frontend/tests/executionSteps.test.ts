@@ -54,6 +54,26 @@ it('keeps a failed final verification distinct from initial defects and unknown 
 })
 
 describe('execution log controls', () => {
+  it('shows pending records without a false zero, then renders loaded steps or a verified empty result', async () => {
+    const wrapper = mount(ExecutionSteps, { props: { task, steps: [], mock: false, stepsLoaded: false } })
+    try {
+      expect(wrapper.text()).toContain('正在读取执行步骤')
+      expect(wrapper.text()).not.toContain('没有已完成的工具步骤')
+      expect(wrapper.find('.count-chip').exists()).toBe(false)
+      expect(wrapper.get('select').text()).not.toContain('（0）')
+      await wrapper.setProps({ stepsLoaded: true })
+      expect(wrapper.text()).toContain('正在读取执行步骤')
+      expect(wrapper.find('.count-chip').exists()).toBe(false)
+      await wrapper.setProps({ steps, stepsLoaded: true })
+      expect(wrapper.findAll('.execution-list > li')).toHaveLength(steps.length)
+      expect(wrapper.get('.count-chip').text()).toBe(String(steps.length))
+      expect(wrapper.text()).not.toContain('正在读取执行步骤')
+      await wrapper.setProps({ task: { ...task, steps_completed: 0 }, steps: [] })
+      expect(wrapper.text()).toContain('没有已完成的工具步骤')
+      expect(wrapper.get('.count-chip').text()).toBe('0')
+    } finally { wrapper.unmount() }
+  })
+
   it('filters unsuccessful steps using original numbers and remembers manual expansion across updates', async () => {
     const wrapper = mount(ExecutionSteps, { props: { task, steps, mock: true } })
     await wrapper.findAll('summary')[2]!.trigger('click')
@@ -78,7 +98,7 @@ describe('execution log controls', () => {
   })
 
   it('distinguishes an empty filter from a task with no steps', async () => {
-    const wrapper = mount(ExecutionSteps, { props: { task, steps: steps.slice(0, 2), mock: false } })
+    const wrapper = mount(ExecutionSteps, { props: { task: { ...task, steps_completed: 2 }, steps: steps.slice(0, 2), mock: false } })
     await wrapper.get('select').setValue('unsuccessful')
     expect(wrapper.text()).toContain('当前没有未成功的步骤')
     expect(wrapper.text()).not.toContain('没有已完成的工具步骤')

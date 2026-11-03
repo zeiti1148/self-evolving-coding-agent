@@ -44,14 +44,25 @@ class ChatClient:
     def set_deadline(self, deadline: float) -> None:
         self.deadline = deadline
 
-    def _remaining(self) -> float:
-        remaining = self.deadline - time.monotonic() if self.deadline else self.settings.llm_timeout
-        if remaining <= 0:
-            raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
-        return min(self.settings.llm_timeout, remaining)
+    def _remaining(self, request_deadline: float | None = None) -> float:
+        now = time.monotonic()
+        remaining = self.settings.llm_timeout
+        if self.deadline is not None:
+            if self.deadline <= now:
+                raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
+            remaining = min(remaining, self.deadline - now)
+        if request_deadline is not None:
+            if request_deadline <= now:
+                raise ApplicationError(ErrorCode.LLM_ERROR, "模型请求超过单次调用时限。")
+            remaining = min(remaining, request_deadline - now)
+        return remaining
 
     def complete(self, messages: list[dict], *, tools: list[dict] | None = None) -> dict:
         config = self.settings
+        # One fixed call budget includes connection retries; body keepalives cannot reset it.
+        request_deadline = time.monotonic() + config.llm_timeout
+        if self.deadline is not None:
+            request_deadline = min(request_deadline, self.deadline)
         if (not config.llm_api_key or config.llm_api_key == "replace_with_your_api_key" or
                 not config.llm_model or config.llm_model == "example-model" or
                 not config.llm_base_url or "api.example.com" in config.llm_base_url):
@@ -81,52 +92,74 @@ class ChatClient:
                      "request_experience_ids": [x["id"] for x in references],
                      "request_experience_hashes": [hashlib.sha256(json.dumps(x, sort_keys=True, ensure_ascii=False).encode()).hexdigest() for x in references]}
             try:
-                remaining = self._remaining()
-                timeout = httpx.Timeout(remaining, connect=min(10.0, remaining))
-                with self._client.stream("POST", config.llm_base_url.rstrip("/") + "/chat/completions",
-                                         headers={"Authorization": "Bearer " + config.llm_api_key,
-                                                  "Accept-Encoding": "identity"}, json=payload, timeout=timeout,
-                                         extensions={"trace": trace}) as response:
-                    event["http_status"] = response.status_code
-                    response.raise_for_status()
-                    # Observe raw bytes so compressed empty blocks cannot keep a read alive
-                    # indefinitely without yielding a chunk to our deadline check.
-                    if response.headers.get("content-encoding", "identity").lower() != "identity":
-                        raise ValueError("unsupported response encoding")
-                    body = bytearray()
-                    chunks = (response.content,) if response.is_stream_consumed else response.iter_raw()
-                    for chunk in chunks:
-                        self._remaining()
-                        body.extend(chunk)
-                        if len(body) > 2_000_000:
-                            raise ValueError("response too large")
-                data = json.loads(body)
-                choice = data["choices"][0]
-                event["finish_reason"] = choice.get("finish_reason")
-                if choice.get("finish_reason") not in {"stop", "tool_calls"}:
-                    raise ValueError("incomplete response")
-                message = validate_message(choice["message"])
-                event.update(success=True, returned_model=data.get("model"), response_id=data.get("id"))
-                usage = data.get("usage")
-                if isinstance(usage, dict):
-                    event["usage"] = {key: value for key, value in usage.items()
-                                      if key in {"prompt_tokens", "completion_tokens", "total_tokens"} and type(value) is int and value >= 0}
-                return message
-            except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
-                event["error_type"] = type(exc).__name__
-                event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
-                self._remaining()
-                if attempt == 2:
-                    raise ApplicationError(ErrorCode.LLM_ERROR, "已尝试连接模型服务三次，仍无法连接。") from None
-                time.sleep(min(0.2 * (attempt + 1), self._remaining()))
-            except httpx.HTTPStatusError as exc:
-                event["error_type"] = "HTTPStatusError"
-                raise ApplicationError(ErrorCode.LLM_ERROR, f"模型服务返回 HTTP {exc.response.status_code}。") from None
-            except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
-                event["error_type"] = type(exc).__name__
-                event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
-                self._remaining()
-                raise ApplicationError(ErrorCode.LLM_ERROR, "模型请求失败、超时或返回了无效响应。") from None
+                try:
+                    remaining = self._remaining(request_deadline)
+                    timeout = httpx.Timeout(remaining, connect=min(10.0, remaining))
+                    with self._client.stream("POST", config.llm_base_url.rstrip("/") + "/chat/completions",
+                                             headers={"Authorization": "Bearer " + config.llm_api_key,
+                                                      "Accept-Encoding": "identity"}, json=payload, timeout=timeout,
+                                             extensions={"trace": trace}) as response:
+                        event["http_status"] = response.status_code
+                        self._remaining(request_deadline)
+                        response.raise_for_status()
+                        # Observe raw bytes so compressed empty blocks cannot keep a read alive
+                        # indefinitely without yielding a chunk to our deadline check.
+                        if response.headers.get("content-encoding", "identity").lower() != "identity":
+                            raise ValueError("unsupported response encoding")
+                        body = bytearray()
+                        chunks = (response.content,) if response.is_stream_consumed else response.iter_raw()
+                        for chunk in chunks:
+                            self._remaining(request_deadline)
+                            body.extend(chunk)
+                            if len(body) > 2_000_000:
+                                raise ValueError("response too large")
+                    self._remaining(request_deadline)
+                    data = json.loads(body)
+                    self._remaining(request_deadline)
+                    choice = data["choices"][0]
+                    event["finish_reason"] = choice.get("finish_reason")
+                    if choice.get("finish_reason") not in {"stop", "tool_calls"}:
+                        raise ValueError("incomplete response")
+                    message = validate_message(choice["message"])
+                    usage = data.get("usage")
+                    if isinstance(usage, dict):
+                        event["usage"] = {key: value for key, value in usage.items()
+                                          if key in {"prompt_tokens", "completion_tokens", "total_tokens"} and type(value) is int and value >= 0}
+                    self._remaining(request_deadline)
+                    event.update(success=True, returned_model=data.get("model"), response_id=data.get("id"))
+                    return message
+                except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+                    event["error_type"] = type(exc).__name__
+                    event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
+                    self._remaining(request_deadline)
+                    if attempt == 2:
+                        raise ApplicationError(ErrorCode.LLM_ERROR, "已尝试连接模型服务三次，仍无法连接。") from None
+                    time.sleep(min(0.2 * (attempt + 1), self._remaining(request_deadline)))
+                except httpx.HTTPStatusError as exc:
+                    event["error_type"] = "HTTPStatusError"
+                    self._remaining(request_deadline)
+                    raise ApplicationError(ErrorCode.LLM_ERROR, f"模型服务返回 HTTP {exc.response.status_code}。") from None
+                except (httpx.HTTPError, ValueError, KeyError, IndexError, TypeError) as exc:
+                    event["error_type"] = type(exc).__name__
+                    event.update(error_chain=exception_chain(exc), failure_stage=trace.failed_stage)
+                    self._remaining(request_deadline)
+                    raise ApplicationError(ErrorCode.LLM_ERROR, "模型请求失败、超时或返回了无效响应。") from None
+            except ApplicationError as exc:
+                failure = exc
+                try:
+                    self._remaining(request_deadline)
+                except ApplicationError as expired:
+                    failure = expired
+                # Preserve transport diagnostics; never serialize exception text or details.
+                event.setdefault("error_type", type(failure).__name__)
+                event["error_code"] = failure.code.value
+                if failure is not exc:
+                    raise failure from None
+                raise
+            except BaseException as exc:
+                # Record interruptions without swallowing them or retrying a sent request.
+                event.setdefault("error_type", type(exc).__name__[:64])
+                raise
             finally:
                 event["duration_ms"] = round((time.monotonic() - started) * 1000)
                 self.audit.append(event)

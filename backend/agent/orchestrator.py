@@ -189,6 +189,7 @@ class MultiAgentCoordinator:
         except Exception:
             status, error, summary = "failed", "角色调用或程序协调操作失败。", "协作任务失败。"
 
+        extraction_diagnostic = {"status": "not_attempted"}
         if status == "succeeded":
             extractor, extractor_id = None, str(uuid4())
             extraction_started = time.monotonic()
@@ -200,7 +201,8 @@ class MultiAgentCoordinator:
                     raise ApplicationError(ErrorCode.LLM_ERROR, "经验提取必须使用独立的模型客户端。")
                 if hasattr(extractor, "set_deadline"): extractor.set_deadline(budget.deadline)
                 records = extract_and_save_experiences(extractor, self.experiences, request, summary=summary,
-                    changed_files=changed, calls=calls, results=results, deadline=budget.deadline)
+                    changed_files=changed, calls=calls, results=results, deadline=budget.deadline,
+                    diagnostic=extraction_diagnostic)
                 ids, saved = [entry.id for entry in records], True
                 emit("extractor", extractor_id, "extract", "completed", "已保存经验：" + ", ".join(ids),
                      usage=client_usage(extractor, extraction_started))
@@ -223,6 +225,7 @@ class MultiAgentCoordinator:
             "retrieval_events": retrieval_events,
             "retrieved_experience_ids": list(dict.fromkeys(identifier for event in retrieval_events for identifier in event["experience_ids"])),
             "model_requests": sorted(roles.audit, key=lambda event: event.get("decision", request.max_steps+1)),
+            "experience_extraction": extraction_diagnostic,
             "experience_ids": ids, "final_verification_attempts": sum(bool(result.metadata.get("final_verification")) for result in results)}
         return AgentResult(task_id=request.task_id, status=status, summary=summary, steps=calls, tool_results=results,
             repair_succeeded=repaired, tests_passed=passed, changed_files=changed, experience_saved=saved,

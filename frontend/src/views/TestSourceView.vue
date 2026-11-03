@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useApiContext } from '../api/context'
 import type { TestSourceFile, TestSourceInfo } from '../api/contracts'
@@ -16,9 +16,13 @@ let generation = 0
 let filesTaskId: string | null = null
 const lineCount = computed(() => source.value?.content.split(/\r\n|\r|\n/).length ?? 0)
 const lineNumbers = computed(() => Array.from({ length: lineCount.value }, (_, index) => index + 1).join('\n'))
+const codeBlock = ref<HTMLElement | null>(null)
+const focusedLine = computed(() => typeof route.query.line === 'string' && /^[1-9]\d{0,6}$/.test(route.query.line)
+  && Number(route.query.line) <= lineCount.value ? Number(route.query.line) : null)
+const lineStyle = computed(() => focusedLine.value ? { '--line-top': `calc(var(--code-padding) + ${(focusedLine.value - 1) * 21.6}px)` } : undefined)
 const sourceLocation = (file: string) => ({ path: `/tasks/${taskId.value}/tests`, query: { file } })
 const directLink = computed(() => source.value
-  ? new URL(router.resolve(sourceLocation(source.value.path)).href, window.location.href).href : '')
+  ? new URL(router.resolve({ ...sourceLocation(source.value.path), query: { file: source.value.path, ...(focusedLine.value ? { line: String(focusedLine.value) } : {}) } }).href, window.location.href).href : '')
 
 async function load(refresh = false) {
   const current = ++generation
@@ -60,6 +64,7 @@ async function copyLink() {
   }
 }
 watch([taskId, () => route.query.file], () => { void load() }, { immediate: true })
+watch([source, focusedLine], async () => { await nextTick(); if (codeBlock.value && focusedLine.value) codeBlock.value.scrollTop = Math.max(0, (focusedLine.value - 5) * 21.6) })
 onBeforeUnmount(() => { ++generation; controller?.abort() })
 </script>
 
@@ -85,7 +90,9 @@ onBeforeUnmount(() => { ++generation; controller?.abort() })
       </div>
       <div class="source-link-bar"><label for="source-direct-link">直接访问链接</label><input id="source-direct-link" class="source-link-input" :value="directLink" readonly @focus="($event.target as HTMLInputElement).select()" /><p v-if="copyMessage" class="field-hint" role="status">{{ copyMessage }}</p></div>
       <p class="source-verification">来自该任务的工作副本，已核对与任务创建时一致。查看源码不会重新运行测试。</p>
-      <div class="source-code-block" tabindex="0" role="region" aria-label="测试源码内容"><pre class="source-line-numbers" aria-hidden="true">{{ lineNumbers }}</pre><pre class="source-content"><code>{{ source.content }}</code></pre></div>
+      <p v-if="focusedLine" class="source-focus-note">已定位到第 {{ focusedLine }} 行，对应修复前未通过的测试。</p>
+      <p v-else-if="route.query.line !== undefined" class="source-focus-note">链接中的行号不在当前文件范围内，展示完整源码。</p>
+      <div ref="codeBlock" class="source-code-block" tabindex="0" role="region" aria-label="测试源码内容" :data-focused-line="focusedLine"><pre class="source-line-numbers" :class="{ 'has-line-highlight': focusedLine }" :style="lineStyle" aria-hidden="true">{{ lineNumbers }}</pre><pre class="source-content" :class="{ 'has-line-highlight': focusedLine }" :style="lineStyle"><code>{{ source.content }}</code></pre></div>
     </section>
   </div>
 </template>

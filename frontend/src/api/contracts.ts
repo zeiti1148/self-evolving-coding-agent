@@ -80,10 +80,25 @@ export interface TaskStatusResponse {
   started_at: string | null; finished_at: string | null; result: AgentResult | null; error_message: string | null
 }
 export interface TaskStepsResponse { task_id: string; status: TaskStatus; steps: TaskStep[] }
+export interface TestRunEvidence {
+  tool_call_id: string; sequence: number; runner: 'maven' | 'pytest'; tests: number
+  passed: number; failures: number; errors: number; skipped: number
+}
+export interface TaskEvidence {
+  task_id: string; status: TaskStatus; source_project: string | null; project_label: string | null
+  tests: { before: TestRunEvidence | null; after: TestRunEvidence | null; final_verified: boolean
+    original_tests_unchanged: boolean | null; comparable: boolean; unavailable_reason: string | null }
+  failure_cases: { test: string; error_type: string; message: string; source_file: string | null; source_line: number | null }[]
+  references: { experience_id: string; title: string; source_task_id: string | null; scope: ExperienceScope | null
+    content_sha256: string; roles: { role: 'diagnosis' | 'repair' | 'review' | 'single'; request_count: number }[]
+    request_count: number; detail_available: boolean }[]
+  reference_recording: 'recorded' | 'unavailable'; reference_notice: string
+}
 export interface AgentApi {
   createTask(request: TaskCreateRequest, signal?: AbortSignal): Promise<TaskCreateResponse>
   getTask(taskId: string, signal?: AbortSignal): Promise<TaskStatusResponse>
   getSteps(taskId: string, signal?: AbortSignal): Promise<TaskStepsResponse>
+  getTaskEvidence?(taskId: string, signal?: AbortSignal): Promise<TaskEvidence>
   listTestSources?(taskId: string, signal?: AbortSignal): Promise<TestSourceIndex>
   getTestSource?(taskId: string, path: string, signal?: AbortSignal): Promise<TestSourceFile>
   listCodeChanges?(taskId: string, signal?: AbortSignal): Promise<CodeChangesIndex>

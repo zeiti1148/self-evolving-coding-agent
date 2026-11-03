@@ -36,6 +36,20 @@ async function setup(client: AgentApi, path = `/tasks/${taskId}/tests`, mock = f
 afterEach(() => vi.unstubAllGlobals())
 
 describe('task test source viewer', () => {
+  it('preserves a linked line when copying and highlights it without changing source text', async () => {
+    const client = api(), writeText = vi.fn().mockResolvedValue(undefined)
+    vi.stubGlobal('navigator', { clipboard: { writeText } })
+    const { wrapper, router } = await setup(client, `/tasks/${taskId}/tests?file=tests/test_a.py&line=2`)
+    expect(wrapper.get('.source-code-block').attributes('data-focused-line')).toBe('2')
+    expect(wrapper.get('.source-content code').element.textContent).toBe(content)
+    await wrapper.get('[data-copy-link]').trigger('click')
+    expect(new URL(writeText.mock.calls[0]![0]).searchParams.get('line')).toBe('2')
+    await router.push({ query: { file: files[0]!.path, line: '999' } }); await flushPromises()
+    expect(wrapper.find('.has-line-highlight').exists()).toBe(false)
+    expect(wrapper.text()).toContain('行号不在当前文件范围')
+    expect(wrapper.get('.source-content code').element.textContent).toBe(content)
+    wrapper.unmount()
+  })
   it('opens a direct file link, preserves whitespace, escapes HTML and copies the same link', async () => {
     const client = api(), writeText = vi.fn().mockResolvedValue(undefined)
     vi.stubGlobal('navigator', { clipboard: { writeText } })

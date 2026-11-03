@@ -35,7 +35,7 @@ npm.cmd --prefix frontend run dev
 8. 刷新任务及经验详情；停止演示 API 后用**相同 data-dir** 重启，原任务、角色事件、经验和来源链接仍可读取。中途断开的任务标记 stopped，不自动续跑。
 9. 切换深浅主题，复查发布编辑器、角色时间线和来源图。用单 Agent 模式跑一个结算样例，确认多个经验链接和旧单 ID 兼容。
 
-真实模型验证使用生产入口 `backend.api.main:app` 与根目录模型配置，单独运行 `scripts/acceptance_v3.py --live`。本次环境未配置模型，报告标为 `not_run`；不把上述脚本角色当成真实模型效果，不作效率提升结论。详见 [测试报告](reports/experience-v3-2026-10-31.md)。
+真实模型验证使用生产入口 `backend.api.main:app` 与根目录模型配置，单独运行 `scripts/acceptance_v3.py --live`。2026-10-31 的验证环境未配置模型，该历史报告标为 `not_run`；不把上述脚本角色当成真实模型效果，不作效率提升结论。详见 [历史测试报告](reports/experience-v3-2026-10-31.md)。2026-11-03 已使用真实模型进行本地提交验证，结果与限制见 [README 当前记录](../README.md) 以及仓库同级 `项目阶段文档/比赛提交材料/03_运行与验证记录.txt`。录屏使用该目录的当前启动说明和任务链接；本页下方带有旧任务 ID 的本机链接属于历史记录。
 
 ## 通过链接查看测试源码
 
@@ -44,7 +44,7 @@ npm.cmd --prefix frontend run dev
 3. 点击 **复制源码链接**。粘贴到新标签页后直接回到同一任务、同一文件；也可手动复制页面中的“直接访问链接”。
 4. 刷新后文件选择仍保留。点击 **返回任务** 查看真正的测试输出和最终结果；打开源码不会重新执行测试。
 
-本机当前 Java 演示链接：
+2026-11-01 本机 Java 演示历史链接：
 
 [查看结算样例的 ServiceTest.java](http://127.0.0.1:5173/#/tasks/c03a8ff3-3ac0-4d61-a998-7f46fbf20024/tests?file=src/test/java/dev/selfevolving/benchmark/ServiceTest.java)
 

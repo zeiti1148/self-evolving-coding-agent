@@ -26,6 +26,7 @@ from .store import TaskStorageError, TaskStore
 from .experience_routes import register_experience_routes, MergeRequest
 from .test_source_routes import register_test_source_routes
 from .code_diff_routes import register_code_diff_routes
+from .task_evidence import register_task_evidence_routes
 from backend.shared import AgentEvent
 
 
@@ -173,6 +174,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
     register_experience_routes(app, experiences)
     register_test_source_routes(app, tasks, manager, ensure_recorded)
     register_code_diff_routes(app, tasks, manager, ensure_recorded)
+    register_task_evidence_routes(app, tasks, manager, experiences, settings, ensure_recorded)
 
     @app.get("/api/projects")
     def get_projects():
