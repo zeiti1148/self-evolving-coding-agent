@@ -17,6 +17,10 @@ const router = createRouter({ history: createWebHashHistory(), routes: [
   { path: '/tasks/:taskId/changes', component: CodeDiffView, meta: { title: '代码对比' } },
   { path: '/experiences', component: ExperiencesView, meta: { title: '经验记录' } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
-], scrollBehavior: () => ({ top: 0 }) })
+], scrollBehavior: (to, from, savedPosition) => {
+  if (savedPosition) return savedPosition
+  // Changing a code view or selected file should keep the reader at the code.
+  return to.path === from.path && /\/(changes|tests)$/.test(to.path) ? false : { top: 0 }
+} })
 router.afterEach(to => { document.title = `${String(to.meta.title ?? '工作台')} · Coding Agent` })
 createApp(App).provide(apiContextKey, context).use(router).mount('#app')

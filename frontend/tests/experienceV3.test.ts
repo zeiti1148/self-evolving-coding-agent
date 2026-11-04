@@ -79,6 +79,70 @@ describe('V3 contracts and mode', () => {
 })
 
 describe('V3 role and publication flows', () => {
+  it('shows a loading state until completed-task role events arrive', async () => {
+    let resolveEvents!: (events: unknown[]) => void
+    const event = { event_id: second, task_id: id, agent_id: third, role: 'review', phase: 'review', status: 'failed',
+      sequence: 1, snapshot_revision: null, summary: '提案曾被拒绝', created_at: record.created_at, usage: { reported_tokens: null, elapsed_ms: 1 } }
+    const client = { getAgentEvents: vi.fn(() => new Promise(resolve => { resolveEvents = resolve })) }
+    const wrapper = mount(AgentTimeline, { props: { taskId: id, status: 'succeeded' }, global: {
+      provide: { [apiContextKey as symbol]: { api: client, mock: false } },
+    } })
+    try {
+      expect(wrapper.text()).toContain('正在读取角色过程')
+      expect(wrapper.text()).not.toContain('暂无角色事件')
+      resolveEvents([event]); await flushPromises()
+      expect(wrapper.text()).toContain('提案曾被拒绝')
+      expect(wrapper.text()).toContain('失败或拒绝')
+      expect(wrapper.text()).not.toContain('正在读取角色过程')
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps role loading errors distinct from a successfully loaded empty history', async () => {
+    let rejectEvents!: (error: Error) => void
+    const client = { getAgentEvents: vi.fn().mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectEvents = reject })).mockResolvedValue([]) }
+    const wrapper = mount(AgentTimeline, { props: { taskId: id, status: 'succeeded' }, global: {
+      provide: { [apiContextKey as symbol]: { api: client, mock: false } },
+    } })
+    try {
+      rejectEvents(new Error('角色记录暂不可用')); await flushPromises()
+      expect(wrapper.get('[role="alert"]').text()).toContain('角色记录暂不可用')
+      expect(wrapper.text()).not.toContain('暂无角色事件')
+      expect(wrapper.text()).not.toContain('正在读取角色过程')
+      await wrapper.get('button').trigger('click'); await flushPromises()
+      expect(wrapper.text()).toContain('暂无角色事件')
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    } finally { wrapper.unmount() }
+  })
+
+  it('keeps a final task result while pending steps fail and recover without showing a false zero', async () => {
+    let rejectSteps!: (error: Error) => void
+    const status = { task_id: id, status: 'succeeded', steps_completed: 1, created_at: record.created_at,
+      started_at: record.created_at, finished_at: record.created_at, error_message: null,
+      result: { task_id: id, status: 'succeeded', summary: '已验证的最终结果', repair_succeeded: true, tests_passed: true,
+        changed_files: [], experience_saved: null, experience_id: null, experience_save_error: null, error_message: null,
+        steps: [], tool_results: [] } }
+    const step = { sequence: 1, completed_at: record.created_at, call: { id: third, name: 'read_file', arguments: {} },
+      result: { call_id: third, tool_name: 'read_file', success: true, output: '已读取的真实代码', metadata: {}, error_code: null, error_message: null } }
+    const client: any = { createTask: vi.fn(), listExperiences: vi.fn(), getTask: vi.fn().mockResolvedValue(status),
+      getSteps: vi.fn().mockImplementationOnce(() => new Promise((_resolve, reject) => { rejectSteps = reject }))
+        .mockResolvedValue({ task_id: id, status: 'succeeded', steps: [step] }) }
+    const { wrapper } = await setup(TaskView, client, `/tasks/${id}`)
+    try {
+      expect(wrapper.text()).toContain('修复成功')
+      expect(wrapper.get('.execution-panel').text()).toContain('正在读取执行步骤')
+      expect(wrapper.find('.execution-panel .count-chip').exists()).toBe(false)
+      rejectSteps(new Error('步骤接口暂不可用')); await flushPromises()
+      expect(wrapper.text()).toContain('修复成功')
+      expect(wrapper.get('.execution-panel').text()).toContain('执行步骤暂不可用')
+      expect(wrapper.get('.execution-panel').text()).not.toContain('没有已完成的工具步骤')
+      expect(wrapper.find('.execution-panel .count-chip').exists()).toBe(false)
+      await wrapper.get('.error-with-action button').trigger('click'); await flushPromises()
+      expect(wrapper.findAll('.execution-list > li')).toHaveLength(1)
+      expect(wrapper.text()).toContain('已读取的真实代码')
+      expect(wrapper.get('.execution-panel .count-chip').text()).toBe('1')
+    } finally { wrapper.unmount() }
+  })
+
   it('drains final events when terminal status arrives during an older poll', async () => {
     let resolveOld!: (events: unknown[]) => void
     const finalEvent = { event_id: second, task_id: id, agent_id: third, role: 'extractor', phase: 'extract', status: 'completed',

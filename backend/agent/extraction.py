@@ -5,6 +5,8 @@ import json
 import re
 import time
 
+from pydantic import ValidationError
+
 from backend.shared import ApplicationError, ErrorCode, ExperienceCreate, VerificationEvidence
 
 
@@ -17,7 +19,49 @@ def verification_passed(result, language: str) -> bool:
                     for key in ("failures", "errors", "skipped")))
 
 
-def extract_and_save_experiences(llm, store, request, *, summary, changed_files, calls, results, deadline):
+def extraction_output_schema():
+    """Describe only model-authored fields; provenance remains program-owned."""
+    record = ExperienceCreate.model_json_schema()
+    authored = {"task_summary", "error_type", "root_cause", "solution", "tags", "applicability",
+                "issues", "required_capabilities"}
+    definitions = record.pop("$defs", {})
+    record["properties"] = {key: value for key, value in record["properties"].items() if key in authored}
+    record["required"] = ["task_summary", "root_cause", "solution", "applicability", "issues"]
+    for field in ("applicability", "issues"):
+        record["properties"][field]["minItems"] = 1
+    return {"type": "object", "additionalProperties": False, "required": ["experiences"],
+            "properties": {"experiences": {"type": "array", "minItems": 1, "maxItems": 5, "items": record}},
+            "$defs": {"RepairIssue": definitions["RepairIssue"]}}
+
+
+def extract_and_save_experiences(llm, store, request, *, summary, changed_files, calls, results, deadline,
+                                 diagnostic=None):
+    """Record safe failure location, never model text, input values or exception messages."""
+    diagnostic = {} if diagnostic is None else diagnostic
+    diagnostic.clear()
+    diagnostic.update(status="running", stage="preconditions")
+    try:
+        records = _extract_and_save_experiences(llm, store, request, summary=summary,
+            changed_files=changed_files, calls=calls, results=results, deadline=deadline, diagnostic=diagnostic)
+    except Exception as exc:
+        diagnostic.update(status="failed", error_type=type(exc).__name__)
+        if isinstance(exc, ApplicationError):
+            diagnostic["error_code"] = exc.code.value
+        if isinstance(exc, ValidationError):
+            # Unknown object keys can themselves contain private model text.
+            known_fields = set(ExperienceCreate.model_fields) | set(VerificationEvidence.model_fields) | {"files"}
+            diagnostic["field_errors"] = [{
+                "field": [part if type(part) is int or part in known_fields else "<unknown>"
+                          for part in error["loc"]],
+                "type": error["type"],
+            } for error in exc.errors(include_url=False, include_context=False, include_input=False)[:20]]
+        raise
+    diagnostic.update(status="succeeded", stage="completed", saved_count=len(records))
+    return records
+
+
+def _extract_and_save_experiences(llm, store, request, *, summary, changed_files, calls, results, deadline,
+                                  diagnostic):
     from .core import normalize_error_type
 
     def remaining():
@@ -37,13 +81,26 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
     evidence = VerificationEvidence(source_task_id=request.task_id, tool_call_id=calls[-1].id, runner=runner,
                                     tests=counts["tests"], failures=counts.get("failures", 0),
                                     errors=counts.get("errors", 0), skipped=counts.get("skipped", 0))
+    diagnostic["stage"] = "model_response"
     response = llm.complete([
         {"role": "system", "content": (
-            'Extract independent reusable repair knowledge. Return only JSON {"experiences":[...]} with 1–5 records. '
+            'Extract independent reusable repair knowledge. Return only JSON {"experiences":[...]} with 1–5 records, '
+            "strictly conforming to the supplied output_schema. "
             "Each record has task_summary, error_type, root_cause, solution, tags, applicability and ordered issues "
             "[{error_type,root_cause,solution,files}]. Each must have a distinct purpose and precise prerequisites. "
+            "tags, applicability, required_capabilities and each issue's files must be arrays of strings, never a string or object. "
+            "applicability and issues must be nonempty. required_capabilities may only contain supplied capability identifiers. "
+            "Do not add fields outside output_schema; omit verification, evidence, IDs, provenance and other program-owned fields. "
             "Group causally related defects in each record; do not copy records or split one rule merely to increase counts. "
             "For a complex repair, identify independent knowledge groups, each with its related problems and repair order. "
+            "An experience is a reusable knowledge group; each issue describes one independently triggerable or testable "
+            "failure condition and its corresponding repair rule. One source file may support multiple distinct issues. "
+            "Keep distinct root causes, exception types or assertion failures as separate issues within that group, "
+            "ordered by their prerequisite checks; do not compress all failures into one issue merely because they share a file. "
+            "Use each issue's observed exception type or AssertionError when supported by the trace, rather than assigning "
+            "the first observed exception to every issue. Do not split cases that differ only in input values but share "
+            "the same root cause and repair rule. Preserve the number of genuinely distinct problems supported by evidence; "
+            "a simple repair may have just one issue. "
             "Only name files actually changed, explain each group's supporting facts. A simple repair may yield one record. "
             "Use only the supplied trace. Do not invent evidence, business defaults, identifiers, secrets or hidden reasoning. "
             "The program owns repository, language, state, provenance and final test evidence. No tool calls. "
@@ -51,8 +108,10 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
             "Preserve JSON keys, language tags, code literals, exception names, file paths and identifiers exactly." )},
         {"role": "user", "content": json.dumps({"task": request.task_description, "summary": summary,
             "language": request.language, "repository_id": request.repository_id, "changed_files": changed_files,
-            "capabilities": request.capabilities, "trace": [r.model_dump(mode="json") for r in results]}, ensure_ascii=False)}])
+            "capabilities": request.capabilities, "output_schema": extraction_output_schema(),
+            "trace": [r.model_dump(mode="json") for r in results]}, ensure_ascii=False)}])
     remaining()
+    diagnostic["stage"] = "json_decode"
     if response.get("tool_calls"):
         raise ValueError("Extractor cannot request tools")
     content = response.get("content", "")
@@ -65,7 +124,8 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
     if not isinstance(raw_items, list) or not 1 <= len(raw_items) <= 5:
         raise ValueError("Extraction must contain 1–5 experiences")
     items = []
-    for raw in raw_items:
+    for index, raw in enumerate(raw_items):
+        diagnostic.update(stage="schema_validation", record_index=index)
         if not isinstance(raw, dict):
             raise ValueError("Every experience must be an object")
         data = dict(raw)
@@ -87,11 +147,14 @@ def extract_and_save_experiences(llm, store, request, *, summary, changed_files,
         if isinstance(data.get("tags", []), list):
             data["tags"] = [request.language, *[tag for tag in data.get("tags", []) if tag not in {"java", "python"}]]
         item = ExperienceCreate.model_validate(data)
+        diagnostic["stage"] = "source_grounding"
         if not item.applicability or not item.issues or any(
                 not issue.files or not set(issue.files).issubset(changed_files) for issue in item.issues):
             raise ValueError("Every rule requires conditions and issues supported by changed files")
+        diagnostic["stage"] = "capability_validation"
         if not set(item.required_capabilities).issubset(request.capabilities):
             raise ValueError("Unregistered capability in extracted experience")
         items.append(item)
     remaining()
+    diagnostic["stage"] = "storage"
     return store.save_experiences(items, source_task_id=request.task_id)

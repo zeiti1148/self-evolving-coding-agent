@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from uuid import uuid4
 
 import pytest
@@ -43,6 +44,23 @@ def test_real_roles_handoff_real_tools_final_tests_and_three_experiences(tmp_pat
     assert agent.last_run_audit["decision_rounds"] == 4
     assert all(client.closed for client in factory.clients)
     assert all(len(store.get_experience(identifier).issues) == 2 for identifier in result.experience_ids)
+    assert agent.last_run_audit["experience_extraction"]["status"] == "succeeded"
+    assert agent.last_run_audit["experience_extraction"]["saved_count"] == 3
+
+
+def test_multi_agent_storage_failure_preserves_repair_and_safe_diagnostic(tmp_path, monkeypatch):
+    from backend.shared import ApplicationError, ErrorCode
+    private = "private-store-connection-information"
+    def fail_save(*args, **kwargs):
+        raise ApplicationError(ErrorCode.EXPERIENCE_STORAGE_ERROR, private)
+    monkeypatch.setattr(ExperienceStore, "save_experiences", fail_save)
+    result, agent, store, _, _ = run(tmp_path, ScriptedRoleFactory())
+    assert result.repair_succeeded and result.tests_passed and result.experience_saved is False
+    assert store.list_experiences() == []
+    diagnostic = agent.last_run_audit["experience_extraction"]
+    assert diagnostic["status"] == "failed" and diagnostic["stage"] == "storage"
+    assert diagnostic["error_code"] == "EXPERIENCE_STORAGE_ERROR"
+    assert private not in json.dumps(agent.last_run_audit)
 
 
 @pytest.mark.parametrize("language", ["python", "java"])

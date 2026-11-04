@@ -148,6 +148,9 @@ def run(live: bool, directory: Path) -> dict:
                 "retrieved_ids": audit.get("retrieved_experience_ids", []), "actual_injections": injections,
                 "actual_injected_ids": sorted({identifier for entry in injections for identifier in entry["experience_ids"]})}
         report["tasks"].append(task); save()
+        records = [http(client, "get", f"/api/experiences/{identifier}") for identifier in result.get("experience_ids", [])]
+        task["experiences"] = records
+        save()
         assert status["status"] == expect, f"{label}: expected {expect}, got {status['status']}"
         assert audit["decision_rounds"] <= max_steps
         if expect == "succeeded":
@@ -157,14 +160,16 @@ def run(live: bool, directory: Path) -> dict:
             assert final["success"] and final["metadata"]["final_verification"]
             assert final["metadata"]["tests"] == project.expected_tests
             assert all(final["metadata"][key] == 0 for key in ("errors", "failures", "skipped"))
-            records = [http(client, "get", f"/api/experiences/{identifier}") for identifier in result["experience_ids"]]
             if save_ok:
-                assert 3 <= len(records) <= 5 and all(len(row["issues"]) >= 2 for row in records[:3])
+                assert 3 <= len(records) <= 5, f"{label}: expected 3–5 experiences, got {len(records)}"
+                issue_counts = [len(row["issues"]) for row in records]
+                assert all(count >= 2 for count in issue_counts[:3]), (
+                    f"{label}: expected at least 2 issues in each of the first 3 experiences; "
+                    f"actual issue counts={issue_counts}")
                 assert len({row["task_summary"] for row in records}) == len(records)
                 assert all(row["source_task_id"] == task_id and row["evidence"][0]["tool_call_id"] == final["call_id"] for row in records)
             else:
                 assert not records and result["experience_save_error"]
-            task["experiences"] = records
             tests = [step for step in result["tool_results"] if step["tool_name"] == "run_tests"]
             task["test_progression"] = [{"passed": step["success"], **step["metadata"]} for step in tests]
             if not live and "checkout" in identifier and mode == "multi":

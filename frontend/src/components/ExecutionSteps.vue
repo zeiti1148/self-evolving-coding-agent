@@ -5,11 +5,13 @@ import type { TaskStatusResponse, TaskStep } from '../api/contracts'
 import { downloadExecution } from '../features/taskExport'
 import { originalDefect, testCounts, testOutcome, testPhase } from '../features/testPresentation'
 import AppIcon from './AppIcon.vue'
-const props = withDefaults(defineProps<{ task: TaskStatusResponse; steps: TaskStep[]; mock: boolean; stepsLoaded?: boolean; testSourceAvailable?: boolean }>(), { stepsLoaded: true })
+const props = withDefaults(defineProps<{ task: TaskStatusResponse; steps: TaskStep[]; mock: boolean; stepsLoaded?: boolean; loadError?: string; testSourceAvailable?: boolean }>(), { stepsLoaded: true, loadError: '' })
 const filter = ref('all')
 const expanded = ref(new Set<number>())
 const downloadError = ref('')
 const terminal = computed(() => !['pending', 'running'].includes(props.task.status))
+const awaitingSteps = computed(() => !props.stepsLoaded || props.steps.length < props.task.steps_completed)
+const countsKnown = computed(() => !awaitingSteps.value && !props.loadError)
 const unsuccessful = computed(() => props.steps.filter(step => !step.result.success))
 const visible = computed(() => filter.value === 'unsuccessful' ? unsuccessful.value : props.steps)
 const allExpanded = computed(() => visible.value.length > 0 && visible.value.every(step => expanded.value.has(step.sequence)))
@@ -36,15 +38,17 @@ function time(value: string) { return new Date(value).toLocaleString('zh-CN', { 
 </script>
 <template>
   <section class="panel execution-panel" aria-labelledby="steps-title">
-    <div class="panel-heading split"><div class="heading-inline"><AppIcon name="code" /><h2 id="steps-title">执行过程</h2><span class="count-chip">{{ steps.length }}</span></div><span class="text-muted" role="status">{{ terminal ? '执行已结束' : task.status === 'pending' ? '等待开始' : '自动更新中' }}</span></div>
+    <div class="panel-heading split"><div class="heading-inline"><AppIcon name="code" /><h2 id="steps-title">执行过程</h2><span v-if="countsKnown || steps.length" class="count-chip">{{ countsKnown ? steps.length : `已读取 ${steps.length}` }}</span></div><span class="text-muted" role="status">{{ loadError ? '记录读取失败' : awaitingSteps ? '正在读取记录' : terminal ? '执行已结束' : task.status === 'pending' ? '等待开始' : '自动更新中' }}</span></div>
     <div class="execution-toolbar">
-      <label class="step-filter">步骤筛选<select v-model="filter"><option value="all">全部步骤（{{ steps.length }}）</option><option value="unsuccessful">未成功（{{ unsuccessful.length }}）</option></select></label>
+      <label class="step-filter">步骤筛选<select v-model="filter" :disabled="!countsKnown && !steps.length"><option value="all">全部步骤{{ countsKnown ? `（${steps.length}）` : '' }}</option><option value="unsuccessful">未成功{{ countsKnown ? `（${unsuccessful.length}）` : '' }}</option></select></label>
       <div class="execution-actions"><button type="button" class="button secondary small" :disabled="!visible.length" @click="toggleAll">{{ allExpanded ? '收起全部' : '展开全部' }}</button><button type="button" class="button secondary small" @click="download"><AppIcon name="file" :size="16" />下载执行记录</button></div>
     </div>
     <p class="execution-export-note">下载包含任务状态和全部已读取步骤，不受筛选影响；未结束或未读全时会标记为不完整。</p>
     <p v-if="downloadError" class="error-notice" role="alert">{{ downloadError }}</p>
-    <div v-if="!steps.length" class="empty-state"><AppIcon name="clock" :size="30" /><h3>{{ terminal ? '没有已完成的工具步骤' : '等待第一步执行完成' }}</h3><p>{{ terminal ? '请查看下方的任务结果或错误说明。' : '工具调用结束后，执行结果会显示在这里。' }}</p></div>
-    <div v-else-if="!visible.length" class="empty-state" role="status"><AppIcon name="check" :size="28" /><h3>当前没有未成功的步骤</h3><p>可切换到全部步骤查看执行过程；最终修复情况以下方结果为准。</p></div>
+    <p v-if="loadError" class="error-notice" role="alert">执行步骤读取失败：{{ loadError }}。已读取的内容保留显示。</p>
+    <p v-else-if="awaitingSteps && steps.length" class="field-hint" role="status">正在读取执行步骤，已读取的内容保留显示…</p>
+    <div v-if="!steps.length" class="empty-state" role="status"><AppIcon name="clock" :size="30" /><h3>{{ loadError ? '执行步骤暂不可用' : awaitingSteps ? '正在读取执行步骤…' : terminal ? '没有已完成的工具步骤' : '等待第一步执行完成' }}</h3><p>{{ loadError ? '读取失败不代表没有执行步骤，请重新读取。' : awaitingSteps ? '任务状态已读取，正在获取过程记录。' : terminal ? '请查看上方的任务结果或错误说明。' : '工具调用结束后，执行结果会显示在这里。' }}</p></div>
+    <div v-else-if="!visible.length" class="empty-state" role="status"><AppIcon name="check" :size="28" /><h3>{{ countsKnown ? '当前没有未成功的步骤' : '已读取内容中没有符合筛选的步骤' }}</h3><p>可切换到全部步骤查看执行过程；最终修复情况以上方结果为准。</p></div>
     <ol v-else class="execution-list"><li v-for="step in visible" :key="step.sequence" :value="step.sequence">
       <div class="step-marker" :class="{ 'step-failed': !step.result.success && !originalDefect(step, steps), 'step-original-defect': originalDefect(step, steps) }">{{ step.sequence }}</div>
       <details class="step-detail" :open="expanded.has(step.sequence)"><summary @click.prevent="toggle(step.sequence)"><div><strong>{{ step.call.name === 'run_tests' ? testLabels[testPhase(step, steps)] : labels[step.call.name] ?? step.call.name }}</strong><code class="tool-name">{{ step.call.name }}</code></div><span class="step-outcome" :class="step.result.success ? 'text-success' : originalDefect(step, steps) ? 'text-warning' : 'text-danger'">{{ testOutcome(step, steps) }}<AppIcon name="chevron" :size="15" /></span></summary>

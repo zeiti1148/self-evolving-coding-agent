@@ -9,6 +9,7 @@ import StatusBadge from '../components/StatusBadge.vue'
 import ResultSummary from '../components/ResultSummary.vue'
 import ExecutionSteps from '../components/ExecutionSteps.vue'
 import AgentTimeline from '../components/AgentTimeline.vue'
+import TaskEvidencePanel from '../components/TaskEvidencePanel.vue'
 const route = useRoute()
 const { api, mock } = useApiContext()
 const testSourceAvailable = !mock && !!api.listTestSources && !!api.getTestSource
@@ -20,15 +21,16 @@ const error = ref('')
 const loading = ref(true)
 const copied = ref(false)
 const stepsLoaded = ref(false)
+const stepsError = ref('')
 let copyTimer: ReturnType<typeof setTimeout> | undefined
 const poller = createTaskPoller(api, {
-  onSnapshot(status, completed, loaded) { task.value = status; steps.value = completed; stepsLoaded.value = loaded; loading.value = false; error.value = '' },
-  onError(cause) { error.value = cause.message; loading.value = false; stepsLoaded.value = false },
+  onSnapshot(status, completed, loaded) { task.value = status; if (loaded || completed.length) steps.value = completed; stepsLoaded.value = loaded; stepsError.value = ''; loading.value = false; error.value = '' },
+  onError(cause) { error.value = cause.message; stepsError.value = cause.message; loading.value = false; stepsLoaded.value = false },
 })
 const terminal = computed(() => task.value && !['pending', 'running'].includes(task.value.status))
-watch(taskId, id => { task.value = null; steps.value = []; stepsLoaded.value = false; error.value = ''; loading.value = true; poller.start(id) }, { immediate: true })
+watch(taskId, id => { task.value = null; steps.value = []; stepsLoaded.value = false; stepsError.value = ''; error.value = ''; loading.value = true; poller.start(id) }, { immediate: true })
 onBeforeUnmount(() => { poller.stop(); clearTimeout(copyTimer) })
-function retry() { error.value = ''; loading.value = true; poller.retry() }
+function retry() { error.value = ''; stepsError.value = ''; stepsLoaded.value = false; loading.value = true; poller.retry() }
 async function copyId() {
   try { await navigator.clipboard.writeText(taskId.value); copied.value = true; copyTimer = setTimeout(() => { copied.value = false }, 1800) }
   catch { error.value = '复制不可用，请手动选择任务 ID。' }
@@ -42,9 +44,9 @@ function time(value: string | null) { return value ? new Date(value).toLocaleStr
   <div v-if="loading && !task" class="panel empty-state" role="status"><AppIcon name="clock" :size="28" /><p>正在读取任务状态…</p></div>
   <template v-if="task">
     <div class="task-metadata"><div><span>创建时间</span><strong>{{ time(task.created_at) }}</strong></div><div><span>开始时间</span><strong>{{ time(task.started_at) }}</strong></div><div><span>{{ terminal ? '结束时间' : '已完成步骤' }}</span><strong>{{ terminal ? time(task.finished_at) : `${task.steps_completed} 步` }}</strong></div></div>
-    <ResultSummary v-if="task.result" :result="task.result" :test-source-available="testSourceAvailable" :code-diff-available="codeDiffAvailable" />
+    <ResultSummary v-if="task.result" :result="task.result" :test-source-available="testSourceAvailable" :code-diff-available="codeDiffAvailable"><template v-if="!mock" #evidence><TaskEvidencePanel :task-id="taskId" :status="task.status" :steps-completed="task.steps_completed" /></template></ResultSummary>
     <section v-else-if="terminal" class="panel result-body"><h2>任务未完成</h2><p class="error-notice">{{ task.error_message || '任务已结束，但没有返回完整执行结果。' }}</p><p class="text-muted">没有最终测试证据，不能确认修复成功。</p></section>
     <AgentTimeline :task-id="taskId" :status="task.status" />
-    <ExecutionSteps :task="task" :steps="steps" :mock="mock" :steps-loaded="stepsLoaded" :test-source-available="testSourceAvailable" />
+    <ExecutionSteps :task="task" :steps="steps" :mock="mock" :steps-loaded="stepsLoaded" :load-error="stepsError" :test-source-available="testSourceAvailable" />
   </template>
 </template>

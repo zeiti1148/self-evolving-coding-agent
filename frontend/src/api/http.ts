@@ -2,6 +2,7 @@ import type { AgentApi, TaskCreateRequest } from './contracts'
 import { readAgentEvents, readCreatedTask, readExperience, readExperiences, readMergedExperience, readMergePreview, readProjects, readPromotionPreview, readProvenance, readSteps, readTask } from './validation'
 import { readTestSource, readTestSources } from './validation'
 import { readCodeChanges, readCodeDiff } from './codeDiffValidation'
+import { readTaskEvidence } from './evidenceValidation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -19,6 +20,7 @@ const fieldLabels: Record<string, string> = {
 
 function errorMessage(status: number, payload: unknown, path: string): string {
   if (status >= 500) return '服务暂时不可用，请稍后重试。'
+  if (status === 404 && /\/evidence(?:\?|$)/.test(path)) return '此后端暂不支持修复证据摘要，请更新并重启后端；下方原始执行记录仍可查看。'
   if (status === 404 && /\/code-(changes|diff)(?:\?|$)/.test(path)) {
     const detail = payload && typeof payload === 'object' && 'detail' in payload ? payload.detail : null
     return typeof detail === 'string' && /[\u4e00-\u9fff]/.test(detail) ? detail : '代码对比暂不可用，请确认任务工作副本仍在，并重启已更新的后端。'
@@ -88,6 +90,7 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     createTask: (body, signal) => request('/api/tasks', readCreatedTask, 'POST', body, signal),
     getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
+    getTaskEvidence: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/evidence`, data => readTaskEvidence(data, id), 'GET', undefined, signal),
     listTestSources: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/test-sources`, data => readTestSources(data, id), 'GET', undefined, signal),
     listCodeChanges: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/code-changes`, data => readCodeChanges(data, id), 'GET', undefined, signal),
     getCodeDiff: (id, path, signal) => request(`/api/tasks/${encodeURIComponent(id)}/code-diff?${new URLSearchParams({ path })}`, data => readCodeDiff(data, id, path), 'GET', undefined, signal),
