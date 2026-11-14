@@ -175,8 +175,18 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             conflicts.append(f"经验已被合并或替代：{source_id}")
     if conflicts:
         return {"can_merge": False, "conflicts": conflicts, "source_ids": ids, "preview": None}
+    return build_merge_preview(sources)
+
+
+def build_merge_preview(sources: list[Experience]) -> dict:
+    """Pure compatibility/representation check for already selected sources.
+
+    Callers own current-state checks; manual commits still recheck in a transaction.
+    """
+    ids = sorted(source.id for source in sources)
+    conflicts = []
     # Stable source chronology preserves each record's declared repair order.
-    sources.sort(key=lambda source: (source.created_at, source.id))
+    sources = sorted(sources, key=lambda source: (source.created_at, source.id))
     first = sources[0]
     for source in sources[1:]:
         if (source.language, source.scope, source.repository_id) != (first.language, first.scope, first.repository_id):
@@ -365,6 +375,11 @@ class ExperienceStore:
             entries = (decode_row(row) for row in connection.execute(
                 f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({SUPERSEDED}){ORDER}"))
             return rank_references(entries, context, query=query, error_types=error_types, limit=limit)
+
+    def suggest_merges(self, *, limit: int = 10, language=None, repository_id=None, scope=None, reuse_status=None):
+        from .suggestions import suggest_merges
+        return suggest_merges(self.database_path, limit=limit, language=language, repository_id=repository_id,
+                              scope=scope, reuse_status=reuse_status)
 
     def preview_merge(self, experience_ids: list[str]) -> dict:
         ids = _merge_ids(experience_ids)

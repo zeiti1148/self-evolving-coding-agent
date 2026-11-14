@@ -1,0 +1,86 @@
+[
+  {
+    "id": "java-booking-transfer",
+    "label": "Java 预约项目：跨仓库经验复用",
+    "language": "java",
+    "repository_id": "v3-java-booking",
+    "source": "benchmarks/experience-v3/java-booking-transfer",
+    "task_example": "修复预约项目的输入处理，并保持正常输入的原有行为。名称：缺失或全为空白时返回 visitor；其他名称去除首尾空白。数量：缺失、空白或格式错误时返回 1；数值不在 1 到 30 范围内时必须抛出异常。列表选择：列表缺失或为空、下标小于 0 或达到或超过列表长度时返回 unassigned；其余情况返回选中的值。检查 prepare 的组合调用，确保原有 12 项测试全部通过。不得修改测试或构建配置。",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "python-booking-transfer",
+    "label": "Python 预约项目：跨仓库经验复用",
+    "language": "python",
+    "repository_id": "v3-python-booking",
+    "source": "benchmarks/experience-v3/python-booking-transfer",
+    "task_example": "修复预约项目的输入处理，并保持正常输入的原有行为。名称：缺失或全为空白时返回 visitor；其他名称去除首尾空白。数量：缺失、空白或格式错误时返回 1；数值不在 1 到 30 范围内时必须抛出异常。列表选择：列表缺失或为空、下标小于 0 或达到或超过列表长度时返回 unassigned；其余情况返回选中的值。检查 prepare 的组合调用，确保原有 12 项测试全部通过。不得修改测试或构建配置。",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "python-ticketing-evaluation",
+    "label": "Python ticketing 独立评估",
+    "language": "python",
+    "repository_id": "v3-eval-python-ticketing",
+    "source": "benchmarks/evaluation-v3/python-ticketing",
+    "task_example": "修复票务输入处理的跨文件调用。姓名缺失或全为空白时返回 attendee，其他姓名去除首尾空白。数量缺失、空白或格式错误时返回 2；有效整数小于 1 时钳制为 1，大于 6 时钳制为 6。座位列表缺失、为空或下标越界（含负数）时返回 waitlist；有效下标返回对应座位。prepare 按 name:quantity:item 组合结果。保持正常行为，通过原始 12 项测试，不修改测试或构建配置。",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "java-ticketing-evaluation",
+    "label": "Java ticketing 独立评估",
+    "language": "java",
+    "repository_id": "v3-eval-java-ticketing",
+    "source": "benchmarks/evaluation-v3/java-ticketing",
+    "task_example": "修复票务输入处理的跨文件调用。姓名缺失或全为空白时返回 attendee，其他姓名去除首尾空白。数量缺失、空白或格式错误时返回 2；有效整数小于 1 时钳制为 1，大于 6 时钳制为 6。座位列表缺失、为空或下标越界（含负数）时返回 waitlist；有效下标返回对应座位。prepare 按 name:quantity:item 组合结果。保持正常行为，通过原始 12 项测试，不修改测试或构建配置。",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "python-inventory-evaluation",
+    "label": "Python inventory 独立评估",
+    "language": "python",
+    "repository_id": "v3-eval-python-inventory",
+    "source": "benchmarks/evaluation-v3/python-inventory",
+    "task_example": "修复库存输入处理的跨文件调用。SKU 缺失或全为空白必须抛出参数异常；有效 SKU 去除首尾空白并转为大写。数量缺失或空白时返回 0；格式错误、数值小于 0 或大于 500 必须抛出参数异常。货位列表缺失或为空时返回 backorder；列表非空但下标越界（含负数）时回退到第一个元素。prepare 按 name:quantity:item 组合结果。保持正常行为，通过原始 12 项测试，不修改测试或构建配置。",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  },
+  {
+    "id": "java-inventory-evaluation",
+    "label": "Java inventory 独立评估",
+    "language": "java",
+    "repository_id": "v3-eval-java-inventory",
+    "source": "benchmarks/evaluation-v3/java-inventory",
+    "task_example": "修复库存输入处理的跨文件调用。SKU 缺失或全为空白必须抛出参数异常；有效 SKU 去除首尾空白并转为大写。数量缺失或空白时返回 0；格式错误、数值小于 0 或大于 500 必须抛出参数异常。货位列表缺失或为空时返回 backorder；列表非空但下标越界（含负数）时回退到第一个元素。prepare 按 name:quantity:item 组合结果。保持正常行为，通过原始 12 项测试，不修改测试或构建配置。",
+    "expected_tests": 12,
+    "capabilities": [
+      "text-input",
+      "integer-input",
+      "indexed-selection"
+    ]
+  }
+]

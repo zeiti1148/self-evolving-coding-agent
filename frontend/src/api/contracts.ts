@@ -66,6 +66,16 @@ export interface ProvenanceGraph { nodes: Experience[]; edges: { source: string;
 export interface MergePreview {
   can_merge: boolean; conflicts: string[]; source_ids: string[]; preview: ExperienceKnowledge | null
 }
+export interface MergeSuggestion {
+  source_ids: string[]; source_titles: string[]; language: ProjectLanguage; scope: ExperienceScope; repository_id: string | null
+  reasons: ('shared_rules' | 'shared_files')[]; shared_issue_count: number; issue_count: number
+  verification_count: number; revision_warning: boolean
+}
+export interface MergeSuggestions {
+  suggestions: MergeSuggestion[]; scanned_count: number; eligible_count: number; checked_pairs: number
+  rejected: { reason: 'conditions' | 'capabilities' | 'unrelated' | 'conflict'; count: number }[]
+  truncation_reasons: ('scan_limit' | 'candidate_limit' | 'result_limit')[]
+}
 export interface AgentResult {
   task_id: string; status: TerminalStatus; summary: string; steps: ToolCall[]; tool_results: ToolResult[]
   repair_succeeded: boolean; tests_passed: boolean | null; changed_files: string[]
@@ -106,6 +116,7 @@ export interface AgentApi {
   listExperiences(limit?: number, offset?: number, signal?: AbortSignal, filters?: ExperienceFilters): Promise<Experience[]>
   listProjects?(signal?: AbortSignal): Promise<RegisteredProject[]>
   previewMerge?(experienceIds: string[], signal?: AbortSignal): Promise<MergePreview>
+  getMergeSuggestions?(filters?: ExperienceFilters, signal?: AbortSignal): Promise<MergeSuggestions>
   mergeExperiences?(experienceIds: string[], signal?: AbortSignal): Promise<Experience>
   getAgentEvents?(taskId: string, afterSequence?: number, signal?: AbortSignal): Promise<AgentEvent[]>
   getExperience?(id: string, signal?: AbortSignal): Promise<Experience>

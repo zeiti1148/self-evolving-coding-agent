@@ -185,9 +185,13 @@ it('switches themes using accessible buttons without navigating or losing form i
 
 it('shows a readable contract error and recovers the experience page on retry', async () => {
   const records = seedExperiences(Date.parse('2026-10-22T00:00:00Z'))
-  const fetcher = vi.fn()
-    .mockResolvedValueOnce(new Response(JSON.stringify({ items: records })))
-    .mockResolvedValueOnce(new Response(JSON.stringify(records.slice(0, 6))))
+  const listResponses = [new Response(JSON.stringify({ items: records })), new Response(JSON.stringify(records.slice(0, 6)))]
+  const fetcher = vi.fn<typeof fetch>(async input => {
+    if (String(input).includes('/merge-suggestions')) return new Response(JSON.stringify({
+      suggestions: [], scanned_count: 0, eligible_count: 0, checked_pairs: 0, rejected: [], truncation_reasons: [],
+    }))
+    return listResponses.shift()!
+  })
   const { wrapper } = await setup(ExperiencesView, createHttpApi('', fetcher))
   try {
     await flushPromises()

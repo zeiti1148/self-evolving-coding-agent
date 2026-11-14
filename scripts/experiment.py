@@ -293,7 +293,8 @@ def run_trial(spec: dict, case: dict, settings: Settings, store, original: dict,
 
     def make_agent(tools, _api_store):
         return Agent(ChatClient(settings), tools.execute_tool, store,
-                     use_experience=spec["use_experience"], timeout_seconds=settings.task_timeout)
+                     use_experience=spec["use_experience"], timeout_seconds=settings.task_timeout,
+                     retrieval_strategy="baseline")
 
     app = create_app(settings, agent_factory=make_agent)
     try:

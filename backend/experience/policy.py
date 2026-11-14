@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 
 from backend.shared import Experience
+from .retrieval import relevance, rule_identity, terms
 
 
 @dataclass(frozen=True)
@@ -20,7 +21,7 @@ def is_eligible(entry: Experience, context: RetrievalContext) -> bool:
 
 def rank_references(entries, context: RetrievalContext, *, query: str, error_types: list[str], limit: int):
     wanted = {" ".join(value.casefold().split()) for value in error_types}
-    keywords = set(query.casefold().split())
+    query_terms = terms(query) if query.strip() else set()
     ranked = []
     for entry in entries:
         if not is_eligible(entry, context):
@@ -30,13 +31,40 @@ def rank_references(entries, context: RetrievalContext, *, query: str, error_typ
         overlap = len(actual & wanted)
         if wanted and not overlap:
             continue
-        content = " ".join([entry.task_summary, entry.root_cause, entry.solution, *entry.applicability, *entry.tags]).casefold()
-        ranked.append(((entry.scope == "project", overlap, sum(word in content for word in keywords), entry.created_at, entry.id), entry))
+        score = relevance(entry, query_terms) if query_terms else 0
+        ranked.append(((entry.scope == "project", overlap, score, entry.created_at, entry.id), entry))
     ranked.sort(key=lambda item: item[0], reverse=True)
-    return [entry for _, entry in ranked[:limit]]
+    if not query.strip():
+        return [entry for _, entry in ranked[:limit]]
+    selected, seen = [], set()
+    for _, entry in ranked:
+        identity = rule_identity(entry)
+        if identity not in seen:
+            selected.append(entry)
+            seen.add(identity)
+        if len(selected) >= limit:
+            break
+    return selected
 
 
-def to_model_reference(entry: Experience) -> dict:
+def validate_reference_options(experience_format, retrieval_strategy):
+    if experience_format not in {"full", "compact"} or retrieval_strategy not in {"baseline", "contextual", "adaptive"}:
+        raise ValueError("Invalid experience representation or retrieval strategy.")
+
+
+def to_model_reference(entry: Experience, representation="full") -> dict:
+    if representation not in {"full", "compact"}:
+        raise ValueError("Experience representation must be full or compact.")
+    payload = _full_reference(entry)
+    if representation == "compact":
+        # Remove supporting metadata, never truncate a rule or its prerequisites.
+        fields = {"id", "schema_version", "scope", "language", "repository_id", "reuse_status", "task_summary",
+                  "error_type", "root_cause", "solution", "applicability", "required_capabilities", "issues"}
+        return {key: value for key, value in payload.items() if key in fields}
+    return payload
+
+
+def _full_reference(entry: Experience) -> dict:
     if entry.scope == "project":
         return entry.model_dump(mode="json")
     # Never include source files, task descriptions, raw verification strings or provenance in cross-repository input.

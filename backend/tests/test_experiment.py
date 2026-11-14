@@ -99,8 +99,8 @@ def test_trial_uses_api_callback_and_requires_terminal_final_verification(
                        projects={"sample": source}, task_timeout=2)
 
     class FakeAgent:
-        def __init__(self, _llm, execute, store, *, use_experience, timeout_seconds):
-            assert not use_experience and timeout_seconds == 2
+        def __init__(self, _llm, execute, store, *, use_experience, timeout_seconds, retrieval_strategy):
+            assert not use_experience and timeout_seconds == 2 and retrieval_strategy == "baseline"
             self.last_run_audit = {"experience_enabled": False, "retrieved_experience_ids": [],
                                    "model_requests": [{"phase": "decision", "success": True, "request_experience_ids": []}]}
 

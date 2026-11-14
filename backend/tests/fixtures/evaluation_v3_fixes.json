@@ -1,0 +1,58 @@
+{
+  "python-ticketing-evaluation": [
+    {
+      "path": "app/names.py",
+      "content": "def normalize_name(value):\n    return value.strip() if value and value.strip() else \"attendee\"\n"
+    },
+    {
+      "path": "app/quantities.py",
+      "content": "def parse_quantity(value):\n    if value is None or not value.strip():\n        return 2\n    try:\n        amount = int(value.strip())\n    except ValueError:\n        return 2\n    return max(1, min(6, amount))\n"
+    },
+    {
+      "path": "app/items.py",
+      "content": "def select_item(values, index):\n    if not values or index < 0 or index >= len(values):\n        return \"waitlist\"\n    return values[index]\n"
+    }
+  ],
+  "java-ticketing-evaluation": [
+    {
+      "path": "src/main/java/dev/selfevolving/evaluation/Names.java",
+      "content": "package dev.selfevolving.evaluation;\n\npublic class Names {\n    public static String normalize(String value) {\n        return value == null || value.trim().isEmpty() ? \"attendee\" : value.trim();\n    }\n}\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/evaluation/Quantities.java",
+      "content": "package dev.selfevolving.evaluation;\n\npublic class Quantities {\n    public static int parse(String value) {\n        if (value == null || value.trim().isEmpty()) return 2;\n        try { return Math.max(1, Math.min(6, Integer.parseInt(value.trim()))); }\n        catch (NumberFormatException error) { return 2; }\n    }\n}\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/evaluation/Items.java",
+      "content": "package dev.selfevolving.evaluation;\n\npublic class Items {\n    public static String select(java.util.List<String> values, int index) {\n        if (values == null || values.isEmpty() || index < 0 || index >= values.size()) return \"waitlist\";\n        return values.get(index);\n    }\n}\n"
+    }
+  ],
+  "python-inventory-evaluation": [
+    {
+      "path": "app/names.py",
+      "content": "def normalize_name(value):\n    if value is None or not value.strip():\n        raise ValueError(\"SKU required\")\n    return value.strip().upper()\n"
+    },
+    {
+      "path": "app/quantities.py",
+      "content": "def parse_quantity(value):\n    if value is None or not value.strip():\n        return 0\n    amount = int(value.strip())\n    if not 0 <= amount <= 500:\n        raise ValueError(\"Quantity outside 0..500\")\n    return amount\n"
+    },
+    {
+      "path": "app/items.py",
+      "content": "def select_item(values, index):\n    if not values:\n        return \"backorder\"\n    return values[index] if 0 <= index < len(values) else values[0]\n"
+    }
+  ],
+  "java-inventory-evaluation": [
+    {
+      "path": "src/main/java/dev/selfevolving/evaluation/Names.java",
+      "content": "package dev.selfevolving.evaluation;\n\npublic class Names {\n    public static String normalize(String value) {\n        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(\"SKU required\");\n        return value.trim().toUpperCase(java.util.Locale.ROOT);\n    }\n}\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/evaluation/Quantities.java",
+      "content": "package dev.selfevolving.evaluation;\n\npublic class Quantities {\n    public static int parse(String value) {\n        if (value == null || value.trim().isEmpty()) return 0;\n        int amount = Integer.parseInt(value.trim());\n        if (amount < 0 || amount > 500) throw new IllegalArgumentException(\"Quantity outside 0..500\");\n        return amount;\n    }\n}\n"
+    },
+    {
+      "path": "src/main/java/dev/selfevolving/evaluation/Items.java",
+      "content": "package dev.selfevolving.evaluation;\n\npublic class Items {\n    public static String select(java.util.List<String> values, int index) {\n        if (values == null || values.isEmpty()) return \"backorder\";\n        return values.get(index < 0 || index >= values.size() ? 0 : index);\n    }\n}\n"
+    }
+  ]
+}
