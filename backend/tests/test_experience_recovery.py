@@ -147,3 +147,69 @@ def test_confirmation_cannot_use_tampered_evidence(tmp_path):
     with pytest.raises(ApplicationError,match='证据已变化'):
         service.confirm(result['id'],result['version'],'Checked',True)
     with connect(store.database_path) as db:assert not active_grants(db)
+
+
+def test_context_matching_preserves_explicit_contracts_and_other_scope_boundaries():
+    from backend.experience.recovery import grant_matches_context
+    tree = 'tree:' + 'a' * 64
+    grant = dict(repository_id='uploaded/example', runner_hash='b' * 64,
+        source_revision='git:' + '1' * 40 + ';' + tree,
+        compatibility_key='git:' + '2' * 40 + ';' + tree)
+    context = dict(repository_id=grant['repository_id'], runner_hash=grant['runner_hash'],
+        source_revision=tree, compatibility_key=tree)
+    assert grant_matches_context(grant, context)
+    assert grant_matches_context(grant | {'compatibility_key': 'business-v1'},
+                                 context | {'compatibility_key': 'business-v1'})
+    for changes in ({'repository_id': 'another-project'}, {'runner_hash': '0' * 64},
+                    {'runner_hash': None}, {'source_revision': 'tree:' + 'c' * 64},
+                    {'source_revision': 'git:invalid;' + tree},
+                    {'compatibility_key': 'different-contract'}, {'compatibility_key': None}):
+        assert not grant_matches_context(grant, context | changes)
+    assert not grant_matches_context(grant | {'compatibility_key': 'business-v1'}, context)
+    assert not grant_matches_context(grant, context | {'compatibility_key': 'business-v1'})
+
+
+def test_old_host_git_revision_grant_survives_without_rewriting_history(tmp_path, monkeypatch):
+    from backend import projects
+    from backend.experience.recovery import grant_matches_context
+    stable_revision = projects.source_revision
+
+    def historical_revision(path, baseline=None):
+        revision = stable_revision(path, baseline)
+        return 'git:' + '1' * 40 + ';tree:' + revision.rsplit('tree:', 1)[1]
+
+    # Reproduce a grant created by the old version, with real repaired workspaces,
+    # original pytest runs and conflict/recovery evidence. No production DB is used.
+    with monkeypatch.context() as historical:
+        historical.setattr(projects, 'source_revision', historical_revision)
+        store, sources, verifier, manager, service = prepared(tmp_path)
+        card = next(item for item in library(store.database_path)['items'] if item['state'] == 'paused')
+        enqueue(store.database_path, card['id'])
+        assert service.run_once()
+        with connect(store.database_path) as db:
+            grant = active_grants(db)[card['id']]
+            before = list(db.iterdump())
+    project = verifier.settings.project(grant['project_id'])
+    current = stable_revision(project.source)
+    assert current.startswith('tree:') and grant['source_revision'].startswith('git:')
+    context = dict(repository_id=project.repository_id, compatibility_key=current, source_revision=current,
+                   runner_hash=digest(project.runner_config.model_dump(mode='json')))
+    assert grant_matches_context(grant, context)
+    assert card['id'] in {entry['rule_id'] for entry in retrieve(
+        store.database_path, language='python', error_types=[], **context)}
+    # The evidence verifier also accepts the original, unchanged task snapshots.
+    original = next(item for item in sources if item.repository_id == project.repository_id)
+    verifier.context(original.model_dump(mode='json'), general=True)
+    with connect(store.database_path) as db:
+        assert list(db.iterdump()) == before
+    assert all(store.get_experience(item.id) == item for item in sources)
+
+    changed_runner = context | {'runner_hash': '0' * 64}
+    assert card['id'] not in {entry['rule_id'] for entry in retrieve(
+        store.database_path, language='python', error_types=[], **changed_runner)}
+    (project.source / 'engine.py').write_text('def convert(value):\n    return 777\n', encoding='utf-8')
+    changed_version = stable_revision(project.source)
+    assert changed_version != current
+    changed_code = context | {'source_revision': changed_version, 'compatibility_key': changed_version}
+    assert card['id'] not in {entry['rule_id'] for entry in retrieve(
+        store.database_path, language='python', error_types=[], **changed_code)}

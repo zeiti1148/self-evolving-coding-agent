@@ -121,7 +121,7 @@ def _normalized(value: str) -> str:
 
 def _validate_filters(language=None, repository_id=None, scope=None):
     if language is not None and (not isinstance(language, str) or language not in {"java", "python", "go", "cpp"}):
-        raise validation_error("语言必须为 java 或 python。")
+        raise validation_error("语言必须为 java、python、go 或 cpp。")
     if scope is not None and (not isinstance(scope, str) or scope not in {"global", "project"}):
         raise validation_error("经验范围必须为通用（global）或仓库专属（project）。")
     if repository_id is not None and (not isinstance(repository_id, str) or not repository_id.strip() or len(repository_id) > 200):
@@ -181,6 +181,15 @@ def _unique_text(values):
     return result
 
 
+def has_verified_projection(connection: sqlite3.Connection, source: Experience) -> bool:
+    """Whole-record changes require every issue's verified rule projection."""
+    ordinals = {row[0] for row in connection.execute(
+        "SELECT s.ordinal FROM knowledge_sources s JOIN knowledge_rules r ON r.id=s.rule_id "
+        "WHERE s.experience_id=? AND json_extract(r.data,'$.verification_class')='verified'",
+        (source.id,))}
+    return ordinals == set(range(len(_source_issues(source))))
+
+
 def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
     existing = connection.execute("SELECT merged_id FROM experience_merges WHERE merge_key=?", (_merge_key(ids),)).fetchone()
     if existing:
@@ -197,17 +206,29 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
         if row is None:
             conflicts.append(f"未找到经验：{source_id}")
             continue
-        sources.append(decode_row(row))
+        source = decode_row(row)
+        sources.append(source)
         from .knowledge import source_requires_review
-        if connection.execute(f"SELECT 1 WHERE ? IN ({UNAVAILABLE})", (source_id,)).fetchone() or source_requires_review(connection,source_id):
+        missing_projection = source.schema_version >= 3 and source.reuse_status == "active" and not has_verified_projection(connection, source)
+        if missing_projection or connection.execute(f"SELECT 1 WHERE ? IN ({UNAVAILABLE})", (source_id,)).fetchone() or source_requires_review(connection,source_id):
             conflicts.append(f"经验已被合并、替代或因冲突暂停复用：{source_id}")
     if conflicts:
         from .merging import detail
         return {"can_merge": False, "conflicts": conflicts, "source_ids": ids, "preview": None,
                 "conflict_details": [detail("source_unavailable", message, ids, "source_ids",
                     "刷新列表，检查来源图或处理待审阅冲突。") for message in conflicts]}
+    return build_merge_preview(sources)
+
+
+def build_merge_preview(sources: list[Experience]) -> dict:
+    """Pure preview shared with suggestions; callers check live source eligibility.
+
+    Keep compatibility domains, explicit dependency order and detailed conflicts
+    identical to the normal manual/automatic merge pipeline.
+    """
     from .merging import build_preview
-    return build_preview(sources, ids)
+    return build_preview(sources, sorted(source.id for source in sources))
+
 
 
 class ExperienceStore:
@@ -359,7 +380,7 @@ class ExperienceStore:
         validate_integer(limit, "limit", 1)
         _validate_filters(language, repository_id)
         if language is None:
-            raise validation_error("语言必须为 java 或 python。")
+            raise validation_error("语言必须为 java、python、go 或 cpp。")
         if not isinstance(query, str) or not isinstance(error_types, list) or any(
             not isinstance(value, str) or not value.strip() for value in error_types):
             raise validation_error("检索内容和异常类型必须为文本。")
@@ -375,6 +396,11 @@ class ExperienceStore:
             entries = (decode_row(row) for row in connection.execute(
                 f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({UNAVAILABLE}){ORDER}"))
             return rank_references(entries, context, query=query, error_types=error_types, limit=limit)
+
+    def suggest_merges(self, *, limit: int = 10, language=None, repository_id=None, scope=None, reuse_status=None):
+        from .suggestions import suggest_merges
+        return suggest_merges(self.database_path, limit=limit, language=language, repository_id=repository_id,
+                              scope=scope, reuse_status=reuse_status)
 
     def preview_merge(self, experience_ids: list[str]) -> dict:
         ids = _merge_ids(experience_ids)

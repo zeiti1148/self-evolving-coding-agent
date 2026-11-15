@@ -1,6 +1,6 @@
 import type { AgentEvent, AgentResult, Experience, ExperienceKnowledge, MergePreview, PromotionDraft, PromotionPreview, ProvenanceGraph, RegisteredProject, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse, ToolCall, ToolResult } from './contracts'
 import type { TestSourceFile, TestSourceIndex, TestSourceInfo } from './contracts'
-import type { MergeConflictDetail } from './contracts'
+import type { MergeConflictDetail, MergeSuggestion, MergeSuggestions } from './contracts'
 
 // Guard the fields consumed by the UI. Public Pydantic models remain authoritative.
 type Data = Record<string, unknown>
@@ -27,6 +27,44 @@ function sameIds(actual: readonly string[], expected: readonly string[]): boolea
   const wanted = new Set(expected.map(id => id.toLowerCase()))
   return normalized.length === expected.length && new Set(normalized).size === normalized.length
     && wanted.size === expected.length && normalized.every(id => wanted.has(id))
+}
+
+export function readMergeSuggestions(value: unknown): MergeSuggestions {
+  const data = object(value)
+  const count = (v: unknown, min: number, max: number): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= min && v <= max
+  check(count(data.scanned_count, 0, 1000) && count(data.eligible_count, 0, 200) && count(data.checked_pairs, 0, 19900))
+  check(data.eligible_count <= data.scanned_count && data.checked_pairs <= data.eligible_count * (data.eligible_count - 1) / 2)
+  const suggestions = list(data.suggestions, value => {
+    const item = object(value)
+    const source_ids = list(item.source_ids, value => { check(uuid(value)); return value as string })
+    const source_titles = list(item.source_titles, value => { check(text(value) && value.length <= 1000); return value })
+    check(source_ids.length === 2 && sameIds(source_ids, source_ids) && source_titles.length === 2)
+    check(['java', 'python', 'go', 'cpp'].includes(String(item.language)))
+    check(item.scope === 'project' || item.scope === 'global')
+    check(item.scope === 'global' ? item.repository_id === null : text(item.repository_id) && item.repository_id.length <= 200)
+    const reasons = list(item.reasons, value => { check(value === 'shared_rules' || value === 'shared_files'); return value })
+    check(reasons.length >= 1 && reasons.length <= 2 && new Set(reasons).size === reasons.length)
+    check(count(item.shared_issue_count, 0, 50) && count(item.issue_count, 1, 50) && count(item.verification_count, 1, 100))
+    check(item.shared_issue_count <= item.issue_count && boolean(item.revision_warning))
+    check(!reasons.includes('shared_rules') || item.shared_issue_count > 0)
+    return { source_ids, source_titles, language: item.language, scope: item.scope, repository_id: item.repository_id,
+      reasons, shared_issue_count: item.shared_issue_count, issue_count: item.issue_count,
+      verification_count: item.verification_count, revision_warning: item.revision_warning } as MergeSuggestion
+  })
+  check(suggestions.length <= 20 && new Set(suggestions.map(item => item.source_ids.map(id => id.toLowerCase()).sort().join(','))).size === suggestions.length)
+  const rejected = list(data.rejected, value => {
+    const row = object(value)
+    check(['conditions', 'capabilities', 'unrelated', 'conflict'].includes(String(row.reason)) && count(row.count, 1, 19900))
+    return { reason: row.reason, count: row.count } as MergeSuggestions['rejected'][number]
+  })
+  check(new Set(rejected.map(item => item.reason)).size === rejected.length)
+  check(suggestions.length + rejected.reduce((total, item) => total + item.count, 0) <= data.checked_pairs)
+  const truncation_reasons = list(data.truncation_reasons, value => {
+    check(value === 'scan_limit' || value === 'candidate_limit' || value === 'result_limit'); return value
+  })
+  check(new Set(truncation_reasons).size === truncation_reasons.length)
+  return { suggestions, scanned_count: data.scanned_count, eligible_count: data.eligible_count,
+    checked_pairs: data.checked_pairs, rejected, truncation_reasons }
 }
 function readSourceInfo(value: unknown): TestSourceInfo {
   const data = object(value)

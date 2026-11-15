@@ -1,6 +1,7 @@
 """Separate candidate similarity, applicability, and behavioral contradiction."""
 import re
 
+from backend.projects import same_source_revision
 from .knowledge import canonical, rule_text
 
 RELATION_POLICY_VERSION = 'rules-v4-action-entailment'
@@ -28,12 +29,26 @@ def protected_literals(data):
     return protected_facts(rule_text(data))
 
 
-def classify(left, right, semantic=None):
-    if any(left[k] != right[k] for k in ('language','repository_id','scope','compatibility_key')):
+def source_derived_compatibility(connection, rule_id, compatibility_key):
+    """Prove derivation from immutable sources, never from a key's shape alone."""
+    rows = connection.execute(
+        "SELECT json_extract(e.details,'$.source_revision'), json_extract(e.details,'$.compatibility_key') "
+        "FROM knowledge_sources s JOIN experiences e ON e.id=s.experience_id WHERE s.rule_id=?", (rule_id,)).fetchall()
+    return bool(rows) and all(same_source_revision(compatibility_key, revision)
+        and (contract is None or same_source_revision(contract, revision)) for revision, contract in rows)
+
+
+def classify(left, right, semantic=None, *, verified_source_compatibility=False):
+    same_key = left['compatibility_key'] == right['compatibility_key']
+    same_content = verified_source_compatibility and same_source_revision(left['compatibility_key'], right['compatibility_key'])
+    if any(left[k] != right[k] for k in ('language','repository_id','scope')) or not (same_key or same_content):
         return 'different_scope', {'reason':'语言、仓库或兼容域不同'}
     if not overlaps(left, right):
         return 'compatible', {'reason':'代码目标范围不重叠'}
-    if canonical(left) == canonical(right):
+    # The stored fingerprints and rule payloads remain unchanged. Only this
+    # proven same-content comparison disregards historical Git metadata.
+    comparable = left if same_key else left | {'compatibility_key': right['compatibility_key']}
+    if canonical(comparable) == canonical(right):
         return 'equivalent', {'reason':'完整规则和条件精确相同', 'method':'exact'}
     if left['required_capabilities'] != right['required_capabilities']:
         return 'unknown', {'reason':'能力要求不同，未证明适用条件相交'}

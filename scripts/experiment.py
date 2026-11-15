@@ -117,6 +117,7 @@ class FrozenSearchStore:
         from backend.experience.policy import to_model_reference
         context.pop('compatibility_key',None)
         context.pop('source_revision',None)
+        context.pop('runner_hash',None)
         return [to_model_reference(item) for item in self.retrieve_experiences(query,**context)]
 
     def retrieve_experiences(self, query="", *, language, repository_id, error_types, limit=5, capabilities=None):
@@ -304,7 +305,8 @@ def run_trial(spec: dict, case: dict, settings: Settings, store, original: dict,
 
     def make_agent(tools, _api_store):
         return Agent(ChatClient(settings), tools.execute_tool, store,
-                     use_experience=spec["use_experience"], timeout_seconds=settings.task_timeout)
+                     use_experience=spec["use_experience"], timeout_seconds=settings.task_timeout,
+                     retrieval_strategy="baseline")
 
     app = create_app(settings, agent_factory=make_agent)
     try:

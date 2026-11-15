@@ -3,6 +3,7 @@ from graphlib import CycleError, TopologicalSorter
 
 from pydantic import ValidationError
 
+from backend.projects import same_source_revision
 from backend.shared import ExperienceCreate
 from .store import _file_keys, _issue_key, _normalized, _source_issues, _unique_text
 
@@ -26,7 +27,13 @@ def build_preview(sources, ids, *, automatic=False):
         if (source.language, source.scope, source.repository_id) != (first.language, first.scope, first.repository_id):
             report("scope_mismatch", "待合并经验必须具有相同的语言、使用范围和所属仓库。", pair,
                    "scope", "按相同仓库、语言和使用范围分别选择来源。")
-        if (source.compatibility_key or source.source_revision) != (first.compatibility_key or first.source_revision):
+        first_key = first.compatibility_key or first.source_revision
+        source_key = source.compatibility_key or source.source_revision
+        same_domain = first_key == source_key or (
+            same_source_revision(first_key, first.source_revision) and
+            same_source_revision(source_key, source.source_revision) and
+            same_source_revision(first_key, source_key))
+        if not same_domain:
             report('version_mismatch', '来源兼容域或版本不同，不能自动放宽。', pair, 'compatibility_key', '登记兼容域或分别保留。')
         if set(source.applicability) != set(first.applicability):
             report("applicability_mismatch", "适用条件不同，请分别保留这些经验。", pair,
@@ -96,6 +103,12 @@ def build_preview(sources, ids, *, automatic=False):
         return result()
     errors = _unique_text(issue.error_type for issue in ordered)
     revisions = {source.source_revision for source in sources}
+    revision = next(iter(revisions)) if len(revisions) == 1 else None
+    if all(same_source_revision(first.source_revision, source.source_revision) for source in sources):
+        # Equivalent legacy host-Git prefixes must not erase the content boundary
+        # needed to recognize this merged record's derived compatibility key.
+        revision = next((source.source_revision for source in sources
+                         if source.source_revision.startswith('tree:')), first.source_revision)
     try:
         preview = ExperienceCreate(
             schema_version=3,
@@ -111,7 +124,7 @@ def build_preview(sources, ids, *, automatic=False):
             verification="\n".join(_unique_text(source.verification for source in sources)),
             tags=_unique_text(tag for source in sources for tag in source.tags),
             language=first.language, scope=first.scope, repository_id=first.repository_id,
-            source_revision=next(iter(revisions)) if len(revisions) == 1 else None,
+            source_revision=revision,
             applicability=first.applicability, issues=ordered, evidence=list(evidence.values()), merged_from=ids,
         )
     except ValidationError:

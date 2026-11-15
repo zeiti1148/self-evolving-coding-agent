@@ -31,7 +31,15 @@ def accept(*, live=False, output: Path | None = None) -> dict:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     directory = (ROOT / ".cache/acceptance" / stamp).resolve()
     directory.mkdir(parents=True)
-    settings = replace(Settings.from_env(), workspace_root=directory / "workspaces", database_path=directory / "experiences.db")
+    configured = Settings.from_env()
+    # These two reviewed fixtures intentionally share the null-to-guest contract.
+    # Unrelated source revisions must not become compatible merely by sharing a repository label.
+    definitions = dict(configured.project_definitions)
+    for identifier, _ in TASKS:
+        definitions[identifier] = configured.project(identifier).model_copy(
+            update={"experience_contract": "acceptance:null-to-guest:v1"})
+    settings = replace(configured, workspace_root=directory / "workspaces", database_path=directory / "experiences.db",
+                       project_definitions=definitions, enable_knowledge_models=configured.enable_knowledge_models if live else False)
     originals = {key: inventory(path) for key, path in settings.projects.items()}
     models = []
     def make_model():
@@ -41,7 +49,8 @@ def accept(*, live=False, output: Path | None = None) -> dict:
     app = create_app(settings, llm_factory=None if live else make_model)
     report = {"mode": "live-model" if live else "scripted-model-real-tools", "created_at": stamp,
               "directory": str(directory), "requested_model": settings.llm_model if live else None,
-              "task_timeout_seconds": settings.task_timeout, "tasks": [], "baselines": {}, "passed": False}
+              "task_timeout_seconds": settings.task_timeout, "tasks": [], "baselines": {}, "passed": False,
+              "experience_contract": "acceptance:null-to-guest:v1", "retrieval_strategy": settings.experience_retrieval_strategy}
     destination = output or directory / "report.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -81,6 +90,16 @@ def accept(*, live=False, output: Path | None = None) -> dict:
                 assert originals[project] == inventory(settings.projects[project]), "Original fixture changed"
                 if not live:
                     assert any(r.error_code == "TEST_FAILED" for r in result.tool_results), "Missing real initial failure"
+                from backend.experience.jobs import report as maintenance_report
+                maintenance_deadline = time.monotonic() + 120
+                while True:
+                    maintenance = maintenance_report(settings.database_path)
+                    assert not maintenance.failed_jobs, "Experience verification maintenance failed"
+                    if not maintenance.pending_jobs:
+                        break
+                    if time.monotonic() > maintenance_deadline:
+                        raise AssertionError("Experience verification maintenance did not finish")
+                    time.sleep(0.15)
                 if len(report["tasks"]) == 2:
                     first_id = report["tasks"][0]["status"]["result"]["experience_id"]
                     assert first_id in result.tool_results[-1].metadata["retrieved_experience_ids"]

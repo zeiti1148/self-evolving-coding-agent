@@ -21,7 +21,8 @@ class ScriptedLLM:
                 "verification": "Use the unchanged Maven tests.", "tags": ["java", "null-safety"],
             })}
         task = json.loads(messages[1]["content"])
-        self.received_experience_ids = [item["id"] for item in task["reference_experiences"]]
+        self.received_experience_ids = list(dict.fromkeys([
+            *self.received_experience_ids, *(item["id"] for item in task["reference_experiences"])]))
         profile = "ProfileFormatter" in task["task"]
         name = "ProfileFormatter" if profile else "GreetingService"
         path = f"src/main/java/dev/selfevolving/benchmark/{name}.java"

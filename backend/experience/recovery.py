@@ -66,6 +66,27 @@ def grant_valid(connection, grant, *, files=True):
     return True
 
 
+def grant_matches_context(grant, context):
+    """Match immutable evidence scope while accepting old host-Git prefixes.
+
+    Repository and runner identity remain exact. A compatibility key may follow
+    content identity only when both sides derived it from their source version;
+    separately named business contracts retain exact matching.
+    """
+    from backend.projects import same_source_revision
+    keys = ('repository_id', 'compatibility_key', 'source_revision', 'runner_hash')
+    if any(not context.get(key) or not grant.get(key) for key in keys):
+        return False
+    if any(context[key] != grant[key] for key in ('repository_id', 'runner_hash')):
+        return False
+    if not same_source_revision(context['source_revision'], grant['source_revision']):
+        return False
+    return (context['compatibility_key'] == grant['compatibility_key'] or
+            same_source_revision(context['compatibility_key'], context['source_revision']) and
+            same_source_revision(grant['compatibility_key'], grant['source_revision']) and
+            same_source_revision(context['compatibility_key'], grant['compatibility_key']))
+
+
 def active_grants(connection, *, context=None, files=True):
     if not connection.execute("SELECT 1 FROM sqlite_master WHERE name='knowledge_reuse_grants'").fetchone():
         return {}
@@ -73,7 +94,7 @@ def active_grants(connection, *, context=None, files=True):
     for row in connection.execute('SELECT g.data,j.state FROM knowledge_reuse_grants g JOIN knowledge_recoveries j ON j.id=g.recovery_id'):
         grant=json.loads(row['data'])
         if row['state']!='succeeded':continue
-        if context is not None and any(not context.get(k) or context[k]!=grant[k] for k in ('repository_id','compatibility_key','source_revision','runner_hash')):
+        if context is not None and not grant_matches_context(grant, context):
             continue
         if grant_valid(connection,grant,files=files):result[grant['rule_id']]=grant
     # A grant cannot silently restore unavailable execution prerequisites.

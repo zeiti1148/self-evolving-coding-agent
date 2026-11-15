@@ -107,16 +107,38 @@ def validate_project_language(project: ProjectDefinition) -> None:
         raise ValueError("Registered language must match one unambiguous project build marker")
 
 
+_SOURCE_REVISION = re.compile(r"(?:git:(?:[a-f0-9]{40}|[a-f0-9]{64});)?tree:([a-f0-9]{64})")
+
+
+def same_source_revision(left: str | None, right: str | None) -> bool:
+    """Match immutable source content without rewriting historical Git provenance.
+
+    Git metadata can change without changing the verified project files. Only
+    complete, generated revision strings share this compatibility rule; named
+    business contracts and other opaque revisions still require exact equality.
+    """
+    if not isinstance(left, str) or not isinstance(right, str) or not left or not right:
+        return False
+    if left == right:
+        return True
+    first, second = _SOURCE_REVISION.fullmatch(left), _SOURCE_REVISION.fullmatch(right)
+    return bool(first and second and first.group(1) == second.group(1))
+
+
 def source_revision(path: Path, baseline: dict[str, str] | None = None) -> str:
     # The file digest identifies dirty working trees and repositories without Git too.
     from backend.tools.workspace import inventory
     fingerprint = hashlib.sha256(json.dumps(inventory(path) if baseline is None else baseline, sort_keys=True).encode()).hexdigest()
     try:
-        process = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"],
-                                 capture_output=True, text=True, timeout=5, check=False)
-        head = process.stdout.strip()
-        if process.returncode == 0 and re.fullmatch(r"[a-f0-9]{40,64}", head):
-            return f"git:{head};tree:{fingerprint}"
+        process = subprocess.run(["git", "-C", str(path), "rev-parse", "--show-toplevel", "HEAD"],
+                                 capture_output=True, text=True, encoding="utf-8", timeout=5, check=False)
+        lines = process.stdout.strip().splitlines()
+        # Git walks up parent directories. An uploaded ZIP or monorepo child
+        # must not inherit the hosting application's unrelated commit identity.
+        if (process.returncode == 0 and len(lines) == 2
+                and Path(lines[0]).resolve() == path.resolve()
+                and re.fullmatch(r"(?:[a-f0-9]{40}|[a-f0-9]{64})", lines[1])):
+            return f"git:{lines[1]};tree:{fingerprint}"
     except (OSError, subprocess.TimeoutExpired):
         pass
     return f"tree:{fingerprint}"

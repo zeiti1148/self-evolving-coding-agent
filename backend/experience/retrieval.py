@@ -2,9 +2,16 @@
 import json
 import re
 
+from backend.projects import same_source_revision
 from .database import read_only as connect
 from .knowledge import effective_rules, rule_text
 from .equivalence import equivalent_groups
+from .relations import source_derived_compatibility
+# Public compatibility exports for evaluation clients; checked-rule retrieval
+# remains the only production path for assembling model references.
+from .retrieval_evidence import (adaptive_retrieval_evidence, build_retrieval_query,
+                                 error_types_in, normalize_error_type, relevance,
+                                 rule_identity, terms)
 
 
 def lexical_candidates(connection, query, limit=50):
@@ -57,7 +64,13 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
                 continue
             target=compatibility_key or source_revision
             if target and data['scope']=='project' and data['compatibility_key']!=target:
-                continue
+                # Older uploads inherited the host repository's Git prefix.
+                # Compare content only for source-derived compatibility keys;
+                # an explicit, independent business contract must stay exact.
+                derived = compatibility_key is None or same_source_revision(compatibility_key, source_revision)
+                if (not derived or not same_source_revision(data['compatibility_key'], target)
+                        or not source_derived_compatibility(connection, row['id'], data['compatibility_key'])):
+                    continue
             entries.append((dict(row),data))
     vector_scores={}
     if query and embedding_rows:

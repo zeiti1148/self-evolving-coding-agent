@@ -7,9 +7,10 @@ import time
 from uuid import uuid4
 
 from backend.shared import ConsolidationReport
+from backend.projects import same_source_revision
 from .database import connect
 from .knowledge import backfill, canonical, now, CURRENT_RULES, is_current
-from .relations import classify, RELATION_POLICY_VERSION
+from .relations import classify, source_derived_compatibility, RELATION_POLICY_VERSION
 
 PAGE_SIZE = 40
 LEASE_SECONDS = 120
@@ -57,14 +58,22 @@ def process_page(path, job, semantic=None):
             if changed and not current:
                 connection.execute("UPDATE knowledge_rules SET state='ready' WHERE id=? AND state='pending'",(rule['id'],))
             return 0
+        connection.create_function('same_source_revision', 2, same_source_revision, deterministic=True)
         candidates = connection.execute('SELECT * FROM knowledge_rules WHERE language=? AND repository_id=? AND scope=? '
-            'AND compatibility_key=? AND id>? AND id!=? AND state!=\'needs_review\' AND id IN '
+            'AND (compatibility_key=? OR same_source_revision(compatibility_key,?)) AND id>? AND id!=? AND state!=\'needs_review\' AND id IN '
             '(SELECT a.rule_id FROM knowledge_targets a JOIN knowledge_targets b '
             "ON (a.file=b.file OR a.file='' OR b.file='') AND (a.symbol=b.symbol OR a.symbol='' OR b.symbol='') "
             'WHERE b.rule_id=?) AND EXISTS(SELECT 1 FROM knowledge_sources s WHERE s.rule_id=knowledge_rules.id AND s.experience_id NOT IN ('
             'SELECT source_id FROM experience_merge_sources UNION SELECT previous_id FROM experience_publication_revisions '
             'UNION SELECT experience_id FROM experience_retirements)) ORDER BY id LIMIT ?',
-            (rule['language'],rule['repository_id'],rule['scope'],rule['compatibility_key'],job['cursor'],rule['id'],rule['id'],PAGE_SIZE+1)).fetchall()
+            (rule['language'],rule['repository_id'],rule['scope'],rule['compatibility_key'],rule['compatibility_key'],
+             job['cursor'],rule['id'],rule['id'],PAGE_SIZE+1)).fetchall()
+        # A revision-looking explicit contract is insufficient: each differing
+        # key must be backed by its own immutable source revision.
+        source_derived = source_derived_compatibility(connection, rule['id'], rule['compatibility_key'])
+        compatible_candidates = {row['id'] for row in candidates[:PAGE_SIZE]
+            if row['compatibility_key'] == rule['compatibility_key'] or source_derived
+            and source_derived_compatibility(connection, row['id'], row['compatibility_key'])}
         embedded = connection.execute('SELECT 1 FROM knowledge_embeddings WHERE rule_id=? AND model_version=?',
                                       (rule['id'],semantic.version)).fetchone() if semantic else True
     if semantic and not embedded:
@@ -75,6 +84,8 @@ def process_page(path, job, semantic=None):
     version = semantic.version if semantic else RELATION_POLICY_VERSION
     data, decisions = json.loads(rule['data']), []
     for row in candidates[:PAGE_SIZE]:
+        if row['id'] not in compatible_candidates:
+            continue
         left, right = sorted([rule['id'],row['id']])
         with connect(path) as connection:
             previous = connection.execute('SELECT model_version,status FROM knowledge_relations WHERE left_rule=? AND right_rule=?',
@@ -88,7 +99,8 @@ def process_page(path, job, semantic=None):
             continue
         if previous and (previous['model_version'] == version or previous['status'] == 'resolved'):
             continue
-        kind, details = classify(data, json.loads(row['data']), semantic)
+        kind, details = classify(data, json.loads(row['data']), semantic,
+                                 verified_source_compatibility=row['compatibility_key'] != rule['compatibility_key'])
         decisions.append((left,right,kind,canonical(details)))
         if semantic:
             with connect(path) as connection:

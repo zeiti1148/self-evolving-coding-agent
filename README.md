@@ -31,6 +31,12 @@ Java/Python checkout 来源各有 18 项固定测试，booking 目标各有 12 �
 
 Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依赖；可通过 `PYTHON_EXECUTABLE` 指定解释器。工作副本不复制 `.env*`、Git 元数据和常见私钥文件；测试、依赖和构建配置保持只读。
 
+2026-11-14 增加 [V3 三组对照实验](docs/experiments-v3.md)：六个 Java/Python 目标、无经验/完整经验/精简经验、baseline/contextual/adaptive 检索，以及 single/multi 模式。运行 `.\.venv\Scripts\python.exe scripts/experiment_v3.py` 默认只打印 54 次试验计划；真实调用需要 `--live --experience-db <独立训练参考库>`。所有试验使用冻结参考库与独立输出，检查训练来源泄漏，记录失败、用量缺失和配对比较。
+
+[扩展实验与优化结果](docs/reports/v3-expanded-2026-11-14.md)：每条件重复 3 次，原版本 108/108、adaptive 复验 54/54 通过原始测试。候选经验少、无经验组成功率已达上限，测试通过后继续注入又增加上下文。新增 adaptive 按具体异常或最近失败测试触发检索，测试成功后撤下参考；相对 contextual，完整/精简经验组的平均修复 token 分别下降 18.4%/10.4%。无经验组同期上升 8.0%，这是分批小样本中的观测开销改善，尚不证明复杂任务修复能力提高。应用设置 `EXPERIENCE_RETRIEVAL_STRATEGY=adaptive` 可启用，未设置时仍兼容 contextual；本地配置已切换 adaptive，下次启动后生效。最终后端回归 636 passed、1 skipped，前端接口联调通过。
+
+2026-11-14 增加[经验合并建议](docs/reports/merge-suggestions-2026-11-14.md)：经验页自动发现同范围内相关且兼容的记录，展示共同规则、去重后的验证数、版本提示及未推荐原因。点击建议进入原有预览，确认后才保存；新建议接口严格只读。当前库的 174 个同范围配对全部因适用条件不同而未推荐，原始经验保持不变。[详细设计](docs/superpowers/specs/2026-11-14-merge-suggestions-design.md)与[实施计划](docs/superpowers/plans/2026-11-14-merge-suggestions.md)记录了规则和验证范围。
+
 ## 已合并的第二阶段基线
 
 已实现同步 Agent 循环、受控工具、FastAPI 四个业务接口、SQLite 经验模块及 Vue 工作台。两个 Java 样例已通过脚本模型回归与真实模型 `deepseek-flash` 验收，均运行真实文件工具、Maven 和 SQLite。

@@ -10,6 +10,7 @@ import { useApiContext } from '../api/context'
 import type { Experience, ExperienceFilters, ExperienceScope, MergePreview, ProjectLanguage, ReuseStatus } from '../api/contracts'
 import AppIcon from '../components/AppIcon.vue'
 import ExperienceKnowledge from '../components/ExperienceKnowledge.vue'
+import MergeSuggestionsPanel from '../components/MergeSuggestions.vue'
 import { excerpt, experienceTitle, repositoryLabel } from '../utils/experiencePresentation'
 const { api } = useApiContext()
 const route = useRoute()
@@ -39,6 +40,8 @@ const maintenanceRevision = ref(0)
 const workflowBusy = computed(() => mergeBusy.value || maintenanceBusy.value)
 const mergeError = ref('')
 const mergeSuccess = ref('')
+const suggestionRefresh = ref(0)
+const suggestionsOpen = ref(false)
 let requestedOffset = 0
 let version = 0
 let mergeVersion = 0
@@ -77,6 +80,13 @@ function applyFilters() {
   promotionId.value = ''; selected.value = []; invalidatePreview(); void load(0)
 }
 function resetFilters() { language.value = ''; scope.value = ''; repositoryId.value = ''; reuseStatus.value = ''; applyFilters() }
+function selectSuggestion(ids: string[]) {
+  if (workflowBusy.value) return
+  selected.value = [...ids]
+  void prepareMerge()
+}
+function publicationUpdated() { maintenanceChanged() }
+function toggleSuggestions(event: Event) { suggestionsOpen.value = (event.currentTarget as HTMLDetailsElement).open }
 async function prepareMerge() {
   if (!api.previewMerge || workflowBusy.value || selected.value.length < 2 || selected.value.length > 10) return
   invalidatePreview()
@@ -102,17 +112,20 @@ async function confirmMerge() {
     if (current !== mergeVersion || active.signal.aborted) return
     selected.value = []; preview.value = null
     mergeSuccess.value = `合并经验已生成：${merged.task_summary}。原始记录与验证证据已保留。`
+    suggestionRefresh.value++
+    maintenanceRevision.value++
     await load(0)
   } catch (cause) {
     if (current === mergeVersion && !active.signal.aborted) {
       mergeError.value = cause instanceof Error ? cause.message : '保存合并经验失败，请重新预览。'
       preview.value = null
+      suggestionRefresh.value++
     }
   } finally { if (current === mergeVersion) mergeBusy.value = false }
 }
 onMounted(() => void load(0))
-function maintenanceChanged() { maintenanceRevision.value++; selected.value = []; invalidatePreview(); void load(0) }
-watch(view,value=>{if(value==='originals')void load(0)})
+function maintenanceChanged() { maintenanceRevision.value++; suggestionRefresh.value++; selected.value = []; invalidatePreview(); void load(0) }
+watch(view,value=>{suggestionsOpen.value=false;if(value==='originals')void load(0)})
 onBeforeUnmount(() => { version++; mergeVersion++; controller?.abort(); mergeController?.abort() })
 function date(value: string) { return new Date(value).toLocaleString('zh-CN', { hour12: false }) }
 </script>
@@ -121,7 +134,7 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
   <nav v-if="hasLibrary" class="experience-view-tabs" aria-label="经验展示方式"><button :aria-current="view==='knowledge'?'page':undefined" @click="view='knowledge'">经验检索</button><button :aria-current="view==='activity'?'page':undefined" @click="view='activity'">合并与冲突</button><button :aria-current="view==='originals'?'page':undefined" @click="view='originals'">原始记录</button></nav>
   <ExperienceLibrary v-if="hasLibrary&&view==='knowledge'" :filters="filters" :refresh-key="maintenanceRevision" @changed="maintenanceChanged" @activity="view='activity'" />
   <ExperienceDetail v-if="detailId&&(!hasLibrary||view==='originals')" :identifier="detailId" @promote="promotionId = $event" />
-  <ExperiencePromotion v-if="promotionId" :key="promotionId" :source-id="promotionId" @close="promotionId = ''" @published="load(0)" />
+  <ExperiencePromotion v-if="promotionId" :key="promotionId" :source-id="promotionId" @close="promotionId = ''" @published="publicationUpdated" />
   <section v-if="!hasLibrary||view!=='knowledge'" class="panel experience-panel" aria-labelledby="experience-title">
     <div class="panel-heading split"><div class="heading-inline"><AppIcon name="book" /><h2 id="experience-title">{{hasLibrary?(view==='activity'?'自动处理记录':'原始来源记录'):'已积累的经验'}}</h2></div><span class="text-muted">{{view==='activity'?'查看前后变化与处理依据':'完整保留，按创建时间倒序'}}</span></div>
     <details class="filter-disclosure"><summary>筛选记录 <span v-if="Object.keys(filters).length">· {{ Object.keys(filters).length }} 项已生效</span><span aria-hidden="true">⌄</span></summary>
@@ -135,6 +148,10 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
     <ExperienceAutoMerge v-if="!hasLibrary||view==='activity'" :filters="detailId?{}:filters" :experience-id="detailId||undefined" :refresh-key="maintenanceRevision" @changed="load(0)" />
     <ExperienceMaintenance v-if="!hasLibrary||view==='activity'" :filters="filters" :disabled="mergeBusy" @busy="maintenanceBusy = $event" @changed="maintenanceChanged" />
     <div v-if="!hasLibrary||view==='originals'">
+    <details v-if="mergeSupported && api.getMergeSuggestions" class="manual-suggestions" data-testid="manual-merge-suggestions" @toggle="toggleSuggestions">
+      <summary><span>手动合并建议</span><span class="text-muted">按需检查历史来源，预览后确认</span></summary>
+      <MergeSuggestionsPanel v-if="suggestionsOpen" :filters="filters" :refresh-key="suggestionRefresh" :disabled="workflowBusy" @select="selectSuggestion" />
+    </details>
     <div v-if="mergeSupported" class="merge-toolbar"><span>已选择 {{ selected.length }} / 10 条<span class="text-muted">，选择至少 2 条后预览</span></span><div><button class="button secondary small" type="button" data-testid="preview-merge" :disabled="selected.length < 2 || workflowBusy" @click="prepareMerge">{{ mergeBusy ? '处理中…' : '预览经验合并' }}</button><button v-if="selected.length" class="text-button" type="button" :disabled="workflowBusy" @click="selected = []; invalidatePreview()">清空选择</button></div></div>
     <div v-if="mergeError" class="merge-message error-notice" role="alert">{{ mergeError }}</div>
     <p v-if="mergeSuccess" class="merge-message success-notice" role="status">{{ mergeSuccess }}</p>
@@ -166,6 +183,7 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
 </template>
 
 <style scoped>
+.manual-suggestions{margin:16px 24px;border:1px solid var(--line);border-radius:10px}.manual-suggestions>summary{display:flex;flex-wrap:wrap;gap:6px 16px;padding:12px 16px;font-size:12px}.manual-suggestions>summary>span:first-child{font-weight:600}.manual-suggestions :deep(.suggestions-panel){margin:0;border:0;border-top:1px solid var(--line);border-radius:0;padding:16px}
 .catalog-page-heading{margin-bottom:16px}.catalog-page-heading h1{font-size:26px}.catalog-page-heading p{font-size:12px;margin-top:4px}.experience-view-tabs{display:flex;gap:6px;padding:5px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;width:fit-content;max-width:100%}.experience-view-tabs button{padding:8px 20px;font-size:12px;border-radius:8px;background:transparent;color:var(--muted);font-weight:600;white-space:nowrap}.experience-view-tabs button[aria-current=page]{background:var(--accent);color:var(--on-accent)}
 @media(max-width:600px){.experience-view-tabs{width:100%}.experience-view-tabs button{padding:10px 7px;flex:1;font-size:12px}}
 

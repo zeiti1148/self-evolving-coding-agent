@@ -93,7 +93,8 @@ class RecordingModel:
 def run(live: bool, directory: Path) -> dict:
     directory.mkdir(parents=True, exist_ok=False)
     base = Settings.from_env()
-    settings = replace(base, workspace_root=directory / "workspaces", database_path=directory / "experiences.db")
+    settings = replace(base, workspace_root=directory / "workspaces", database_path=directory / "experiences.db",
+                       enable_knowledge_models=base.enable_knowledge_models if live else False)
     repairs = json.loads((ROOT / "backend/tests/fixtures/multi_issue_fixes.json").read_text(encoding="utf-8"))
     report = {"mode": "live" if live else "scripted", "created_at": datetime.now(timezone.utc).isoformat(),
               "tasks": [], "baselines": {}, "merge": {}, "passed": False}
@@ -117,6 +118,25 @@ def run(live: bool, directory: Path) -> dict:
 
     def save():
         (directory / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    def wait_for_maintenance(client, identifier):
+        # Saving raw experience is durable before asynchronous rule review finishes.
+        # Observe the normal worker through its public status endpoint; never mark
+        # fixture rules ready or bypass the same eligibility checks users face.
+        deadline = time.monotonic() + 90
+        status = {}
+        while time.monotonic() < deadline:
+            response = client.get(f"/api/experiences/{identifier}/maintenance")
+            response.raise_for_status()
+            status = response.json()
+            rules = status["rules"]
+            if rules and all(rule["state"] == "ready" and rule["effective_status"] == "active" for rule in rules):
+                return {"experience_id": identifier, "rule_count": len(rules), "ready": True}
+            if any(rule["state"] in {"failed", "needs_review"} for rule in rules):
+                raise RuntimeError(f"Experience maintenance requires review: {identifier}")
+            time.sleep(.1)
+        raise RuntimeError(f"Experience maintenance did not finish: {identifier}; "
+                           f"states={[rule['state'] for rule in status.get('rules', [])]}")
 
     def submit(client, identifier):
         active["project"] = identifier
@@ -150,6 +170,7 @@ def run(live: bool, directory: Path) -> dict:
         assert saved.language == project.language and saved.repository_id == project.repository_id
         assert len(saved.issues) >= 3 and saved.evidence[0].tests == project.expected_tests
         task["experience"] = saved.model_dump(mode="json")
+        task["maintenance"] = wait_for_maintenance(client, saved.id)
         task["model_reference_ids"] = [entry["id"] for entry in json.loads(models[-1].requests[0][1]["content"])["reference_experiences"]]
         if not live:
             test_results = [r for r in result["tool_results"] if r["tool_name"] == "run_tests"]
@@ -176,13 +197,14 @@ def run(live: bool, directory: Path) -> dict:
             components = [experience, repeated]
             body = {"experience_ids": [entry.id for entry in components]}
             preview = client.post("/api/experiences/merge-preview", json=body)
-            assert preview.status_code == 200 and preview.json()["can_merge"]
+            assert preview.status_code == 200 and preview.json()["can_merge"], preview.text
             response = client.post("/api/experiences/merge", json=body)
             assert response.status_code == 200, response.text
             merged = response.json()
             assert client.post("/api/experiences/merge", json=body).json()["id"] == merged["id"]
             report["merge"] = {"source_task_ids": [entry.source_task_id for entry in components], "independently_generated_sources": True,
                                "source_ids": body["experience_ids"], "result": merged, "idempotent": True}
+            report["merge"]["maintenance"] = wait_for_maintenance(client, merged["id"])
             if not live:
                 submit(client, "python-fulfillment-multi")
                 delivered = report["tasks"][-1]["model_reference_ids"]

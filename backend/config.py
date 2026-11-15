@@ -29,6 +29,7 @@ class Settings:
     task_timeout: float = 600.0
     use_experience: bool = True
     enable_knowledge_models: bool = False
+    experience_retrieval_strategy: str = "contextual"
     python_executable: Path = field(default_factory=lambda: Path(sys.executable))
     project_definitions: dict[str, ProjectDefinition] = field(default_factory=dict)
     projects: dict[str, Path] = field(default_factory=lambda: {
@@ -41,6 +42,8 @@ class Settings:
     })
 
     def __post_init__(self) -> None:
+        if self.experience_retrieval_strategy not in ("baseline", "contextual", "adaptive"):
+            raise ValueError("experience_retrieval_strategy must be baseline, contextual or adaptive")
         if type(self.llm_trust_env) is not bool:
             raise ValueError("llm_trust_env must be a boolean")
         for name in ("llm_timeout", "task_timeout"):
@@ -113,6 +116,7 @@ class Settings:
             task_timeout=float(os.environ.get("TASK_TIMEOUT_SECONDS", "600")),
             use_experience=experience == "true",
             enable_knowledge_models=os.environ.get("KNOWLEDGE_MODELS_ENABLED", "true").lower() == "true",
+            experience_retrieval_strategy=os.environ.get("EXPERIENCE_RETRIEVAL_STRATEGY", "contextual").strip().lower(),
             python_executable=path("PYTHON_EXECUTABLE", Path(sys.executable)),
             project_definitions=definitions,
             projects=projects,

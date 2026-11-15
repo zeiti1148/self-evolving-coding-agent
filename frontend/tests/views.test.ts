@@ -189,6 +189,9 @@ it('shows a readable contract error and recovers the experience page on retry', 
   const fetcher = vi.fn(async (url: RequestInfo | URL) => {
     if (String(url).includes('/automation?')) return new Response('{"items":[],"next_offset":null}')
     if (String(url).includes('/conflicts?')) return new Response('[]')
+    if (String(url).includes('/merge-suggestions')) return new Response(JSON.stringify({
+      suggestions: [], scanned_count: 0, eligible_count: 0, checked_pairs: 0, rejected: [], truncation_reasons: [],
+    }))
     return new Response(JSON.stringify(attempts++ === 0 ? { items: records } : records.slice(0, 6)))
   })
   const { wrapper } = await setup(ExperiencesView, { ...createHttpApi('', fetcher), getExperienceLibrary: undefined })
