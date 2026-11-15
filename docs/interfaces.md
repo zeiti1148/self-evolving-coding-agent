@@ -490,6 +490,7 @@ backend/api, backend/agent, backend/tools, backend/experience
 | GET | `/api/experiences/{id}/provenance` | nodes、edges、truncated；最多 100 节点/深度 10 |
 | POST | `/api/experiences/merge-preview` | `{experience_ids:[UUID,...]}`，返回 can_merge/conflicts/preview |
 | POST | `/api/experiences/merge` | 同预览输入，提交时重新校验，重复来源集合幂等 |
+| GET | `/api/experiences/merge-suggestions` | 自动生成兼容配对建议，严格只读；仍需预览和手动确认 |
 | POST | `/api/experiences/promotion-preview` | `{source_id:UUID}`，返回草稿、最终注入预览、current_global_id |
 | POST | `/api/experiences/publish-global` | `{source_id,draft,supersedes_id:null或当前globalID}`，返回新记录 |
 
@@ -500,6 +501,14 @@ Experience 支持 schema_version 1/2/3，新增 batch_id、reuse_status、derive
 角色事件含 event_id/task_id/agent_id/role/phase/status/sequence/snapshot_revision/summary/created_at/usage；usage.reported_tokens 未报告为 null，不能当 0。角色无工具权限；PatchProposal 必须含提案/角色 UUID、快照版本、路径、before_sha256 和完整 UTF-8 替换内容。程序统一验证应用并独立测试。
 
 所有模型入口使用 `ExperienceStore.retrieve_experiences` + `policy.to_model_reference`，不可直接注入管理 search/list 结果。检索审计与实际模型请求 ID/内容哈希分开记录；终态的测试事实另行判断。
+
+### 合并建议响应
+
+支持 `language`、`repository_id`、`scope`、`reuse_status` 和 `limit`（默认 10，1–20）。只分析当前 active V3、有条件/问题/证据的记录；每次最多扫描 1000 条、分析 200 条。新接口不会创建数据库或迁移旧库。
+
+返回 `suggestions`、`scanned_count`、`eligible_count`、`checked_pairs`、`rejected:[{reason,count}]`、`truncation_reasons`。每条建议有两个不同 `source_ids` 及对应 `source_titles`、language/scope/repository_id、reasons（shared_rules/shared_files）、shared_issue_count、issue_count、verification_count、revision_warning。验证数按任务和工具调用去重。只读保证覆盖经验内容和表结构；SQLite WAL 读者可能维护辅助文件，不能视为文件系统零副作用。
+
+拒绝原因 conditions/capabilities/unrelated/conflict 每对只归类一次；截断原因 scan_limit/candidate_limit/result_limit 独立报告。建议每组两条，点击后使用现有预览接口重新读取，最终写入仍走手动确认接口。相同来源集合的历史幂等行为保留；其他组合消费了来源时仍拒绝合并。
 
 ## 任务测试源码链接
 

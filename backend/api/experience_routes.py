@@ -57,6 +57,17 @@ def register_experience_routes(app, store):
             scope=scope, reuse_status=reuse_status, source_task_id=str(source_task_id) if source_task_id else None,
             active_only=active_only))
 
+    from backend.experience.suggestions import MergeSuggestions
+
+    @router.get("/merge-suggestions", response_model=MergeSuggestions)
+    def merge_suggestions(limit: Annotated[int, Query(ge=1, le=20)] = 10,
+                          language: Literal["java", "python"] | None = None,
+                          repository_id: Annotated[str | None, Query(min_length=1, max_length=200)] = None,
+                          scope: Literal["global", "project"] | None = None,
+                          reuse_status: Literal["active", "candidate", "legacy_unreviewed"] | None = None):
+        return operation(lambda: store.suggest_merges(limit=limit, language=language, repository_id=repository_id,
+                                                     scope=scope, reuse_status=reuse_status))
+
     @router.post("/merge-preview")
     def merge_preview(body: MergeRequest):
         return operation(lambda: store.preview_merge(sources(body)))

@@ -107,3 +107,30 @@ def test_frozen_experiment_uses_identical_policy_without_mutating_snapshot(tmp_p
     assert method(language="python", repository_id="A", error_types=[]) == [local]
     assert method(language="python", repository_id=None, error_types=[]) == []
     assert file_hash(frozen) == digest
+
+
+@pytest.mark.parametrize("scope", ["project", "global"])
+def test_compact_reference_preserves_all_rules_and_conditions(tmp_path, scope):
+    from backend.experience.policy import to_model_reference
+    entry = seed(ExperienceStore(tmp_path / "compact.db"), scope=scope,
+                 repository_id="A" if scope == "project" else None, capabilities=["normalize"])
+    full = to_model_reference(entry)
+    compact = to_model_reference(entry, representation="compact")
+    for field in ("id", "scope", "language", "reuse_status", "task_summary", "error_type", "root_cause", "solution",
+                  "applicability", "required_capabilities", "issues"):
+        assert compact[field] == full[field]
+    assert len(json.dumps(compact)) < len(json.dumps(full))
+    assert "verification" not in compact and "evidence_summary" not in compact
+    if scope == "global":
+        assert "private/source.py" not in json.dumps(compact)
+    else:
+        assert compact["repository_id"] == "A"
+
+
+@pytest.mark.parametrize("agent_type", ["single", "multi"])
+def test_runtime_rejects_misspelled_experiment_controls(agent_type, tmp_path):
+    from backend.agent.orchestrator import MultiAgentCoordinator
+    constructor = Agent if agent_type == "single" else MultiAgentCoordinator
+    for controls in (dict(experience_format="unknown"), dict(retrieval_strategy="unknown")):
+        with pytest.raises(ValueError):
+            constructor(None, None, None, **controls)

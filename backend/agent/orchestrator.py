@@ -7,7 +7,8 @@ import time
 from threading import RLock
 from uuid import uuid4
 
-from backend.experience.policy import to_model_reference
+from backend.experience.policy import to_model_reference, validate_reference_options
+from backend.experience.retrieval import adaptive_retrieval_evidence, build_retrieval_query
 from backend.shared import AgentEvent, AgentResult, ApplicationError, ErrorCode, TaskStep, ToolCall, ToolResult
 from .budget import RunBudget
 from .context import capture_context
@@ -37,9 +38,12 @@ def client_usage(client, started):
 
 
 class MultiAgentCoordinator:
-    def __init__(self, llm_factory, execute_tool, experience_store, *, use_experience=True, timeout_seconds=600):
+    def __init__(self, llm_factory, execute_tool, experience_store, *, use_experience=True, timeout_seconds=600,
+                 experience_format="full", retrieval_strategy="contextual"):
+        validate_reference_options(experience_format, retrieval_strategy)
         self.llm_factory, self.execute_tool, self.experiences = llm_factory, execute_tool, experience_store
         self.use_experience, self.timeout_seconds = use_experience, timeout_seconds
+        self.experience_format, self.retrieval_strategy = experience_format, retrieval_strategy
         self.last_run_audit = {}
 
     def run(self, request, *, on_step=None, on_event=None):
@@ -99,11 +103,25 @@ class MultiAgentCoordinator:
             if not self.use_experience:
                 return []
             try:
-                entries = self.experiences.retrieve_experiences(language=request.language, repository_id=request.repository_id,
-                    error_types=observed, capabilities=request.capabilities, limit=5)
+                query = build_retrieval_query(request.task_description, facts) if self.retrieval_strategy == "contextual" else ""
+                current_errors, reason = observed, None
+                if self.retrieval_strategy == "adaptive":
+                    evidence = adaptive_retrieval_evidence(request.task_description, results, request.language)
+                    query, current_errors, reason = evidence.query, list(evidence.error_types), evidence.reason
+                    if query is None:
+                        with lock:
+                            retrieval_events.append({"experience_ids": [], "error_types": current_errors, "reason": reason})
+                        return []
+                entries = self.experiences.retrieve_experiences(
+                    query=query,
+                    language=request.language, repository_id=request.repository_id,
+                    error_types=current_errors, capabilities=request.capabilities, limit=5)
+                event = {"experience_ids": [entry.id for entry in entries], "error_types": list(current_errors)}
+                if reason:
+                    event["reason"] = reason
                 with lock:
-                    retrieval_events.append({"experience_ids": [entry.id for entry in entries], "error_types": list(observed)})
-                return [to_model_reference(entry) for entry in entries]
+                    retrieval_events.append(event)
+                return [to_model_reference(entry, self.experience_format) for entry in entries]
             except Exception:
                 with lock:
                     retrieval_events.append({"experience_ids": [], "error": "经验检索暂时不可用"})
@@ -221,6 +239,9 @@ class MultiAgentCoordinator:
                     "elapsed_ms": round((time.monotonic()-extraction_started)*1000), "requests": reports,
                     "request_experience_ids": []})
         self.last_run_audit = {"task_id": request.task_id, "execution_mode": "multi", "decision_rounds": budget.decisions,
+            "language": request.language, "repository_id": request.repository_id,
+            "experience_enabled": self.use_experience, "experience_format": self.experience_format,
+            "retrieval_strategy": self.retrieval_strategy,
             "tool_calls": len(calls), "elapsed_ms": round((time.monotonic()-started)*1000),
             "retrieval_events": retrieval_events,
             "retrieved_experience_ids": list(dict.fromkeys(identifier for event in retrieval_events for identifier in event["experience_ids"])),

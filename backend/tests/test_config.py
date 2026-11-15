@@ -31,3 +31,12 @@ def test_model_environment_inheritance_is_explicit_and_validated(monkeypatch):
         Settings.from_env()
     with pytest.raises(ValueError, match="llm_trust_env"):
         replace(Settings(), llm_trust_env="false")
+
+
+def test_experience_retrieval_strategy_is_explicit_and_validated(monkeypatch):
+    for value in ("baseline", "contextual", "adaptive"):
+        monkeypatch.setenv("EXPERIENCE_RETRIEVAL_STRATEGY", value)
+        assert Settings.from_env().experience_retrieval_strategy == value
+    monkeypatch.setenv("EXPERIENCE_RETRIEVAL_STRATEGY", "guess")
+    with pytest.raises(ValueError, match="experience_retrieval_strategy"):
+        Settings.from_env()

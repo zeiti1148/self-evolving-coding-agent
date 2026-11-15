@@ -103,11 +103,11 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             if request.execution_mode == "multi":
                 agent = multi_agent_factory(tools, experiences) if multi_agent_factory else MultiAgentCoordinator(
                     factory, tools.execute_tool, experiences, use_experience=settings.use_experience,
-                    timeout_seconds=settings.task_timeout)
+                    timeout_seconds=settings.task_timeout, retrieval_strategy=settings.experience_retrieval_strategy)
             else:
                 agent = agent_factory(tools, experiences) if agent_factory else Agent(
                     factory(), tools.execute_tool, experiences, use_experience=settings.use_experience,
-                    timeout_seconds=settings.task_timeout)
+                    timeout_seconds=settings.task_timeout, retrieval_strategy=settings.experience_retrieval_strategy)
             callbacks = {"on_step": lambda step: tasks.append(task_id, step)}
             if request.execution_mode == "multi":
                 callbacks["on_event"] = lambda event: tasks.append_agent_event(task_id, event)

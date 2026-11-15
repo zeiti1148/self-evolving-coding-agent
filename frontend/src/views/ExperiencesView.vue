@@ -7,6 +7,7 @@ import { useApiContext } from '../api/context'
 import type { Experience, ExperienceFilters, ExperienceScope, MergePreview, ProjectLanguage, ReuseStatus } from '../api/contracts'
 import AppIcon from '../components/AppIcon.vue'
 import ExperienceKnowledge from '../components/ExperienceKnowledge.vue'
+import MergeSuggestionsPanel from '../components/MergeSuggestions.vue'
 const { api } = useApiContext()
 const route = useRoute()
 const detailId = computed(() => typeof route?.query.id === 'string' ? route.query.id : '')
@@ -28,6 +29,7 @@ const preview = shallowRef<MergePreview | null>(null)
 const mergeBusy = ref(false)
 const mergeError = ref('')
 const mergeSuccess = ref('')
+const suggestionRefresh = ref(0)
 let requestedOffset = 0
 let version = 0
 let mergeVersion = 0
@@ -66,6 +68,12 @@ function applyFilters() {
   promotionId.value = ''; selected.value = []; invalidatePreview(); void load(0)
 }
 function resetFilters() { language.value = ''; scope.value = ''; repositoryId.value = ''; reuseStatus.value = ''; applyFilters() }
+function selectSuggestion(ids: string[]) {
+  if (mergeBusy.value) return
+  selected.value = [...ids]
+  void prepareMerge()
+}
+function publicationUpdated() { suggestionRefresh.value++; void load(0) }
 async function prepareMerge() {
   if (!api.previewMerge || mergeBusy.value || selected.value.length < 2 || selected.value.length > 10) return
   invalidatePreview()
@@ -91,11 +99,13 @@ async function confirmMerge() {
     if (current !== mergeVersion || active.signal.aborted) return
     selected.value = []; preview.value = null
     mergeSuccess.value = `合并经验已生成：${merged.task_summary}。原始记录与验证证据已保留。`
+    suggestionRefresh.value++
     await load(0)
   } catch (cause) {
     if (current === mergeVersion && !active.signal.aborted) {
       mergeError.value = cause instanceof Error ? cause.message : '保存合并经验失败，请重新预览。'
       preview.value = null
+      suggestionRefresh.value++
     }
   } finally { if (current === mergeVersion) mergeBusy.value = false }
 }
@@ -106,7 +116,7 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
 <template>
   <div class="page-heading"><div><h1>经验记录</h1><p>按项目与语言查找修复知识，查看多个问题的处理顺序和验证证据。</p></div><RouterLink to="/" class="button secondary"><AppIcon name="plus" :size="17" />新建任务</RouterLink></div>
   <ExperienceDetail v-if="detailId" :identifier="detailId" @promote="promotionId = $event" />
-  <ExperiencePromotion v-if="promotionId" :key="promotionId" :source-id="promotionId" @close="promotionId = ''" @published="load(0)" />
+  <ExperiencePromotion v-if="promotionId" :key="promotionId" :source-id="promotionId" @close="promotionId = ''" @published="publicationUpdated" />
   <section class="panel experience-panel" aria-labelledby="experience-title">
     <div class="panel-heading split"><div class="heading-inline"><AppIcon name="book" /><h2 id="experience-title">已积累的经验</h2></div><span class="text-muted">按创建时间倒序</span></div>
     <form class="experience-filters" @submit.prevent="applyFilters">
@@ -116,6 +126,7 @@ function date(value: string) { return new Date(value).toLocaleString('zh-CN', { 
       <div class="repository-filter"><label for="experience-repository">仓库 ID</label><input id="experience-repository" v-model="repositoryId" placeholder="输入完整仓库 ID" :disabled="mergeBusy || scope === 'global'" maxlength="200" /></div>
       <div class="filter-actions"><button class="button secondary small" type="submit" :disabled="loading || mergeBusy">应用筛选</button><button class="text-button" type="button" :disabled="mergeBusy" @click="resetFilters">重置</button></div>
     </form>
+    <MergeSuggestionsPanel v-if="mergeSupported && api.getMergeSuggestions" :filters="filters" :refresh-key="suggestionRefresh" :disabled="mergeBusy" @select="selectSuggestion" />
     <div v-if="mergeSupported" class="merge-toolbar"><span>已选择 {{ selected.length }} / 10 条<span class="text-muted">，选择至少 2 条后预览</span></span><div><button class="button secondary small" type="button" data-testid="preview-merge" :disabled="selected.length < 2 || mergeBusy" @click="prepareMerge">{{ mergeBusy ? '处理中…' : '预览经验合并' }}</button><button v-if="selected.length" class="text-button" type="button" :disabled="mergeBusy" @click="selected = []; invalidatePreview()">清空选择</button></div></div>
     <div v-if="mergeError" class="merge-message error-notice" role="alert">{{ mergeError }}</div>
     <p v-if="mergeSuccess" class="merge-message success-notice" role="status">{{ mergeSuccess }}</p>

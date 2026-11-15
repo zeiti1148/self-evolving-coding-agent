@@ -1,5 +1,6 @@
 import type { AgentApi, TaskCreateRequest } from './contracts'
 import { readAgentEvents, readCreatedTask, readExperience, readExperiences, readMergedExperience, readMergePreview, readProjects, readPromotionPreview, readProvenance, readSteps, readTask } from './validation'
+import { readMergeSuggestions } from './validation'
 import { readTestSource, readTestSources } from './validation'
 import { readCodeChanges, readCodeDiff } from './codeDiffValidation'
 import { readTaskEvidence } from './evidenceValidation'
@@ -106,6 +107,11 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     getAgentEvents: (id, after = 0, signal) => request(`/api/tasks/${encodeURIComponent(id)}/agents?after_sequence=${after}&limit=100`, data => readAgentEvents(data, id, after), 'GET', undefined, signal),
     previewPromotion: (id, signal) => request('/api/experiences/promotion-preview', data => readPromotionPreview(data, id), 'POST', { source_id: id }, signal),
     publishGlobal: (id, draft, previous, signal) => request('/api/experiences/publish-global', readExperience, 'POST', { source_id: id, draft, supersedes_id: previous ?? null }, signal),
+    getMergeSuggestions: (filters = {}, signal) => {
+      const params = new URLSearchParams({ limit: '10' })
+      for (const key of ['language', 'repository_id', 'scope', 'reuse_status'] as const) if (filters[key] !== undefined) params.set(key, filters[key]!)
+      return request(`/api/experiences/merge-suggestions?${params}`, readMergeSuggestions, 'GET', undefined, signal)
+    },
     previewMerge: (ids, signal) => {
       const sources = [...ids]
       return request('/api/experiences/merge-preview', data => readMergePreview(data, sources), 'POST', { experience_ids: sources }, signal)
