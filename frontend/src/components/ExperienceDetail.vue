@@ -36,7 +36,7 @@ const relations: Record<string, string> = { merged_from: '合并自', derived_fr
         <button v-if="api.previewPromotion" class="button secondary small" :disabled="!record.evidence?.length || record.reuse_status === 'candidate'" @click="emit('promote', record.id)">通用化预览</button>
       </template>
       <div v-if="graph" class="provenance-graph"><h3>来源关系</h3><p v-if="!graph.edges.length" class="text-muted">原始任务经验，没有合并或通用化前序。</p>
-        <ul><li v-for="edge in graph.edges" :key="`${edge.source}:${edge.relation}:${edge.target}`"><RouterLink :to="{ path: '/experiences', query: { id: edge.source } }">{{ edge.source.slice(0, 8) }}</RouterLink> {{ relations[edge.relation] }} <RouterLink :to="{ path: '/experiences', query: { id: edge.target } }">{{ edge.target.slice(0, 8) }}</RouterLink></li></ul>
+        <ul><li v-for="edge in graph.edges" :key="`${edge.source}:${edge.relation}:${edge.target}`"><RouterLink :to="{ path: '/experiences', query: { id: edge.source, view: 'originals' } }">{{ edge.source.slice(0, 8) }}</RouterLink> {{ relations[edge.relation] }} <RouterLink :to="{ path: '/experiences', query: { id: edge.target, view: 'originals' } }">{{ edge.target.slice(0, 8) }}</RouterLink></li></ul>
         <p v-if="graph.truncated" class="warning-notice">来源较多，仅显示前 100 个节点及 10 层。可打开来源记录继续查看。</p>
       </div>
     </div>

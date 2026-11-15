@@ -12,7 +12,7 @@ from backend.shared import ApplicationError, ErrorCode, ExperienceCreate, Verifi
 
 def verification_passed(result, language: str) -> bool:
     counts = result.metadata
-    runner = "maven" if language == "java" else "pytest"
+    runner = {"java": "maven", "python": "pytest", "go": "go", "cpp": "ctest"}[language]
     return (result.success and counts.get("runner", runner) == runner
             and type(counts.get("tests")) is int and counts["tests"] > 0
             and all(type(counts.get(key, 0)) is int and counts.get(key, 0) == 0
@@ -23,7 +23,7 @@ def extraction_output_schema():
     """Describe only model-authored fields; provenance remains program-owned."""
     record = ExperienceCreate.model_json_schema()
     authored = {"task_summary", "error_type", "root_cause", "solution", "tags", "applicability",
-                "issues", "required_capabilities"}
+                "issues", "required_capabilities", "constraints"}
     definitions = record.pop("$defs", {})
     record["properties"] = {key: value for key, value in record["properties"].items() if key in authored}
     record["required"] = ["task_summary", "root_cause", "solution", "applicability", "issues"]
@@ -76,7 +76,7 @@ def _extract_and_save_experiences(llm, store, request, *, summary, changed_files
         raise ValueError("Extraction requires independent passing final verification")
     if not changed_files:
         raise ValueError("No changed source files support a repair experience")
-    runner = "maven" if request.language == "java" else "pytest"
+    runner = {"java": "maven", "python": "pytest", "go": "go", "cpp": "ctest"}[request.language]
     counts = results[-1].metadata
     evidence = VerificationEvidence(source_task_id=request.task_id, tool_call_id=calls[-1].id, runner=runner,
                                     tests=counts["tests"], failures=counts.get("failures", 0),
@@ -86,7 +86,11 @@ def _extract_and_save_experiences(llm, store, request, *, summary, changed_files
         {"role": "system", "content": (
             'Extract independent reusable repair knowledge. Return only JSON {"experiences":[...]} with 1–5 records, '
             "strictly conforming to the supplied output_schema. "
-            "Each record has task_summary, error_type, root_cause, solution, tags, applicability and ordered issues "
+            "Each record has task_summary, error_type, root_cause, solution, tags, applicability, constraints and issues. "
+            "Put every business restriction from top-level root_cause/solution into constraints; never drop qualifiers. "
+            "Array order alone is presentation. depends_on contains zero-based indices of actual prerequisite rules. "
+            "symbols, when known, use exact path#qualified.function names present in changed code; omit when uncertain. "
+            "Each issue has "
             "[{error_type,root_cause,solution,files}]. Each must have a distinct purpose and precise prerequisites. "
             "tags, applicability, required_capabilities and each issue's files must be arrays of strings, never a string or object. "
             "applicability and issues must be nonempty. required_capabilities may only contain supplied capability identifiers. "
@@ -129,8 +133,9 @@ def _extract_and_save_experiences(llm, store, request, *, summary, changed_files
         if not isinstance(raw, dict):
             raise ValueError("Every experience must be an object")
         data = dict(raw)
-        data.update(schema_version=3, language=request.language, scope="project", repository_id=request.repository_id,
+        data.update(schema_version=4 if "constraints" in raw else 3, language=request.language, scope="project", repository_id=request.repository_id,
                     source_revision=request.source_revision, source_task_id=request.task_id,
+                    compatibility_key=request.experience_contract or request.source_revision,
                     reuse_status="active", batch_id=None, merged_from=[], derived_from=[], supersedes_id=None,
                     evidence=[evidence.model_dump()],
                     verification=f"程序独立运行 {runner} 最终验证，{evidence.tests} 项测试全部通过；工具调用编号：{calls[-1].id}。")
@@ -145,9 +150,11 @@ def _extract_and_save_experiences(llm, store, request, *, summary, changed_files
             if isinstance(issue, dict):
                 issue["error_type"] = normalize_error_type(issue.get("error_type"))
         if isinstance(data.get("tags", []), list):
-            data["tags"] = [request.language, *[tag for tag in data.get("tags", []) if tag not in {"java", "python"}]]
+            data["tags"] = [request.language, *[tag for tag in data.get("tags", []) if tag not in {"java", "python", "go", "cpp"}]]
         item = ExperienceCreate.model_validate(data)
+        from backend.experience.grounding import ground_issues
         diagnostic["stage"] = "source_grounding"
+        ground_issues(item.issues, request.workspace, request.language)
         if not item.applicability or not item.issues or any(
                 not issue.files or not set(issue.files).issubset(changed_files) for issue in item.issues):
             raise ValueError("Every rule requires conditions and issues supported by changed files")

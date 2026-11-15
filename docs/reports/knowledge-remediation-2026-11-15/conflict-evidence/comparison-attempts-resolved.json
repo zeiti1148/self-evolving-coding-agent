@@ -1,0 +1,238 @@
+[
+  {
+    "pair_id": "4b652a68-d1e7-5fbb-88cc-502543a5daa0",
+    "attempt": 1,
+    "state": "failed",
+    "result": {
+      "conflict_check": {
+        "assessment": {
+          "conflicts": [
+            {
+              "left_issue": 0,
+              "left_quote": "在 get_unpacked_marks 的类分支中遍历 `reversed(obj.__mro__)` 而不是 `obj.__mro__`，使标记按基类到派生类顺序返回；保持 consider_mro=False 分支不变。",
+              "overlapping_condition": "两者都针对 `src/_pytest/mark/structures.py#get_unpacked_marks` 在 `consider_mro=True` 时处理类继承标记的 MRO 遍历顺序，且都涉及多继承/父类标记的收集顺序。",
+              "reason": "左侧要求改为 `reversed(obj.__mro__)`，即按基类到派生类顺序返回标记；右侧要求遍历 `obj.__mro__` 并让“本地类标记优先”，即按派生类到基类顺序处理。两者在 `consider_mro=True` 的类继承场景下对同一函数的 MRO 遍历方向及标记优先级给出互斥规定。",
+              "right_issue": 3,
+              "right_quote": "对类且 `consider_mro=True` 时遍历 `obj.__mro__`，每个类只读取其 `__dict__` 中本地 `pytestmark`，分别归一化后按 MRO/C3 顺序拼接；本地类标记优先，菱形根类只出现一次；不同基类的同名 marker 不去重。`consider_mro=False` 或非类对象只处理本地标记。"
+            },
+            {
+              "left_issue": 1,
+              "left_quote": "用 `reversed(obj.__mro__)` 遍历类 MRO，让父类 usefixtures 标记先于子类标记进入 own_markers，从而恢复 add_attr1 先于 add_attr2 的 fixture 执行顺序。",
+              "overlapping_condition": "两者都针对 `get_unpacked_marks` 在 `consider_mro=True` 时收集类 MRO 上的 `pytestmark`，并影响父类与子类 `usefixtures` 标记进入 `own_markers` 的先后顺序。",
+              "reason": "左侧明确要求父类标记先于子类标记，因此必须反向遍历 MRO；右侧明确要求按 `obj.__mro__` 遍历并让本地类标记优先，导致子类标记先于父类标记。两者在父类与子类 `usefixtures` 标记的读取顺序上互斥，会分别产生父类 fixture 先执行与子类 fixture 先执行的不同结果。",
+              "right_issue": 3,
+              "right_quote": "对类且 `consider_mro=True` 时遍历 `obj.__mro__`，每个类只读取其 `__dict__` 中本地 `pytestmark`，分别归一化后按 MRO/C3 顺序拼接；本地类标记优先，菱形根类只出现一次；不同基类的同名 marker 不去重。`consider_mro=False` 或非类对象只处理本地标记。"
+            }
+          ],
+          "reason": "发现两处冲突，均位于两个来源对 `get_unpacked_marks` 在 `consider_mro=True` 类继承场景下 MRO 遍历顺序的解决方案之间：左侧要求 `reversed(obj.__mro__)` 的基类优先顺序，右侧要求 `obj.__mro__` 且本地类优先的派生类优先顺序，二者对同一函数的标记收集顺序给出互斥规定。其余候选对只涉及返回值物化、参数新增或 `store_mark` 本地读取，未与左侧 MRO 方向形成直接矛盾。"
+        },
+        "candidates": [
+          {
+            "left_issue": 0,
+            "right_issue": 0,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 0,
+            "right_issue": 1,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 0,
+            "right_issue": 2,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 0,
+            "right_issue": 3,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 1,
+            "right_issue": 0,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 1,
+            "right_issue": 1,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 1,
+            "right_issue": 2,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 1,
+            "right_issue": 3,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          }
+        ],
+        "conflict_ids": [],
+        "policy": "cross-upload-conflicts-v1"
+      },
+      "model_requests": [
+        {
+          "api_configuration": {
+            "identity": "4f003362858407b3c4f55d13",
+            "key_fingerprint": "c5f83d792da0",
+            "key_present": true,
+            "model": "deepseek-flash",
+            "origin": "https://api.deepseek.com",
+            "source": "explicit_file",
+            "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+            "transport": "direct"
+          },
+          "attempt": 1,
+          "duration_ms": 13345,
+          "finish_reason": "stop",
+          "http_status": 200,
+          "phase": "conflict_detection",
+          "request_experience_hashes": [],
+          "request_experience_ids": [],
+          "requested_model": "deepseek-flash",
+          "response_id": "f1c2bd50-8948-4b5c-9c88-b0b12ec8d1dd",
+          "returned_model": "deepseek-flash",
+          "success": true,
+          "transport_events": [
+            {
+              "elapsed_ms": 1,
+              "event": "connection.connect_tcp.started"
+            },
+            {
+              "elapsed_ms": 60,
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "elapsed_ms": 60,
+              "event": "connection.start_tls.started"
+            },
+            {
+              "elapsed_ms": 106,
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "elapsed_ms": 106,
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "elapsed_ms": 107,
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "elapsed_ms": 107,
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "elapsed_ms": 107,
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "elapsed_ms": 107,
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "elapsed_ms": 228,
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "elapsed_ms": 228,
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "elapsed_ms": 13345,
+              "event": "http11.receive_response_body.complete"
+            }
+          ],
+          "transport_policy": "direct",
+          "usage": {
+            "completion_tokens": 2629,
+            "prompt_tokens": 4087,
+            "total_tokens": 6716
+          }
+        },
+        {
+          "api_configuration": {
+            "identity": "4f003362858407b3c4f55d13",
+            "key_fingerprint": "c5f83d792da0",
+            "key_present": true,
+            "model": "deepseek-flash",
+            "origin": "https://api.deepseek.com",
+            "source": "explicit_file",
+            "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+            "transport": "direct"
+          },
+          "attempt": 1,
+          "duration_ms": 42604,
+          "finish_reason": "stop",
+          "http_status": 200,
+          "phase": "conflict_review",
+          "request_experience_hashes": [],
+          "request_experience_ids": [],
+          "requested_model": "deepseek-flash",
+          "response_id": "99679fdb-16de-49bf-a7ca-6d51547e5646",
+          "returned_model": "deepseek-flash",
+          "success": true,
+          "transport_events": [
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "elapsed_ms": 148,
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "elapsed_ms": 148,
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "elapsed_ms": 42603,
+              "event": "http11.receive_response_body.complete"
+            }
+          ],
+          "transport_policy": "direct",
+          "usage": {
+            "completion_tokens": 8202,
+            "prompt_tokens": 4730,
+            "total_tokens": 12932
+          }
+        }
+      ]
+    },
+    "notice": "经验比较或复核失败；原始经验和已完成的修复已保存。",
+    "updated_at": "2026-11-15T09:42:29.689093+00:00"
+  }
+]

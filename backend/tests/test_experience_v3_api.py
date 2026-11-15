@@ -8,7 +8,10 @@ from backend.config import Settings
 from backend.tests.test_experience_promotion import draft, source
 
 
-def test_publication_api_previews_revises_filters_and_reports_conflicts(tmp_path):
+def test_publication_api_previews_revises_filters_and_reports_conflicts(tmp_path,monkeypatch):
+    from backend.experience.jobs import MaintenanceWorker
+    monkeypatch.setattr(MaintenanceWorker,'start',lambda self:None)
+    monkeypatch.setattr(MaintenanceWorker,'close',lambda self:None)
     settings = replace(Settings(), database_path=tmp_path / "api.db", workspace_root=tmp_path / "work")
     app = create_app(settings)
     original = source(app.state.experiences)
@@ -29,6 +32,8 @@ def test_publication_api_previews_revises_filters_and_reports_conflicts(tmp_path
         assert graph.status_code == 200 and len(graph.json()["nodes"]) == 3
         rows = client.get("/api/experiences", params={"source_task_id": original.source_task_id, "reuse_status": "active"}).json()
         assert len(rows) == 3 and all(row["source_task_id"] == original.source_task_id for row in rows)
+        from backend.experience.jobs import drain
+        drain(app.state.experiences.database_path, seconds=20)
         active = client.get("/api/experiences", params={"scope": "global", "active_only": "true"}).json()
         assert [row["id"] for row in active] == [revised.json()["id"]]
         assert client.get(f"/api/experiences/{uuid4()}").status_code == 404

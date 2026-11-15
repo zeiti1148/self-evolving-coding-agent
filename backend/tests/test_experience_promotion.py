@@ -10,7 +10,10 @@ from backend.tests.test_experience_batches import batch, save
 
 
 def source(store):
-    return save(store, batch())[0]
+    result = save(store, batch())[0]
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
+    return result
 
 
 def draft(**updates):
@@ -31,7 +34,11 @@ def preview(store, identifier):
 def publish(store, identifier, value=None, **kwargs):
     method = getattr(store, "publish_global", None)
     assert method is not None, "explicit global publication is required"
-    return method(identifier, value or draft(), **kwargs)
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
+    result = method(identifier, value or draft(), **kwargs)
+    drain(store.database_path, seconds=20)
+    return result
 
 
 def test_preview_is_read_only_and_global_payload_excludes_source_private_data(tmp_path):
@@ -149,6 +156,8 @@ def test_merge_preserves_related_rules_within_each_multi_issue_source(tmp_path):
         item.issues = [RepairIssue(error_type="ValueError", root_cause=f"Group {index} missing", solution="Guard missing", files=[f"part{index}.py"]),
                        RepairIssue(error_type="ValueError", root_cause=f"Group {index} blank", solution="Guard normalized blank", files=[f"part{index}.py"])]
     saved = save(store, records)
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     plan = store.preview_merge([saved[0].id, saved[1].id])
     assert plan["can_merge"], plan["conflicts"]
     assert len(store.merge_experiences([saved[0].id, saved[1].id]).issues) == 4
@@ -156,7 +165,13 @@ def test_merge_preserves_related_rules_within_each_multi_issue_source(tmp_path):
 
 def test_merged_global_is_republished_by_new_record_and_old_versions_stay_excluded(tmp_path):
     store = ExperienceStore(tmp_path / "publish.db")
-    left, right = source(store), source(store)
+    left = source(store)
+    # Distinct source contexts can explicitly publish the same general rule.
+    # Exact repeats in one context are now automatically consolidated.
+    other = batch()
+    other[0].applicability = ["Different verified source context"]
+    other[0].issues[0].files = ['app/other.py']
+    right = save(store, other)[0]
     first, second = publish(store, left.id), publish(store, right.id)
     merged = store.merge_experiences([first.id, second.id])
     with pytest.raises(ApplicationError):

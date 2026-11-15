@@ -1,0 +1,35 @@
+{
+  "observed_at": "2026-11-14T21:27:01.213586+08:00",
+  "user_selected_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+  "selected_configuration": {
+    "origin": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "source": "explicit_file",
+    "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+    "key_present": true,
+    "key_fingerprint": "c5f83d792da0",
+    "identity": "4f003362858407b3c4f55d13",
+    "transport": "direct"
+  },
+  "comparison_file": "D:\\中级实训\\self-evolving-coding-agent-next\\.env",
+  "same_current_key": false,
+  "same_current_endpoint": false,
+  "same_current_model": false,
+  "historical_requests": {
+    "events": 677,
+    "successes": 669,
+    "requested_models": {
+      "deepseek-flash": 677
+    },
+    "transport": {
+      "direct": 677
+    },
+    "per_request_credential_provenance_available": false
+  },
+  "new_model_requests_during_audit": 0,
+  "validation": {
+    "backend_passed": 628,
+    "backend_skipped": 1,
+    "new_tests": 15
+  }
+}

@@ -1,8 +1,10 @@
-import type { AgentApi, TaskCreateRequest } from './contracts'
+import type { AgentApi, ExperienceRetryState, TaskCreateRequest } from './contracts'
 import { readAgentEvents, readCreatedTask, readExperience, readExperiences, readMergedExperience, readMergePreview, readProjects, readPromotionPreview, readProvenance, readSteps, readTask } from './validation'
 import { readTestSource, readTestSources } from './validation'
 import { readCodeChanges, readCodeDiff } from './codeDiffValidation'
 import { readTaskEvidence } from './evidenceValidation'
+import { readExperienceLibrary, readHistoryScan, readRecovery, readRecoveries } from './libraryValidation'
+import { readAutomaticMerges, readConsolidationReport, readConflict, readConflicts, readJobs, readMaintenance, readRuleSources, readReviewHistory } from './experienceWorkflowValidation'
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); this.name = 'ApiError' }
@@ -58,17 +60,23 @@ function errorMessage(status: number, payload: unknown, path: string): string {
 
 export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThis.fetch): AgentApi {
   const base = baseUrl.replace(/\/$/, '')
-  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: object, signal?: AbortSignal): Promise<T> {
+  function retryState(value: unknown, id: string): ExperienceRetryState {
+    if (!value || typeof value !== 'object') throw new Error('Invalid extraction state')
+    const data = value as ExperienceRetryState
+    if (data.task_id !== id || !['idle', 'running', 'succeeded', 'failed'].includes(data.state) || typeof data.notice !== 'string') throw new Error('Invalid extraction state')
+    return data
+  }
+  async function request<T>(path: string, read: (data: unknown) => T, method = 'GET', body?: object | Blob, signal?: AbortSignal): Promise<T> {
     const controller = new AbortController()
     let timedOut = false
     const abort = () => controller.abort()
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError')
     signal?.addEventListener('abort', abort, { once: true })
-    const timeout = setTimeout(() => { timedOut = true; controller.abort() }, 15000)
+    const timeout = setTimeout(() => { timedOut = true; controller.abort() }, body instanceof Blob ? 120000 : 15000)
     try {
       const response = await fetcher(base + path, {
-        method, signal: controller.signal, headers: { 'Content-Type': 'application/json' },
-        ...(body ? { body: JSON.stringify(body) } : {}),
+        method, signal: controller.signal, headers: { 'Content-Type': body instanceof Blob ? 'application/zip' : 'application/json' },
+        ...(body ? { body: body instanceof Blob ? body : JSON.stringify(body) } : {}),
       })
       let data: unknown
       try { data = await response.json() } catch {
@@ -87,8 +95,36 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     }
   }
   return {
+    listAutomaticMerges: (filters, offset = 0, signal) => {
+      const params = new URLSearchParams({limit: '5', offset: String(offset)})
+      for (const key of ['language', 'repository_id', 'scope', 'experience_id'] as const) if (filters[key]) params.set(key, String(filters[key]))
+      return request('/api/experiences/automation?' + params, readAutomaticMerges, 'GET', undefined, signal)
+    },
+    getExperienceLibrary: (filters = {}, signal) => {
+      const params=new URLSearchParams()
+      for(const key of ['language','repository_id','scope','q','error_type','state','tag','merged','limit','offset','sort','card_id'] as const)if(filters[key]!==undefined&&filters[key]!=='')params.set(key,String(filters[key]))
+      return request('/api/experiences/library?'+params,readExperienceLibrary,'GET',undefined,signal)
+    },
+    scanExperienceHistory: (retry=false,signal) => request('/api/experiences/history-scan',readHistoryScan,'POST',{retry},signal),
+    listExperienceRecovery:(id,signal)=>request('/api/experiences/library/'+encodeURIComponent(id)+'/recovery',readRecoveries,'GET',undefined,signal),
+    listRecoveryTasks:(id,signal)=>request('/api/experiences/library/'+encodeURIComponent(id)+'/evidence-tasks',value=>{
+      if(!Array.isArray(value)||!value.every(v=>v&&typeof v==='object'&&typeof v.id==='string'&&typeof v.label==='string'&&typeof v.project_label==='string'&&Number.isSafeInteger(v.tests)))throw new Error('Invalid evidence tasks')
+      return value
+    },'GET',undefined,signal),
+    startExperienceRecovery:(id,body,signal)=>request('/api/experiences/library/'+encodeURIComponent(id)+'/recovery',readRecovery,'POST',body,signal),
+    getExperienceRecovery:(id,signal)=>request('/api/experiences/recovery/'+encodeURIComponent(id),readRecovery,'GET',undefined,signal),
+    confirmExperienceRecovery:(id,body,signal)=>request('/api/experiences/recovery/'+encodeURIComponent(id)+'/confirm',readRecovery,'POST',body,signal),
+    retryAutomaticMerge: (id, signal) => request('/api/experiences/automation/' + encodeURIComponent(id) + '/retry', value => {
+      if (!value || typeof value !== 'object' || (value as {id?: string}).id !== id) throw new Error('Invalid retry response')
+      return {id}
+    }, 'POST', {}, signal),
+    uploadProject: (file, label, projectRoot, signal) => request(`/api/projects/upload?${new URLSearchParams({label, project_root: projectRoot})}`, data => readProjects([data])[0]!, 'POST', file, signal),
+    configureProject: (id, config, signal) => request(`/api/projects/${encodeURIComponent(id)}/configure`, data => readProjects([data])[0]!, 'POST', {runner_config: config}, signal),
+    runtimeOptions: signal => request('/api/runtime-options', data => data as {python: string[]; go: boolean; cpp: boolean}, 'GET', undefined, signal),
     createTask: (body, signal) => request('/api/tasks', readCreatedTask, 'POST', body, signal),
     getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
+    getExperienceRetry: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/experience-retry`, data => retryState(data, id), 'GET', undefined, signal),
+    retryExperience: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/experience-retry`, data => retryState(data, id), 'POST', {}, signal),
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),
     getTaskEvidence: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/evidence`, data => readTaskEvidence(data, id), 'GET', undefined, signal),
     listTestSources: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/test-sources`, data => readTestSources(data, id), 'GET', undefined, signal),
@@ -114,5 +150,25 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
       const sources = [...ids]
       return request('/api/experiences/merge', data => readMergedExperience(data, sources), 'POST', { experience_ids: sources }, signal)
     },
+    consolidateExperiences: (language, repository_id, signal, cursor) => request('/api/experiences/consolidate',
+      readConsolidationReport, 'POST', { language, repository_id, ...(cursor ? { cursor } : {}) }, signal),
+    listConflicts: (filters = {}, signal) => {
+      const params = new URLSearchParams()
+      for (const key of ['language', 'repository_id', 'status', 'limit', 'offset'] as const)
+        if (filters[key] !== undefined) params.set(key, String(filters[key]))
+      return request(`/api/experiences/conflicts?${params}`, readConflicts, 'GET', undefined, signal)
+    },
+    listMaintenanceJobs: (signal, filters = {}) => {
+      const params = new URLSearchParams()
+      for (const key of ['language', 'repository_id'] as const) if (filters[key]) params.set(key, filters[key]!)
+      return request(`/api/experiences/jobs${params.size ? `?${params}` : ''}`, readJobs, 'GET', undefined, signal)
+    },
+    retryMaintenanceJob: (id, signal) => request(`/api/experiences/jobs/${encodeURIComponent(id)}/retry`, data => readJobs([data])[0]!, 'POST', {}, signal),
+    getExperienceMaintenance: (id, signal) => request(`/api/experiences/${encodeURIComponent(id)}/maintenance`, data => readMaintenance(data, id), 'GET', undefined, signal),
+    getRuleSources: (id, offset = 0, signal) => request(`/api/experiences/rules/${encodeURIComponent(id)}/sources?offset=${offset}`, data => readRuleSources(data, id), 'GET', undefined, signal),
+    getReviewHistory: (id, signal) => request(`/api/experiences/conflicts/${encodeURIComponent(id)}/history`, readReviewHistory, 'GET', undefined, signal),
+    reopenConflict: (id, version, note, signal) => request(`/api/experiences/conflicts/${encodeURIComponent(id)}/reopen`, data => readConflict(data, id), 'POST', { version, note }, signal),
+    resolveConflict: (id, resolution, signal) => request(`/api/experiences/conflicts/${encodeURIComponent(id)}/resolve`,
+      data => readConflict(data, id), 'POST', resolution, signal),
   }
 }

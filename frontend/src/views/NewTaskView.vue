@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useApiContext } from '../api/context'
-import type { ExecutionMode, MockScenario, RegisteredProject } from '../api/contracts'
+import type { ExecutionMode, ExperienceRecovery, MockScenario, RegisteredProject } from '../api/contracts'
 import AppIcon from '../components/AppIcon.vue'
+import ProjectUpload from '../components/ProjectUpload.vue'
 const context = useApiContext()
 const router = useRouter()
+const route = useRoute()
+const recoveryId = typeof route.query.knowledge_recovery_id === 'string' ? route.query.knowledge_recovery_id : ''
+const recovery = ref<ExperienceRecovery | null>(null), recoveryError = ref(''), loadingRecovery = ref(!!recoveryId)
+const projectMode = ref(context.mock || !context.api.uploadProject ? 'registered' : 'upload')
+const uploaded = ref<RegisteredProject | null>(null)
+function uploadedReady(project: RegisteredProject | null) { uploaded.value = project }
 const description = ref('')
 const maxSteps = ref<number | string>(20)
 const executionMode = ref<ExecutionMode>('single')
@@ -18,10 +25,24 @@ const projects = ref<RegisteredProject[]>([{ id: context.projectId, label: conte
 const projectId = ref(context.projectId)
 const loadingProjects = ref(false)
 const projectError = ref('')
-const selectedProject = computed(() => projects.value.find(project => project.id === projectId.value))
-const runnerLabel = computed(() => selectedProject.value?.language === 'python' ? 'Python / pytest' : 'Java / Maven / JUnit')
+const selectedProject = computed(() => projectMode.value === 'upload' ? uploaded.value : projects.value.find(project => project.id === projectId.value))
+const runnerLabel = computed(() => selectedProject.value ? ({python:'Python / pytest', java:'Java / Maven / JUnit', go:'Go / go test', cpp:'C++ / CMake / CTest'})[selectedProject.value.language] : '上传自己的项目')
 let controller: AbortController | undefined
 let projectController: AbortController | undefined
+let recoveryController: AbortController | undefined
+async function loadRecovery() {
+  if (!recoveryId || !context.api.getExperienceRecovery) { loadingRecovery.value = false; return }
+  recoveryController?.abort(); const active = new AbortController(); recoveryController = active
+  loadingRecovery.value = true; recoveryError.value = ''
+  try {
+    const value = await context.api.getExperienceRecovery(recoveryId, active.signal)
+    if (active.signal.aborted) return
+    if (!['needs_evidence', 'needs_confirmation', 'failed'].includes(value.state) || value.task_id) throw new Error('此补证请求已关联任务或状态已改变，请回到经验页重新验证。')
+    recovery.value = value
+    if (!description.value) description.value = `请检查项目是否存在以下问题并完成修复，保留现有业务行为，运行完整测试验证。\n原经验方案：${value.before.summary}\n请核对它是否适用于本项目，并记录实际修复与测试证据。`
+  } catch (cause) { if (!active.signal.aborted) recoveryError.value = cause instanceof Error ? cause.message : '读取补证请求失败' }
+  finally { if (!active.signal.aborted) loadingRecovery.value = false }
+}
 async function loadProjects() {
   if (context.mock || !context.api.listProjects) return
   projectController?.abort()
@@ -38,11 +59,11 @@ async function loadProjects() {
     if (!active.signal.aborted) projectError.value = cause instanceof Error ? cause.message : '读取项目目录失败，请重试。'
   } finally { if (!active.signal.aborted) loadingProjects.value = false }
 }
-onMounted(() => void loadProjects())
-onBeforeUnmount(() => { controller?.abort(); projectController?.abort() })
+onMounted(() => { void loadProjects(); void loadRecovery() })
+onBeforeUnmount(() => { controller?.abort(); projectController?.abort(); recoveryController?.abort() })
 function fillExample() { description.value = selectedProject.value?.task_example ?? '' }
 async function submit() {
-  if (submitting.value || loadingProjects.value || projectError.value || !selectedProject.value) return
+  if (submitting.value || loadingRecovery.value || recoveryError.value || (projectMode.value === 'registered' && (loadingProjects.value || projectError.value)) || !selectedProject.value) return
   error.value = ''
   const task_description = description.value.trim()
   if (!task_description || task_description.length > 50000) { error.value = '请填写 1 至 50000 字的任务描述。'; return }
@@ -52,7 +73,8 @@ async function submit() {
   controller = new AbortController()
   if (context.mock) context.setScenario?.(scenario.value)
   try {
-    const task = await context.api.createTask({ task_description, source_project: projectId.value, max_steps, execution_mode: executionMode.value }, controller.signal)
+    const task = await context.api.createTask({ task_description, source_project: selectedProject.value.id, max_steps, execution_mode: executionMode.value,
+      ...(recovery.value ? { knowledge_recovery_id: recovery.value.id } : {}) }, controller.signal)
     if (!controller.signal.aborted) await router.push(`/tasks/${task.task_id}`)
   } catch (cause) {
     if (!controller.signal.aborted) error.value = cause instanceof Error ? cause.message : '提交失败，请稍后重试。'
@@ -60,18 +82,22 @@ async function submit() {
 }
 </script>
 <template>
-  <div class="page-heading"><div><h1>提交一个修复任务</h1><p>选择项目仓库，描述问题与预期行为，查看 Agent 如何逐步修复和验证。</p></div><span class="subtle-label">{{ runnerLabel }}</span></div>
+  <div class="page-heading"><div><h1>提交一个修复任务</h1><p>上传项目或选择已有仓库，描述问题与预期行为，查看 Agent 如何逐步修复和验证。</p></div><span class="subtle-label">{{ runnerLabel }}</span></div>
+  <section v-if="recoveryId" class="panel recovery-task-context" aria-label="为经验补充验证"><strong>本次修复将为已有经验补充验证</strong><p v-if="recovery">修复完成并保存经验后，系统会重复运行测试、审阅与旧经验的关系，并自动判断能否恢复复用。</p><p v-if="loadingRecovery" role="status">正在读取待验证经验…</p><p v-if="recoveryError" class="error-notice" role="alert">{{recoveryError}} <button class="text-button" @click="loadRecovery">重新读取</button></p><RouterLink :to="{path:'/experiences',query:{view:'knowledge',card:recovery?.card_id}}">返回经验目录 ↗</RouterLink></section>
   <div class="create-layout">
     <form class="panel task-form" novalidate @submit.prevent="submit">
       <div class="panel-heading"><span class="section-icon"><AppIcon name="terminal" /></span><h2>任务配置</h2></div>
       <div class="form-body">
+        <label for="project-mode">项目来源</label><select id="project-mode" v-model="projectMode" :disabled="submitting"><option value="upload">上传自己的项目 ZIP</option><option value="registered">已登记项目</option></select>
+        <ProjectUpload v-if="projectMode === 'upload'" @ready="uploadedReady" />
+        <template v-else>
         <label for="project">目标项目</label>
-        <select id="project" v-model="projectId" :disabled="submitting || loadingProjects"><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.label }} · {{ project.language === 'python' ? 'Python' : 'Java' }}</option></select>
+        <select id="project" v-model="projectId" :disabled="submitting || loadingProjects"><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.label }} · {{ ({python:'Python', java:'Java', go:'Go', cpp:'C++'})[project.language] }}</option></select>
         <p v-if="loadingProjects" class="field-hint" role="status">正在读取登记项目…</p>
         <div v-if="projectError" class="error-notice error-with-action" role="alert"><span>{{ projectError }}</span><button class="button secondary small" type="button" data-testid="retry-projects" @click="loadProjects">重新加载</button></div>
         <p v-if="selectedProject" class="project-metadata">仓库 <code>{{ selectedProject.repository_id }}</code><span v-if="selectedProject.source_revision">来源版本 <code>{{ selectedProject.source_revision }}</code></span></p>
-        <p class="field-hint">使用已登记的项目样例，修复将在独立工作副本中进行。</p>
-        <div class="label-row"><label for="description">任务描述 <span class="required">*</span></label><button class="text-button" type="button" :disabled="submitting || loadingProjects || !!projectError || !selectedProject?.task_example" @click="fillExample">填入修复示例</button></div>
+        <p class="field-hint">也可以切换到上传模式，导入任意受支持构建系统的项目。</p></template>
+        <div class="label-row"><label for="description">任务描述 <span class="required">*</span></label><button class="text-button" type="button" :disabled="submitting || (projectMode === 'registered' && (loadingProjects || !!projectError)) || !selectedProject?.task_example" @click="fillExample">填入修复示例</button></div>
         <textarea id="description" v-model="description" rows="7" maxlength="50000" :disabled="submitting" placeholder="说明异常表现、需要保留的行为，以及全部验收条件。可同时描述多个异常。" aria-describedby="description-hint" />
         <div id="description-hint" class="field-hint split"><span>说明错误表现、预期结果和需要保留的行为。</span><span>{{ description.length }} / 50000</span></div>
         <div class="form-row"><div><label for="max-steps">最大决策轮数</label><input id="max-steps" v-model="maxSteps" type="number" min="1" max="100" step="1" :disabled="submitting" /><p class="field-hint">1–100 轮，工具步骤数量可能更多。</p></div>
@@ -81,7 +107,7 @@ async function submit() {
         <select id="execution-mode" v-model="executionMode" :disabled="submitting"><option value="single">单 Agent</option><option value="multi">多 Agent 协作</option></select>
         <p class="field-hint">{{ executionMode === 'multi' ? '诊断、修复、独立复核共享决策轮数；修改通过复核后应用，最终测试由程序执行。' : '单 Agent 分步调用工具，最终测试由程序独立执行。' }}</p>
       </div>
-      <div class="form-footer"><span><AppIcon name="shield" :size="17" />原始样例保持不变</span><button class="button primary" type="submit" :disabled="submitting || loadingProjects || !!projectError || !selectedProject"><AppIcon :name="submitting ? 'clock' : 'play'" :size="17" />{{ submitting ? '正在提交…' : '提交任务' }}</button></div>
+      <div class="form-footer"><span><AppIcon name="shield" :size="17" />原始项目保持不变</span><button class="button primary" type="submit" :disabled="submitting || loadingRecovery || !!recoveryError || (projectMode === 'registered' && (loadingProjects || !!projectError)) || !selectedProject"><AppIcon :name="submitting ? 'clock' : 'play'" :size="17" />{{ submitting ? '正在提交…' : '提交任务' }}</button></div>
     </form>
     <aside class="create-aside">
       <section class="workflow-note"><h2>一次修复的完整过程</h2><ol class="workflow-list"><li><span>1</span><div><h3>定位问题</h3><p>查看代码与测试输出，识别错误原因。</p></div></li><li><span>2</span><div><h3>修改与验证</h3><p>在工作副本中修改代码，运行测试验证结果。</p></div></li><li><span>3</span><div><h3>留下可复用的经验</h3><p>记录根因、修复方案与验证方法。</p></div></li></ol></section>
@@ -90,3 +116,4 @@ async function submit() {
     </aside>
   </div>
 </template>
+<style scoped>.recovery-task-context{padding:18px 22px;margin-bottom:20px;font-size:13px;border-left:3px solid var(--accent)}.recovery-task-context p{color:var(--muted);font-size:12px;line-height:1.8}.recovery-task-context a{font-size:12px}</style>

@@ -1,0 +1,1343 @@
+{
+  "kind": "historical_independent_task_extractions_real_local_semantic_replay",
+  "created_at": "2026-11-14T14:34:20.444260+00:00",
+  "completed": true,
+  "new_model_api_calls": 0,
+  "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\experiences.db",
+  "policy": "rules-v4-action-entailment",
+  "original_model": "deepseek-flash",
+  "sources": [
+    {
+      "database": "training.db",
+      "original": {
+        "task_summary": "修复 quantity 的输入解析：None、空白、非整数或负数返回 0，有效非负整数去空白后解析。",
+        "error_type": null,
+        "root_cause": "quantity 直接调用 int(value)，未处理 None 导致的 TypeError，未捕获空串、空白或非整数字符串导致的 ValueError，也未在解析成功后校验非负，负整数会原样返回并触发 AssertionError。",
+        "solution": "先判断 value is None，成立则返回 0；否则对输入去除首尾空白，空串返回 0；再用 try/except 捕获 int 转换的 ValueError 并返回 0；转换成功后若 n < 0 返回 0，否则返回 n。",
+        "verification": "程序独立运行 pytest 最终验证，11 项测试全部通过；工具调用编号：e304d5f2-4d71-43c1-9cbc-d89c4161c091。",
+        "tags": [
+          "python",
+          "输入解析",
+          "非负整数",
+          "异常处理",
+          "默认值",
+          "quantity"
+        ],
+        "source_task_id": "66d5330d-c8be-4a42-90e6-65fc3e5fd6ce",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "knowledge-python",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:893e3d71bee467559a9292ccc552658e252a3fc5d0d81774e27906f6d7765c4c",
+        "compatibility_key": "stable-v2",
+        "constraints": [
+          "quantity(None)、quantity('')、quantity(' ') 必须返回 0。",
+          "quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。",
+          "quantity('-2') 等负整数必须返回 0。",
+          "有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。",
+          "不得修改测试文件和构建文件。",
+          "label 与 quantity 的修复规则互不依赖。"
+        ],
+        "applicability": [
+          "适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。"
+        ],
+        "issues": [
+          {
+            "error_type": "TypeError",
+            "root_cause": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+            "solution": "在解析前增加 None 判断：if value is None: return 0。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#quantity"
+            ],
+            "depends_on": []
+          },
+          {
+            "error_type": "ValueError",
+            "root_cause": "quantity 未处理空串、纯空白或非整数字符串；int('')、int(' ') 或 int('bad') 会抛出 ValueError，未按规则返回 0。",
+            "solution": "对非 None 输入先去除首尾空白；若为空串返回 0；否则用 try/except 捕获 int 转换抛出的 ValueError 并返回 0；转换成功则继续非负校验。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#quantity"
+            ],
+            "depends_on": [
+              0
+            ]
+          },
+          {
+            "error_type": "AssertionError",
+            "root_cause": "quantity 对可解析的负整数字符串直接返回 int 结果，例如 int('-2') 得到 -2，未执行非负约束，导致断言失败。",
+            "solution": "在 int 转换成功后检查 n < 0，若为负数返回 0；否则返回 n，保留有效非负整数去空白后的解析结果。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#quantity"
+            ],
+            "depends_on": [
+              1
+            ]
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "66d5330d-c8be-4a42-90e6-65fc3e5fd6ce",
+            "tool_call_id": "e304d5f2-4d71-43c1-9cbc-d89c4161c091",
+            "runner": "pytest",
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": "d381b274-3146-400d-936e-73395dfd956b",
+        "reuse_status": "active",
+        "derived_from": [],
+        "supersedes_id": null,
+        "required_capabilities": [],
+        "id": "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+        "created_at": "2026-11-14T11:39:56.926702Z"
+      },
+      "selected_issue_index": 0,
+      "record_sha256": "9e236144bd33bd767a9f5a5a43d8b40d6eb8479c5abc5bc4d5cbf7a7c395ef9d",
+      "trial": {
+        "trial_id": "training-python-independent",
+        "task_id": "66d5330d-c8be-4a42-90e6-65fc3e5fd6ce",
+        "case": "training-python-independent",
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-live-experiment\\workspaces\\66d5330d-c8be-4a42-90e6-65fc3e5fd6ce",
+        "visible_passed": true,
+        "heldout_passed": true
+      },
+      "replay": {
+        "code_before": "def label(value):\n    return value.strip()\n\ndef quantity(value):\n    return int(value)\n",
+        "code_after": "def label(value):\n    if value is None:\n        return 'guest'\n    text = value.strip()\n    if not text:\n        return 'guest'\n    return text\n\n\ndef quantity(value):\n    if value is None:\n        return 0\n    if isinstance(value, bool):\n        return 0\n    if isinstance(value, int):\n        return value if value >= 0 else 0\n    if not isinstance(value, str):\n        return 0\n    text = value.strip()\n    if not text:\n        return 0\n    try:\n        number = int(text)\n    except ValueError:\n        return 0\n    if number < 0:\n        return 0\n    return number\n",
+        "tests": [
+          {
+            "stage": "before",
+            "exit_code": 1,
+            "tests": 11,
+            "failures": 8,
+            "errors": 0,
+            "skipped": 0,
+            "stdout": "FFF.FFFFF..                                                              [100%]\r\n================================== FAILURES ===================================\r\n_________________________________ test_case_0 _________________________________\r\n\r\n    def test_case_0():\r\n>       assert rules.label(None) == 'guest'\r\n               ^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:5: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def label(value):\r\n>       return value.strip()\r\n               ^^^^^^^^^^^\r\nE       AttributeError: 'NoneType' object has no attribute 'strip'\r\n\r\nrules.py:2: AttributeError\r\n_________________________________ test_case_1 _________________________________\r\n\r\n    def test_case_1():\r\n>       assert rules.label('') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:7: AssertionError\r\n_________________________________ test_case_2 _________________________________\r\n\r\n    def test_case_2():\r\n>       assert rules.label(' ') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:9: AssertionError\r\n_________________________________ test_case_4 _________________________________\r\n\r\n    def test_case_4():\r\n>       assert rules.quantity(None) == 0\r\n               ^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:13: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\r\n\r\nrules.py:5: TypeError\r\n_________________________________ test_case_5 _________________________________\r\n\r\n    def test_case_5():\r\n>       assert rules.quantity('') == 0\r\n               ^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:15: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ''\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ''\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_6 _________________________________\r\n\r\n    def test_case_6():\r\n>       assert rules.quantity(' ') == 0\r\n               ^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:17: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ' '\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ' '\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_7 _________________________________\r\n\r\n    def test_case_7():\r\n>       assert rules.quantity('bad') == 0\r\n               ^^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:19: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = 'bad'\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: 'bad'\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_8 _________________________________\r\n\r\n    def test_case_8():\r\n>       assert rules.quantity('-2') == 0\r\nE       AssertionError: assert -2 == 0\r\nE        +  where -2 = <function quantity at 0x000002213DCD2AC0>('-2')\r\nE        +    where <function quantity at 0x000002213DCD2AC0> = rules.quantity\r\n\r\ntests\\test_rules.py:21: AssertionError\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-1-before.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_rules.py::test_case_0 - AttributeError: 'NoneType' object h...\r\nFAILED tests/test_rules.py::test_case_1 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_2 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_4 - TypeError: int() argument must be a...\r\nFAILED tests/test_rules.py::test_case_5 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_6 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_7 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_8 - AssertionError: assert -2 == 0\r\n8 failed, 3 passed in 0.27s\r\n",
+            "report": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-1-before.xml"
+          },
+          {
+            "stage": "after",
+            "exit_code": 0,
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "stdout": "...........                                                              [100%]\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-1-after.xml -\r\n11 passed in 0.18s\r\n",
+            "report": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-1-after.xml"
+          }
+        ],
+        "behavior": [
+          {
+            "input": null,
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "TypeError"
+            }
+          },
+          {
+            "input": "",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "ValueError"
+            }
+          },
+          {
+            "input": " ",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "ValueError"
+            }
+          },
+          {
+            "input": "bad",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "ValueError"
+            }
+          },
+          {
+            "input": "-2",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": -2,
+              "error": null
+            }
+          },
+          {
+            "input": " 3 ",
+            "expected": 3,
+            "actual": 3,
+            "before": {
+              "value": 3,
+              "error": null
+            }
+          },
+          {
+            "input": "0",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": 0,
+              "error": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "database": "evaluation-output.db",
+      "original": {
+        "task_summary": "修复 rules.py 的 quantity：None、空白、非整数或负数返回 0，有效非负整数去除首尾空白后解析。",
+        "error_type": "TypeError",
+        "root_cause": "quantity 直接 int(value)：None 输入触发 TypeError；空字符串、纯空白字符串或非整数字符串触发 ValueError；负数被解析为负值而未回退 0，导致断言失败。",
+        "solution": "先对 None 返回 0；在 None 检查后 strip 文本，若为空则返回 0；解析时捕获无效整数转换的 ValueError（按语言约定 Java 为 IllegalArgumentException）并返回 0；解析成功后若结果小于 0 返回 0，否则返回该非负整数。该规则独立于 label。",
+        "verification": "程序独立运行 pytest 最终验证，11 项测试全部通过；工具调用编号：160c179d-ef9f-44ab-8d3f-f562ce840b8c。",
+        "tags": [
+          "python",
+          "输入校验",
+          "整数解析",
+          "异常处理",
+          "负数兜底",
+          "空白处理"
+        ],
+        "source_task_id": "7be175c8-3ef2-441d-8dd7-10f0b9419e74",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "knowledge-python",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:893e3d71bee467559a9292ccc552658e252a3fc5d0d81774e27906f6d7765c4c",
+        "compatibility_key": "stable-v2",
+        "constraints": [
+          "quantity(None) 必须返回 0。",
+          "quantity('') 必须返回 0。",
+          "quantity(' ') 必须返回 0。",
+          "quantity('bad') 必须返回 0。",
+          "quantity('-2') 必须返回 0。",
+          "quantity(' 3 ') 必须返回 3。",
+          "quantity('0') 必须返回 0。",
+          "有效非负整数必须去除首尾空白后解析。",
+          "无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。",
+          "quantity 与 label 规则互不依赖，可分别修复。",
+          "不得修改测试和构建文件。"
+        ],
+        "applicability": [
+          "Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。",
+          "同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。"
+        ],
+        "issues": [
+          {
+            "error_type": "TypeError",
+            "root_cause": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+            "solution": "在解析前先判断 value is None，若为 None 立即返回 0。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#quantity"
+            ],
+            "depends_on": []
+          },
+          {
+            "error_type": "ValueError",
+            "root_cause": "空字符串、纯空白字符串或非整数字符串直接 int 会触发 ValueError，未回退 0。",
+            "solution": "在 None 判空后先 strip 文本；若为空返回 0；否则用 try 捕获 int 转换的 ValueError 并返回 0，Java 对应 IllegalArgumentException。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#quantity"
+            ],
+            "depends_on": [
+              0
+            ]
+          },
+          {
+            "error_type": "AssertionError",
+            "root_cause": "负数输入被 int 正常解析为负整数，未按规则回退 0，导致断言失败。",
+            "solution": "在 int 解析成功后立即判断结果是否小于 0；小于 0 返回 0，否则返回该非负整数。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#quantity"
+            ],
+            "depends_on": []
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "7be175c8-3ef2-441d-8dd7-10f0b9419e74",
+            "tool_call_id": "160c179d-ef9f-44ab-8d3f-f562ce840b8c",
+            "runner": "pytest",
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": "94be4e50-dd35-47b8-9573-a5c6bb7658ae",
+        "reuse_status": "active",
+        "derived_from": [],
+        "supersedes_id": null,
+        "required_capabilities": [],
+        "id": "7733be83-1564-4be4-8339-e81d6717d341",
+        "created_at": "2026-11-14T11:52:57.260153Z"
+      },
+      "selected_issue_index": 0,
+      "record_sha256": "c98104dfb3e236f044dd227e8359b263294eeec9fb5c7f14a62a57f30928125c",
+      "trial": {
+        "trial_id": "evaluation-python-independent-old-r2",
+        "task_id": "7be175c8-3ef2-441d-8dd7-10f0b9419e74",
+        "case": "evaluation-python-independent",
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-live-experiment\\workspaces\\7be175c8-3ef2-441d-8dd7-10f0b9419e74",
+        "visible_passed": true,
+        "heldout_passed": true
+      },
+      "replay": {
+        "code_before": "def label(value):\n    return value.strip()\n\ndef quantity(value):\n    return int(value)\n",
+        "code_after": "def label(value):\n    if value is None:\n        return 'guest'\n    text = value.strip() if isinstance(value, str) else str(value).strip()\n    if not text:\n        return 'guest'\n    return text\n\n\ndef quantity(value):\n    if value is None:\n        return 0\n    if isinstance(value, str):\n        text = value.strip()\n    else:\n        try:\n            text = str(value).strip()\n        except Exception:\n            return 0\n    if not text:\n        return 0\n    try:\n        number = int(text)\n    except (ValueError, TypeError):\n        return 0\n    if number < 0:\n        return 0\n    return number\n",
+        "tests": [
+          {
+            "stage": "before",
+            "exit_code": 1,
+            "tests": 11,
+            "failures": 8,
+            "errors": 0,
+            "skipped": 0,
+            "stdout": "FFF.FFFFF..                                                              [100%]\r\n================================== FAILURES ===================================\r\n_________________________________ test_case_0 _________________________________\r\n\r\n    def test_case_0():\r\n>       assert rules.label(None) == 'guest'\r\n               ^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:5: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def label(value):\r\n>       return value.strip()\r\n               ^^^^^^^^^^^\r\nE       AttributeError: 'NoneType' object has no attribute 'strip'\r\n\r\nrules.py:2: AttributeError\r\n_________________________________ test_case_1 _________________________________\r\n\r\n    def test_case_1():\r\n>       assert rules.label('') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:7: AssertionError\r\n_________________________________ test_case_2 _________________________________\r\n\r\n    def test_case_2():\r\n>       assert rules.label(' ') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:9: AssertionError\r\n_________________________________ test_case_4 _________________________________\r\n\r\n    def test_case_4():\r\n>       assert rules.quantity(None) == 0\r\n               ^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:13: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\r\n\r\nrules.py:5: TypeError\r\n_________________________________ test_case_5 _________________________________\r\n\r\n    def test_case_5():\r\n>       assert rules.quantity('') == 0\r\n               ^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:15: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ''\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ''\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_6 _________________________________\r\n\r\n    def test_case_6():\r\n>       assert rules.quantity(' ') == 0\r\n               ^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:17: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ' '\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ' '\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_7 _________________________________\r\n\r\n    def test_case_7():\r\n>       assert rules.quantity('bad') == 0\r\n               ^^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:19: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = 'bad'\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: 'bad'\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_8 _________________________________\r\n\r\n    def test_case_8():\r\n>       assert rules.quantity('-2') == 0\r\nE       AssertionError: assert -2 == 0\r\nE        +  where -2 = <function quantity at 0x000001E5646F2AC0>('-2')\r\nE        +    where <function quantity at 0x000001E5646F2AC0> = rules.quantity\r\n\r\ntests\\test_rules.py:21: AssertionError\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-2-before.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_rules.py::test_case_0 - AttributeError: 'NoneType' object h...\r\nFAILED tests/test_rules.py::test_case_1 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_2 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_4 - TypeError: int() argument must be a...\r\nFAILED tests/test_rules.py::test_case_5 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_6 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_7 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_8 - AssertionError: assert -2 == 0\r\n8 failed, 3 passed in 0.24s\r\n",
+            "report": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-2-before.xml"
+          },
+          {
+            "stage": "after",
+            "exit_code": 0,
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "stdout": "...........                                                              [100%]\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-2-after.xml -\r\n11 passed in 0.19s\r\n",
+            "report": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-semantic-merge-demo\\20261114T143420Z-63409b\\task-2-after.xml"
+          }
+        ],
+        "behavior": [
+          {
+            "input": null,
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "TypeError"
+            }
+          },
+          {
+            "input": "",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "ValueError"
+            }
+          },
+          {
+            "input": " ",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "ValueError"
+            }
+          },
+          {
+            "input": "bad",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": null,
+              "error": "ValueError"
+            }
+          },
+          {
+            "input": "-2",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": -2,
+              "error": null
+            }
+          },
+          {
+            "input": " 3 ",
+            "expected": 3,
+            "actual": 3,
+            "before": {
+              "value": 3,
+              "error": null
+            }
+          },
+          {
+            "input": "0",
+            "expected": 0,
+            "actual": 0,
+            "before": {
+              "value": 0,
+              "error": null
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "stage": "first_task_ready",
+      "counts": {
+        "experiences": 1,
+        "knowledge_rules": 3,
+        "knowledge_evidence": 1,
+        "knowledge_decisions": 0
+      },
+      "selected_rule_ids": [
+        "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f"
+      ],
+      "rules": [
+        {
+          "id": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "fingerprint": "4575eacd65406a61ea46c16d77157ab7128196031542ed564d5078bbe5521bcb",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"AssertionError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 对可解析的负整数字符串直接返回 int 结果，例如 int('-2') 得到 -2，未执行非负约束，导致断言失败。\",\"solution\":\"在 int 转换成功后检查 n < 0，若为负数返回 0；否则返回 n，保留有效非负整数去空白后的解析结果。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "fingerprint": "76076f2642d3f6696a12539fed4bfc6c41b988a85ba54ca77bda4600835d13d9",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"TypeError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。\",\"solution\":\"在解析前增加 None 判断：if value is None: return 0。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "fingerprint": "aaa0f006e918ead7b79c44ddaa6a22bf617257461f6ce455337500b9ba1c1359",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"ValueError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 未处理空串、纯空白或非整数字符串；int('')、int(' ') 或 int('bad') 会抛出 ValueError，未按规则返回 0。\",\"solution\":\"对非 None 输入先去除首尾空白；若为空串返回 0；否则用 try/except 捕获 int 转换抛出的 ValueError 并返回 0；转换成功则继续非负校验。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        },
+        {
+          "id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        },
+        {
+          "id": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        }
+      ],
+      "relations": [],
+      "references": [
+        {
+          "id": "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+          "rule_id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+          "error_type": "TypeError",
+          "root_cause": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+          "solution": "在解析前增加 None 判断：if value is None: return 0。",
+          "applicability": [
+            "适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "quantity('-2') 等负整数必须返回 0。",
+            "quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。",
+            "quantity(None)、quantity('')、quantity(' ') 必须返回 0。",
+            "不得修改测试文件和构建文件。",
+            "有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "TypeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+              "solution": "在解析前增加 None 判断：if value is None: return 0。",
+              "symbols": [
+                "rules.py#quantity"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 1,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "a4861a4b-c256-4007-a48b-d1dcf134ab84"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "second_task_ingested",
+      "counts": {
+        "experiences": 2,
+        "knowledge_rules": 6,
+        "knowledge_evidence": 2,
+        "knowledge_decisions": 0
+      },
+      "selected_rule_ids": [
+        "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+        "5fb98be2-adc8-5806-ab6d-52578dce978f"
+      ],
+      "rules": [
+        {
+          "id": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "fingerprint": "4575eacd65406a61ea46c16d77157ab7128196031542ed564d5078bbe5521bcb",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"AssertionError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 对可解析的负整数字符串直接返回 int 结果，例如 int('-2') 得到 -2，未执行非负约束，导致断言失败。\",\"solution\":\"在 int 转换成功后检查 n < 0，若为负数返回 0；否则返回 n，保留有效非负整数去空白后的解析结果。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "fingerprint": "76076f2642d3f6696a12539fed4bfc6c41b988a85ba54ca77bda4600835d13d9",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"TypeError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。\",\"solution\":\"在解析前增加 None 判断：if value is None: return 0。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "fingerprint": "76f645036dd7e4cdd0921a27f10ca600ee9b1f243fd473ae38ec73e42aa7eeb1",
+          "state": "pending",
+          "data": "{\"applicability\":[\"Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。\",\"同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"quantity 与 label 规则互不依赖，可分别修复。\",\"quantity(' ') 必须返回 0。\",\"quantity(' 3 ') 必须返回 3。\",\"quantity('') 必须返回 0。\",\"quantity('-2') 必须返回 0。\",\"quantity('0') 必须返回 0。\",\"quantity('bad') 必须返回 0。\",\"quantity(None) 必须返回 0。\",\"不得修改测试和构建文件。\",\"无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。\",\"有效非负整数必须去除首尾空白后解析。\"],\"issue\":{\"error_type\":\"TypeError\",\"files\":[\"rules.py\"],\"root_cause\":\"None 输入未判空，直接调用 int(value) 会触发 TypeError。\",\"solution\":\"在解析前先判断 value is None，若为 None 立即返回 0。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "fingerprint": "dd7e852090ef8b8f593758b00770b4ddb8c80f1279daac79c4c1c90a0bda1920",
+          "state": "pending",
+          "data": "{\"applicability\":[\"Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。\",\"同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"quantity 与 label 规则互不依赖，可分别修复。\",\"quantity(' ') 必须返回 0。\",\"quantity(' 3 ') 必须返回 3。\",\"quantity('') 必须返回 0。\",\"quantity('-2') 必须返回 0。\",\"quantity('0') 必须返回 0。\",\"quantity('bad') 必须返回 0。\",\"quantity(None) 必须返回 0。\",\"不得修改测试和构建文件。\",\"无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。\",\"有效非负整数必须去除首尾空白后解析。\"],\"issue\":{\"error_type\":\"ValueError\",\"files\":[\"rules.py\"],\"root_cause\":\"空字符串、纯空白字符串或非整数字符串直接 int 会触发 ValueError，未回退 0。\",\"solution\":\"在 None 判空后先 strip 文本；若为空返回 0；否则用 try 捕获 int 转换的 ValueError 并返回 0，Java 对应 IllegalArgumentException。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "fingerprint": "793478c28996b6ea1e8e4f45e48f222ec65b2e6629d339ab51ed22629d0d20e9",
+          "state": "pending",
+          "data": "{\"applicability\":[\"Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。\",\"同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"quantity 与 label 规则互不依赖，可分别修复。\",\"quantity(' ') 必须返回 0。\",\"quantity(' 3 ') 必须返回 3。\",\"quantity('') 必须返回 0。\",\"quantity('-2') 必须返回 0。\",\"quantity('0') 必须返回 0。\",\"quantity('bad') 必须返回 0。\",\"quantity(None) 必须返回 0。\",\"不得修改测试和构建文件。\",\"无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。\",\"有效非负整数必须去除首尾空白后解析。\"],\"issue\":{\"error_type\":\"AssertionError\",\"files\":[\"rules.py\"],\"root_cause\":\"负数输入被 int 正常解析为负整数，未按规则回退 0，导致断言失败。\",\"solution\":\"在 int 解析成功后立即判断结果是否小于 0；小于 0 返回 0，否则返回该非负整数。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "fingerprint": "aaa0f006e918ead7b79c44ddaa6a22bf617257461f6ce455337500b9ba1c1359",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"ValueError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 未处理空串、纯空白或非整数字符串；int('')、int(' ') 或 int('bad') 会抛出 ValueError，未按规则返回 0。\",\"solution\":\"对非 None 输入先去除首尾空白；若为空串返回 0；否则用 try/except 捕获 int 转换抛出的 ValueError 并返回 0；转换成功则继续非负校验。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        },
+        {
+          "id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        },
+        {
+          "id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "state": "pending",
+          "attempts": 0,
+          "examined": 0
+        },
+        {
+          "id": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "state": "pending",
+          "attempts": 0,
+          "examined": 0
+        },
+        {
+          "id": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "state": "pending",
+          "attempts": 0,
+          "examined": 0
+        },
+        {
+          "id": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        }
+      ],
+      "relations": [],
+      "references": [
+        {
+          "id": "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+          "rule_id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+          "error_type": "TypeError",
+          "root_cause": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+          "solution": "在解析前增加 None 判断：if value is None: return 0。",
+          "applicability": [
+            "适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "quantity('-2') 等负整数必须返回 0。",
+            "quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。",
+            "quantity(None)、quantity('')、quantity(' ') 必须返回 0。",
+            "不得修改测试文件和构建文件。",
+            "有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "TypeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。",
+              "solution": "在解析前增加 None 判断：if value is None: return 0。",
+              "symbols": [
+                "rules.py#quantity"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 1,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "a4861a4b-c256-4007-a48b-d1dcf134ab84"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "semantic_maintenance_completed",
+      "counts": {
+        "experiences": 2,
+        "knowledge_rules": 6,
+        "knowledge_evidence": 2,
+        "knowledge_decisions": 0
+      },
+      "selected_rule_ids": [
+        "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+        "5fb98be2-adc8-5806-ab6d-52578dce978f"
+      ],
+      "rules": [
+        {
+          "id": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "fingerprint": "4575eacd65406a61ea46c16d77157ab7128196031542ed564d5078bbe5521bcb",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"AssertionError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 对可解析的负整数字符串直接返回 int 结果，例如 int('-2') 得到 -2，未执行非负约束，导致断言失败。\",\"solution\":\"在 int 转换成功后检查 n < 0，若为负数返回 0；否则返回 n，保留有效非负整数去空白后的解析结果。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "fingerprint": "76076f2642d3f6696a12539fed4bfc6c41b988a85ba54ca77bda4600835d13d9",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"TypeError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 直接调用 int(value)，未先判断 None；当输入为 None 时，int(None) 抛出 TypeError。\",\"solution\":\"在解析前增加 None 判断：if value is None: return 0。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "fingerprint": "76f645036dd7e4cdd0921a27f10ca600ee9b1f243fd473ae38ec73e42aa7eeb1",
+          "state": "ready",
+          "data": "{\"applicability\":[\"Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。\",\"同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"quantity 与 label 规则互不依赖，可分别修复。\",\"quantity(' ') 必须返回 0。\",\"quantity(' 3 ') 必须返回 3。\",\"quantity('') 必须返回 0。\",\"quantity('-2') 必须返回 0。\",\"quantity('0') 必须返回 0。\",\"quantity('bad') 必须返回 0。\",\"quantity(None) 必须返回 0。\",\"不得修改测试和构建文件。\",\"无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。\",\"有效非负整数必须去除首尾空白后解析。\"],\"issue\":{\"error_type\":\"TypeError\",\"files\":[\"rules.py\"],\"root_cause\":\"None 输入未判空，直接调用 int(value) 会触发 TypeError。\",\"solution\":\"在解析前先判断 value is None，若为 None 立即返回 0。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "fingerprint": "dd7e852090ef8b8f593758b00770b4ddb8c80f1279daac79c4c1c90a0bda1920",
+          "state": "ready",
+          "data": "{\"applicability\":[\"Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。\",\"同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"quantity 与 label 规则互不依赖，可分别修复。\",\"quantity(' ') 必须返回 0。\",\"quantity(' 3 ') 必须返回 3。\",\"quantity('') 必须返回 0。\",\"quantity('-2') 必须返回 0。\",\"quantity('0') 必须返回 0。\",\"quantity('bad') 必须返回 0。\",\"quantity(None) 必须返回 0。\",\"不得修改测试和构建文件。\",\"无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。\",\"有效非负整数必须去除首尾空白后解析。\"],\"issue\":{\"error_type\":\"ValueError\",\"files\":[\"rules.py\"],\"root_cause\":\"空字符串、纯空白字符串或非整数字符串直接 int 会触发 ValueError，未回退 0。\",\"solution\":\"在 None 判空后先 strip 文本；若为空返回 0；否则用 try 捕获 int 转换的 ValueError 并返回 0，Java 对应 IllegalArgumentException。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "fingerprint": "793478c28996b6ea1e8e4f45e48f222ec65b2e6629d339ab51ed22629d0d20e9",
+          "state": "ready",
+          "data": "{\"applicability\":[\"Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。\",\"同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"quantity 与 label 规则互不依赖，可分别修复。\",\"quantity(' ') 必须返回 0。\",\"quantity(' 3 ') 必须返回 3。\",\"quantity('') 必须返回 0。\",\"quantity('-2') 必须返回 0。\",\"quantity('0') 必须返回 0。\",\"quantity('bad') 必须返回 0。\",\"quantity(None) 必须返回 0。\",\"不得修改测试和构建文件。\",\"无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。\",\"有效非负整数必须去除首尾空白后解析。\"],\"issue\":{\"error_type\":\"AssertionError\",\"files\":[\"rules.py\"],\"root_cause\":\"负数输入被 int 正常解析为负整数，未按规则回退 0，导致断言失败。\",\"solution\":\"在 int 解析成功后立即判断结果是否小于 0；小于 0 返回 0，否则返回该非负整数。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        },
+        {
+          "id": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "fingerprint": "aaa0f006e918ead7b79c44ddaa6a22bf617257461f6ce455337500b9ba1c1359",
+          "state": "ready",
+          "data": "{\"applicability\":[\"适用于 Python 中需要把外部输入解析为非负整数的场景；适用于空值、空白、非法文本或负数应回退为 0 的接口。\"],\"compatibility_key\":\"stable-v2\",\"constraints\":[\"label 与 quantity 的修复规则互不依赖。\",\"quantity('-2') 等负整数必须返回 0。\",\"quantity('bad') 等非整数字符串必须返回 0；Python 中 int 转换非整数会抛出 ValueError，需要捕获。\",\"quantity(None)、quantity('')、quantity(' ') 必须返回 0。\",\"不得修改测试文件和构建文件。\",\"有效非负整数必须先去除首尾空白再解析；例如 quantity(' 3 ') 返回 3，quantity('0') 返回 0。\"],\"issue\":{\"error_type\":\"ValueError\",\"files\":[\"rules.py\"],\"root_cause\":\"quantity 未处理空串、纯空白或非整数字符串；int('')、int(' ') 或 int('bad') 会抛出 ValueError，未按规则返回 0。\",\"solution\":\"对非 None 输入先去除首尾空白；若为空串返回 0；否则用 try/except 捕获 int 转换抛出的 ValueError 并返回 0；转换成功则继续非负校验。\",\"symbols\":[\"rules.py#quantity\"]},\"language\":\"python\",\"repository_id\":\"knowledge-python\",\"required_capabilities\":[],\"scope\":\"project\",\"verification_class\":\"verified\"}"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        },
+        {
+          "id": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        },
+        {
+          "id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 5
+        },
+        {
+          "id": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 5
+        },
+        {
+          "id": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 5
+        },
+        {
+          "id": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 2
+        }
+      ],
+      "relations": [
+        {
+          "id": "18b1f28f-ee33-40d7-9508-7048a31aaf78",
+          "left_rule": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "right_rule": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"未达到经领域校准的自动判定门槛\",\"scores\":{\"contradiction\":0.0010935341706499457,\"entailment\":0.9625710844993591,\"neutral\":0.0046616652980446815}}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:48.688131+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "612bcf09-64f6-42ab-8585-6e543ef2820b",
+          "left_rule": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "right_rule": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"模型不可用或完整条件超过模型窗口\",\"scores\":null}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:48.993234+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "c688ed9c-dbfa-4e1c-ab83-3e61b614a76a",
+          "left_rule": "3ec4b474-eba9-51ae-baf1-86be001c0f59",
+          "right_rule": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"模型不可用或完整条件超过模型窗口\",\"scores\":null}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:51.260069+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "a0aff528-39f7-4315-b260-c821ffc0dfbc",
+          "left_rule": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "right_rule": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "kind": "equivalent",
+          "details": "{\"action_scores\":{\"contradiction\":0.00023726429208181798,\"entailment\":0.9944692850112915,\"neutral\":0.0016030140686780214},\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"双向自然语言推断\",\"scores\":{\"contradiction\":0.0007595862844027579,\"entailment\":0.9850794076919556,\"neutral\":0.0020790090784430504}}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:48.688896+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "8c3c9fcd-852b-4882-a798-b7e118d11378",
+          "left_rule": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "right_rule": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"模型不可用或完整条件超过模型窗口\",\"scores\":null}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:48.994016+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "9259c955-4dc3-41e5-be50-25f06c85bc61",
+          "left_rule": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+          "right_rule": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"未达到经领域校准的自动判定门槛\",\"scores\":{\"contradiction\":0.002723416779190302,\"entailment\":0.6706241965293884,\"neutral\":0.005435528699308634}}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:51.260899+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "d22214da-69fa-4d4b-9d1f-af47b28282eb",
+          "left_rule": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "right_rule": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"模型不可用或完整条件超过模型窗口\",\"scores\":null}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:48.688934+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "7383768f-7643-47a3-840d-7326e8ab3567",
+          "left_rule": "62c86cd9-2591-505f-af8e-c45e1e2ce266",
+          "right_rule": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"模型不可用或完整条件超过模型窗口\",\"scores\":null}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:48.994055+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        },
+        {
+          "id": "f6b314e4-1fb1-4ea1-9efb-511adbc2cb45",
+          "left_rule": "63c68556-8711-5c27-a1e3-554252edc0fa",
+          "right_rule": "b394b0f9-23f8-508c-821f-9b5387690e45",
+          "kind": "unknown",
+          "details": "{\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"模型不可用或完整条件超过模型窗口\",\"scores\":null}",
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "status": "pending",
+          "version": 1,
+          "created_at": "2026-11-14T14:34:51.260958+00:00",
+          "resolved_at": null,
+          "resolution": null,
+          "preferred_source_id": null,
+          "note": null
+        }
+      ],
+      "references": [
+        {
+          "id": "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+          "rule_id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+          "error_type": "TypeError",
+          "root_cause": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+          "solution": "在解析前先判断 value is None，若为 None 立即返回 0。",
+          "applicability": [
+            "Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。",
+            "同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。"
+          ],
+          "constraints": [
+            "quantity 与 label 规则互不依赖，可分别修复。",
+            "quantity(' ') 必须返回 0。",
+            "quantity(' 3 ') 必须返回 3。",
+            "quantity('') 必须返回 0。",
+            "quantity('-2') 必须返回 0。",
+            "quantity('0') 必须返回 0。",
+            "quantity('bad') 必须返回 0。",
+            "quantity(None) 必须返回 0。",
+            "不得修改测试和构建文件。",
+            "无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。",
+            "有效非负整数必须去除首尾空白后解析。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "TypeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+              "solution": "在解析前先判断 value is None，若为 None 立即返回 0。",
+              "symbols": [
+                "rules.py#quantity"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 2,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+            "7733be83-1564-4be4-8339-e81d6717d341"
+          ]
+        }
+      ]
+    }
+  ],
+  "source_database_sha256": {
+    "training.db": "a00dfee5e58939dafd89ff2fa44be3a155a030f9f8c4a632df8ee0b4e8baeb69",
+    "evaluation-output.db": "74cc397e3ffd1944b7237414aca3d21b274ff45fac6759ba2124fa718aecd534"
+  },
+  "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+  "manifest": {
+    "embedding": {
+      "model": "intfloat/multilingual-e5-small",
+      "revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-models\\embedding"
+    },
+    "nli": {
+      "model": "MoritzLaurer/mDeBERTa-v3-base-mnli-xnli",
+      "revision": "8adb042d524ecd5c26d3e3ba0e3fbcf7e2d0864c",
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-models\\nli"
+    }
+  },
+  "threshold": 0.95,
+  "calibration_sha256": "59dd9d12700d33bb3c07ff7192aef352d9cec91251797c0f84ea3d2d1fbfdcb5",
+  "elapsed_maintenance_seconds": 8.532236900005955,
+  "selected_relation": {
+    "id": "a0aff528-39f7-4315-b260-c821ffc0dfbc",
+    "left_rule": "41043c6f-b32a-5ea2-abf4-a5151aa4fe1f",
+    "right_rule": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+    "kind": "equivalent",
+    "details": "{\"action_scores\":{\"contradiction\":0.00023726429208181798,\"entailment\":0.9944692850112915,\"neutral\":0.0016030140686780214},\"condition_scores\":{\"contradiction\":0.0002689111279323697,\"entailment\":0.9938191771507263,\"neutral\":0.0015531076351180673},\"method\":\"nli\",\"model_version\":\"f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5\",\"reason\":\"双向自然语言推断\",\"scores\":{\"contradiction\":0.0007595862844027579,\"entailment\":0.9850794076919556,\"neutral\":0.0020790090784430504}}",
+    "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+    "status": "pending",
+    "version": 1,
+    "created_at": "2026-11-14T14:34:48.688896+00:00",
+    "resolved_at": null,
+    "resolution": null,
+    "preferred_source_id": null,
+    "note": null
+  },
+  "decision_details": {
+    "action_scores": {
+      "contradiction": 0.00023726429208181798,
+      "entailment": 0.9944692850112915,
+      "neutral": 0.0016030140686780214
+    },
+    "condition_scores": {
+      "contradiction": 0.0002689111279323697,
+      "entailment": 0.9938191771507263,
+      "neutral": 0.0015531076351180673
+    },
+    "method": "nli",
+    "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+    "reason": "双向自然语言推断",
+    "scores": {
+      "contradiction": 0.0007595862844027579,
+      "entailment": 0.9850794076919556,
+      "neutral": 0.0020790090784430504
+    }
+  },
+  "reference": {
+    "id": "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+    "rule_id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+    "schema_version": 4,
+    "language": "python",
+    "scope": "project",
+    "repository_id": "knowledge-python",
+    "reuse_status": "active",
+    "task_summary": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+    "error_type": "TypeError",
+    "root_cause": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+    "solution": "在解析前先判断 value is None，若为 None 立即返回 0。",
+    "applicability": [
+      "Python 中需要把 None、空白、非整数或负数输入统一回退为 0，并解析有效非负整数的输入处理函数。",
+      "同一源码文件中多个输入规范化函数需要保持独立规则、分别验证的场景。"
+    ],
+    "constraints": [
+      "quantity 与 label 规则互不依赖，可分别修复。",
+      "quantity(' ') 必须返回 0。",
+      "quantity(' 3 ') 必须返回 3。",
+      "quantity('') 必须返回 0。",
+      "quantity('-2') 必须返回 0。",
+      "quantity('0') 必须返回 0。",
+      "quantity('bad') 必须返回 0。",
+      "quantity(None) 必须返回 0。",
+      "不得修改测试和构建文件。",
+      "无效整数转换的输入异常按语言约定为 Python ValueError、Java IllegalArgumentException。",
+      "有效非负整数必须去除首尾空白后解析。"
+    ],
+    "compatibility_key": "stable-v2",
+    "required_capabilities": [],
+    "issues": [
+      {
+        "error_type": "TypeError",
+        "files": [
+          "rules.py"
+        ],
+        "root_cause": "None 输入未判空，直接调用 int(value) 会触发 TypeError。",
+        "solution": "在解析前先判断 value is None，若为 None 立即返回 0。",
+        "symbols": [
+          "rules.py#quantity"
+        ]
+      }
+    ],
+    "evidence_summary": {
+      "verified_runs": 2,
+      "level": "source_project_tests",
+      "minimum_tests": 11
+    },
+    "source_ids": [
+      "a4861a4b-c256-4007-a48b-d1dcf134ab84",
+      "7733be83-1564-4be4-8339-e81d6717d341"
+    ]
+  },
+  "provenance": {
+    "rule_id": "5fb98be2-adc8-5806-ab6d-52578dce978f",
+    "source_ids": [
+      "7733be83-1564-4be4-8339-e81d6717d341",
+      "a4861a4b-c256-4007-a48b-d1dcf134ab84"
+    ],
+    "evidence_count": 2,
+    "next_offset": null
+  },
+  "controls": [
+    {
+      "index": 1,
+      "left": {
+        "id": "9722b1d7-b175-5474-80c0-98d390f137d6",
+        "data": {
+          "applicability": [
+            "Python 函数需要将 None、空串或仅空白字符串映射为固定默认标签。",
+            "同一文件中 label 与 quantity 等函数规则互不依赖。",
+            "字符串标签需要去除首尾空白但保留大小写。"
+          ],
+          "compatibility_key": "stable-v2",
+          "constraints": [
+            "label 保留有效文本的大小写。",
+            "label 对 None 返回 'guest'。",
+            "label 对仅空白字符串返回 'guest'。",
+            "label 对有效文本去除首尾空白。",
+            "label 对空字符串返回 'guest'。",
+            "不得修改测试和构建文件。"
+          ],
+          "issue": {
+            "error_type": "AttributeError",
+            "files": [
+              "rules.py"
+            ],
+            "root_cause": "value 为 None 时直接调用 value.strip()，触发 AttributeError。",
+            "solution": "在调用 strip() 前判断 value is None，并返回 'guest'。",
+            "symbols": [
+              "rules.py#label"
+            ]
+          },
+          "language": "python",
+          "repository_id": "knowledge-python",
+          "required_capabilities": [],
+          "scope": "project",
+          "verification_class": "verified"
+        },
+        "sources": [
+          {
+            "id": "fdd44272-4f34-41f5-83f8-4bf65f94b60a",
+            "source_task_id": "f2fa4dac-9450-425e-a2aa-b07b8ffb2963"
+          }
+        ],
+        "db": "evaluation-output.db",
+        "trial_ids": [
+          "evaluation-python-independent-old-r1"
+        ]
+      },
+      "right": {
+        "id": "b0613c25-e702-51d2-9f75-164db17f2528",
+        "data": {
+          "applicability": [
+            "Python 中需要将可选文本标签规范化为默认 'guest' 的函数。",
+            "同一模块中存在多个互不依赖的输入规范化函数，需要分别修复和验证。",
+            "输入可能为 None、空字符串或仅空白字符，且有效文本需保留大小写的场景。"
+          ],
+          "compatibility_key": "stable-v2",
+          "constraints": [
+            "label 与 quantity 的规则互不依赖，可分别实现和验证。",
+            "label 对有效文本去除首尾空白且保留大小写。",
+            "label 对空值返回 'guest'。",
+            "label 对空白输入（包括空字符串和仅空白字符）返回 'guest'。",
+            "不得修改测试和构建文件。"
+          ],
+          "issue": {
+            "error_type": "AssertionError",
+            "files": [
+              "rules.py"
+            ],
+            "root_cause": "空字符串或仅空白字符经 strip() 后得到空字符串，代码未将空结果转换为默认值 'guest'，导致断言失败。",
+            "solution": "strip 后判断结果是否为空；若为空返回 'guest'，否则返回 strip 后的文本并保留大小写。",
+            "symbols": [
+              "rules.py#label"
+            ]
+          },
+          "language": "python",
+          "repository_id": "knowledge-python",
+          "required_capabilities": [],
+          "scope": "project",
+          "verification_class": "verified"
+        },
+        "sources": [
+          {
+            "id": "a795ecc0-8845-483f-9018-1df1dc0b35c4",
+            "source_task_id": "08fe846b-83fa-4f9e-8dd9-543300ac3410"
+          }
+        ],
+        "db": "evaluation-output.db",
+        "trial_ids": [
+          "evaluation-python-independent-old-r4"
+        ]
+      },
+      "before": {
+        "index": 1,
+        "prediction": "equivalent",
+        "details": {
+          "reason": "双向自然语言推断",
+          "scores": {
+            "entailment": 0.9903275370597839,
+            "neutral": 0.004239300265908241,
+            "contradiction": 0.0005231312825344503
+          },
+          "condition_scores": {
+            "entailment": 0.9974318146705627,
+            "neutral": 0.0019462573109194636,
+            "contradiction": 0.00032521149842068553
+          },
+          "model_version": "fe7c0c2ef5d77c3dd7298deebb066551a2d52c65124ee88d274fd158bef874da",
+          "method": "nli"
+        },
+        "tokens": 421,
+        "same_error_type": false,
+        "trials": [
+          [
+            "evaluation-python-independent-old-r1"
+          ],
+          [
+            "evaluation-python-independent-old-r4"
+          ]
+        ]
+      },
+      "after": {
+        "prediction": "unknown",
+        "details": {
+          "reason": "修复动作、错误类型或代码目标未独立通过等价检查",
+          "scores": {
+            "entailment": 0.9903275370597839,
+            "neutral": 0.004239300265908241,
+            "contradiction": 0.0005231312825344503
+          },
+          "condition_scores": {
+            "entailment": 0.9974318146705627,
+            "neutral": 0.0019462573109194636,
+            "contradiction": 0.00032521149842068553
+          },
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "method": "nli",
+          "action_scores": null
+        }
+      }
+    },
+    {
+      "index": 104,
+      "left": {
+        "id": "177ce56b-fd47-513c-935b-9197cb232230",
+        "data": {
+          "applicability": [
+            "Python 函数 label(value, mode) 需要同时支持 read 与 write 模式。",
+            "空值包括 None；空白包括空字符串或仅含空白字符的字符串。",
+            "需要对空值或去空白后为空的输入按模式返回默认值或抛出输入异常的场景。"
+          ],
+          "compatibility_key": "stable-v2",
+          "constraints": [
+            "Python 输入异常为 ValueError；Java 实现中对应输入异常为 IllegalArgumentException。",
+            "read 模式遇到空值或去空白后为空时返回 guest。",
+            "write 模式遇到空值或去空白后为空时必须抛出输入异常。",
+            "不得修改测试和构建文件。",
+            "有效文本去除首尾空白且保留大小写。"
+          ],
+          "issue": {
+            "error_type": "AttributeError",
+            "files": [
+              "rules.py"
+            ],
+            "root_cause": "原实现直接调用 value.strip()，没有先判断 value 是否为 None；当 value 为 None 且 mode 为 read 时会触发 AttributeError，无法进入 read 模式的 guest 返回逻辑。",
+            "solution": "在调用 strip 前判断 value is None；为 None 且 mode 为 read 时返回 guest。",
+            "symbols": [
+              "rules.py#label"
+            ]
+          },
+          "language": "python",
+          "repository_id": "knowledge-python",
+          "required_capabilities": [],
+          "scope": "project",
+          "verification_class": "verified"
+        },
+        "sources": [
+          {
+            "id": "a6f1a3e9-385d-4dfa-b422-431a8bf1bf6c",
+            "source_task_id": "4f348765-3a1e-4c0d-817f-1eb6323d85f2"
+          }
+        ],
+        "db": "training.db",
+        "trial_ids": [
+          "training-python-readonly"
+        ]
+      },
+      "right": {
+        "id": "3f7c59b2-3161-56ce-8dda-7cd3cb782662",
+        "data": {
+          "applicability": [
+            "适用于 Python 函数 label(value, mode) 的修复。",
+            "适用于 read 模式空输入回退 guest、write 模式空输入抛 ValueError 的输入清洗逻辑。",
+            "适用于需要按 read/write 模式区分空值处理策略的场景。"
+          ],
+          "compatibility_key": "stable-v2",
+          "constraints": [
+            "label(value, mode) 需支持 read 和 write 两种模式。",
+            "read 模式下 value 为 None、空字符串或仅空白字符串时返回 guest。",
+            "write 模式下 value 为 None、空字符串或仅空白字符串时必须抛出 ValueError。",
+            "不得修改测试文件 tests/test_rules.py 和构建文件 pyproject.toml。",
+            "有效文本需去除首尾空白并保留大小写。"
+          ],
+          "issue": {
+            "error_type": "AttributeError",
+            "files": [
+              "rules.py"
+            ],
+            "root_cause": "write 模式在 value 为 None 时仍调用 value.strip()，触发 AttributeError，而不是按要求抛出 ValueError。",
+            "solution": "write 模式下先判断 value is None；若为 None 立即抛出 ValueError。该检查必须在 strip 之前完成。",
+            "symbols": [
+              "rules.py#label"
+            ]
+          },
+          "language": "python",
+          "repository_id": "knowledge-python",
+          "required_capabilities": [],
+          "scope": "project",
+          "verification_class": "verified"
+        },
+        "sources": [
+          {
+            "id": "327cb762-0987-48da-bac3-7104c11ecc4a",
+            "source_task_id": "5f1b9ce8-842e-4bcf-93de-e6a131a8439d"
+          }
+        ],
+        "db": "evaluation-output.db",
+        "trial_ids": [
+          "evaluation-python-conditional-none-r1"
+        ]
+      },
+      "before": {
+        "index": 104,
+        "prediction": "equivalent",
+        "details": {
+          "reason": "双向自然语言推断",
+          "scores": {
+            "entailment": 0.9955251812934875,
+            "neutral": 0.003961206413805485,
+            "contradiction": 0.000303690874716267
+          },
+          "condition_scores": {
+            "entailment": 0.9971101880073547,
+            "neutral": 0.0018251283327117562,
+            "contradiction": 0.00015636900207027793
+          },
+          "model_version": "fe7c0c2ef5d77c3dd7298deebb066551a2d52c65124ee88d274fd158bef874da",
+          "method": "nli"
+        },
+        "tokens": 491,
+        "same_error_type": true,
+        "trials": [
+          [
+            "training-python-readonly"
+          ],
+          [
+            "evaluation-python-conditional-none-r1"
+          ]
+        ]
+      },
+      "after": {
+        "prediction": "unknown",
+        "details": {
+          "reason": "修复动作、错误类型或代码目标未独立通过等价检查",
+          "scores": {
+            "entailment": 0.9955251812934875,
+            "neutral": 0.003961206413805485,
+            "contradiction": 0.000303690874716267
+          },
+          "condition_scores": {
+            "entailment": 0.9971101880073547,
+            "neutral": 0.0018251283327117562,
+            "contradiction": 0.00015636900207027793
+          },
+          "model_version": "f90b5acc3032db3511683c22dc861a6a77a80f87d1c0815f784a061efd3b7bd5",
+          "method": "nli",
+          "action_scores": {
+            "entailment": 0.15062235295772552,
+            "neutral": 0.002726837759837508,
+            "contradiction": 0.00013398217561189085
+          }
+        }
+      }
+    }
+  ],
+  "originals_unchanged": true,
+  "source_databases_unchanged": true,
+  "calibration_unchanged": true,
+  "limitation": "Two independently executed tasks from the small controlled repair benchmark; not unrelated production repositories. Full original records and evidence are preserved. Only the selected TypeError knowledge is consolidated into one reference; other rules are not claimed merged."
+}

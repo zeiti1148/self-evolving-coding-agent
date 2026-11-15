@@ -185,10 +185,13 @@ it('switches themes using accessible buttons without navigating or losing form i
 
 it('shows a readable contract error and recovers the experience page on retry', async () => {
   const records = seedExperiences(Date.parse('2026-10-22T00:00:00Z'))
-  const fetcher = vi.fn()
-    .mockResolvedValueOnce(new Response(JSON.stringify({ items: records })))
-    .mockResolvedValueOnce(new Response(JSON.stringify(records.slice(0, 6))))
-  const { wrapper } = await setup(ExperiencesView, createHttpApi('', fetcher))
+  let attempts = 0
+  const fetcher = vi.fn(async (url: RequestInfo | URL) => {
+    if (String(url).includes('/automation?')) return new Response('{"items":[],"next_offset":null}')
+    if (String(url).includes('/conflicts?')) return new Response('[]')
+    return new Response(JSON.stringify(attempts++ === 0 ? { items: records } : records.slice(0, 6)))
+  })
+  const { wrapper } = await setup(ExperiencesView, { ...createHttpApi('', fetcher), getExperienceLibrary: undefined })
   try {
     await flushPromises()
     expect(wrapper.get('[role="alert"]').text()).toContain('接口约定')

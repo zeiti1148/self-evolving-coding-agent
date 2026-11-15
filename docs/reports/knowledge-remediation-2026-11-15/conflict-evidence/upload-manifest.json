@@ -1,0 +1,52 @@
+{
+  "runner_config": {
+    "python_paths": [
+      "src"
+    ],
+    "python_version": "3.10",
+    "requirements_file": "agent-requirements.txt",
+    "pytest_plugins": [
+      "pytester"
+    ],
+    "timeout_seconds": 300,
+    "deselect": [
+      "testing/test_mark.py::TestKeywordSelection::test_keyword_extra_dash"
+    ],
+    "test_targets": [
+      "testing/test_mark.py",
+      "testing/test_skipping.py",
+      "testing/python/collect.py",
+      "testing/python/fixtures.py::TestFixtureUsages"
+    ]
+  },
+  "task_description": "Parent class marked fixture no longer reached with pytest 7.2\n\nStarting with the release of pytest 7.2, the distutils tests started failing (https://github.com/pypa/distutils/issues/186).\r\n\r\nI read the [changelog for 7.2](https://docs.pytest.org/en/stable/changelog.html#pytest-7-2-0-2022-10-23), but I don't see anything relevant.\r\n\r\nThe issue is likely due to some of these factors:\r\n\r\n- the [test class is a subclass](https://github.com/pypa/distutils/blob/6c39b5053c17ec41690dab9d11399e2f39389892/distutils/tests/test_build_ext.py#L87) of [another class](https://github.com/pypa/distutils/blob/6c39b5053c17ec41690dab9d11399e2f39389892/distutils/tests/support.py#L15)\r\n- both classes are marked with `usefixtures`\r\n- The fixture on the subclass is reliant on the prior execution of the fixture in the parent class.\r\n\r\nSee the upstream bug for:\r\n\r\n- [x] a detailed description of the bug or problem you are having\r\n- [x] output of `pip list` from the virtual environment you are using\r\n- [x] pytest and operating system versions\r\n\r\nFor consideration:\r\n- [x] minimal example if possible\r\n\r\n\r\nI haven't put together a minimal example yet as I'm still triaging the issue. Is there a known change with pytest 7.2 that was expected to change this behavior?\n\n请独立检查源码和已登记的上游回归测试，复现并修复缺陷。通过全部登记测试，保留正常行为；只修改生产源码，不得修改测试、依赖或构建配置。",
+  "provenance": {
+    "repo": "pytest-dev/pytest",
+    "base_commit": "b77d0deaf53697630ba534f62dc871f4eb275f14",
+    "test_commit": "561f1a993bcef74b626a43ec16c79a57b6aa99d9",
+    "issue_url": "https://github.com/pytest-dev/pytest/issues/10447",
+    "pr_url": "https://github.com/pytest-dev/pytest/pull/11155",
+    "issue_title": "Parent class marked fixture no longer reached with pytest 7.2",
+    "issue_body": "Starting with the release of pytest 7.2, the distutils tests started failing (https://github.com/pypa/distutils/issues/186).\r\n\r\nI read the [changelog for 7.2](https://docs.pytest.org/en/stable/changelog.html#pytest-7-2-0-2022-10-23), but I don't see anything relevant.\r\n\r\nThe issue is likely due to some of these factors:\r\n\r\n- the [test class is a subclass](https://github.com/pypa/distutils/blob/6c39b5053c17ec41690dab9d11399e2f39389892/distutils/tests/test_build_ext.py#L87) of [another class](https://github.com/pypa/distutils/blob/6c39b5053c17ec41690dab9d11399e2f39389892/distutils/tests/support.py#L15)\r\n- both classes are marked with `usefixtures`\r\n- The fixture on the subclass is reliant on the prior execution of the fixture in the parent class.\r\n\r\nSee the upstream bug for:\r\n\r\n- [x] a detailed description of the bug or problem you are having\r\n- [x] output of `pip list` from the virtual environment you are using\r\n- [x] pytest and operating system versions\r\n\r\nFor consideration:\r\n- [x] minimal example if possible\r\n\r\n\r\nI haven't put together a minimal example yet as I'm still triaging the issue. Is there a known change with pytest 7.2 that was expected to change this behavior?",
+    "files": [
+      {
+        "filename": "changelog/10447.bugfix.rst",
+        "status": "added"
+      },
+      {
+        "filename": "src/_pytest/mark/structures.py",
+        "status": "modified"
+      },
+      {
+        "filename": "testing/test_mark.py",
+        "status": "modified"
+      }
+    ],
+    "test_files": [
+      "testing/test_mark.py"
+    ],
+    "test_file_sha256": "38c71481889084494630596da3bfcaf0c75804259241f303b1ce4dd0793d31e5",
+    "archive_sha256": "9f94d6380cd1ce17ce21d734b3a4c99814c574aff3868dee4afd7fcec4df04e4"
+  },
+  "archive_sha256": "fec7fd1ee0bd012b3bb923aacfb7c48b4d79b882999dcb245a4e26e8e0e34c6b"
+}

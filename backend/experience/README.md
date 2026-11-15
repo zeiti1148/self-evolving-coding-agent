@@ -1,6 +1,7 @@
 # SQLite 经验模块
 
 本模块实现 V3 原子多经验保存、隔离检索、合并、显式通用发布、来源图及旧数据兼容。
+新增批次保存后的自动重复规则合并、持久化冲突队列及版本校验的人工处理；模型注入排除待处理与已停用来源。规则、接口和限制见 [自动合并与冲突处理](../../docs/experience-consolidation.md)。
 复用 `backend.shared` 的公共模型和错误码，不依赖 Agent、工具、FastAPI 或前端。
 不负责经验提取，也不独立执行 Java/Python 验证；成功验证和保存时机由 Agent 控制。
 
@@ -140,7 +141,7 @@ npm.cmd run check:integration
 
 ## V3 模型检索及知识工作流
 
-- `retrieve_experiences(..., language, repository_id, capabilities, error_types)` 是唯一模型检索入口；只取当前仓库 active project 与同语言、能力符合的 active global，排除所有被替代记录。
+- `retrieve_model_references` 是生产模型入口：检查规范规则、目标兼容域、能力、审阅和依赖后返回紧凑引用。`retrieve_experiences` 保留旧调用兼容，不能替代新的规则级策略；管理列表不直接注入模型。
 - `policy.to_model_reference` 对通用记录使用白名单，移除私有来源字段；旧 global 默认 legacy_unreviewed，不因 V1/V2 迁移被自动信任。
 - `save_experiences` 校验整个 1–5 条数组，BEGIN IMMEDIATE 原子写入记录和批次索引；相同来源任务/内容重复返回原 ID，内容不同冲突。程序的最终测试证据由调用方绑定。
 - `preview_merge`/`merge_experiences` 检查范围、适用条件、能力、跨来源规则及顺序冲突，并去重问题和测试调用。
@@ -148,3 +149,5 @@ npm.cmd run check:integration
 - `get_provenance` 有界查询合并/通用化/修订关系；缺失和循环不伪装为空。
 
 更多字段和 API 见 [V3 说明](../../docs/experience-v3.md)、[公共接口](../../docs/interfaces.md)。批次、合并与发布不能承诺任意自然语言规则语义通用；目标仓库仍需独立验证。
+
+后台整理、规则级决定及撤销、可选本地模型、迁移和实验的当前行为见 [自动整理说明](../../docs/experience-consolidation.md)。基础依赖仍可运行确定性流程；本地 E5/NLI/Tree-sitter 使用 `requirements-semantic.txt`，不再沿用早期“没有新增业务依赖”的历史说明。

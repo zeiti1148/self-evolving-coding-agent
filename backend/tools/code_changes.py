@@ -20,7 +20,7 @@ def code_path(path: str) -> bool:
     parsed = PurePosixPath(path)
     return (bool(path) and parsed.as_posix() == path and not parsed.is_absolute()
             and not any(c in path for c in ('\\', ':')) and not any(ord(c) < 32 for c in path) and '..' not in parsed.parts
-            and parsed.suffix.casefold() in {'.java', '.py'} and not ignored_path(path)
+            and parsed.suffix.casefold() in {'.java', '.py', '.go', '.c', '.cc', '.cpp', '.cxx', '.h', '.hpp', '.hxx'} and not ignored_path(path)
             and not protected({path: ''}))
 
 

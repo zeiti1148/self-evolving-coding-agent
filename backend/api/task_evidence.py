@@ -22,7 +22,7 @@ class EvidenceModel(BaseModel):
 class TestRunEvidence(EvidenceModel):
     tool_call_id: str
     sequence: int = Field(ge=1)
-    runner: Literal["maven", "pytest"]
+    runner: Literal["maven", "pytest", "go", "ctest"]
     tests: int = Field(gt=0)
     passed: int = Field(ge=0)
     failures: int = Field(ge=0)
@@ -88,7 +88,7 @@ def _test_run(step):
     if step.call.name != "run_tests" or step.result.tool_name != "run_tests":
         return None
     data = step.result.metadata
-    if data.get("runner") not in {"maven", "pytest"}:
+    if data.get("runner") not in {"maven", "pytest", "go", "ctest"}:
         return None
     counts = [data.get(name) for name in ("tests", "failures", "errors", "skipped")]
     if any(type(value) is not int or value < 0 for value in counts):

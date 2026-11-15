@@ -1,0 +1,186 @@
+{
+  "at": "2026-11-15T06:32:27.426777+00:00",
+  "tasks": {
+    "pytest": {
+      "id": "a85747f6-0acf-4670-9bb0-280d38298b19",
+      "state": "succeeded",
+      "steps": 30,
+      "last_tool": "run_tests",
+      "last_result": true,
+      "test_runs": [
+        {
+          "sequence": 1,
+          "success": false,
+          "final": false,
+          "tests": 302,
+          "failures": 40,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 27,
+          "success": false,
+          "final": false,
+          "tests": 302,
+          "failures": 5,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 29,
+          "success": true,
+          "final": false,
+          "tests": 302,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 30,
+          "success": true,
+          "final": true,
+          "tests": 302,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "result": {
+        "tests_passed": true,
+        "repair_succeeded": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "b6716e28-3f6f-409a-a462-17f008382321"
+        ],
+        "experience_save_error": null,
+        "error_message": null
+      }
+    },
+    "sphinx": {
+      "id": "01403326-4f55-4098-887a-9136838899a1",
+      "state": "stopped",
+      "steps": 85,
+      "last_tool": "run_tests",
+      "last_result": true,
+      "test_runs": [
+        {
+          "sequence": 1,
+          "success": false,
+          "final": false,
+          "tests": 148,
+          "failures": 10,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 43,
+          "success": false,
+          "final": false,
+          "tests": 148,
+          "failures": 10,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 46,
+          "success": false,
+          "final": false,
+          "tests": 148,
+          "failures": 16,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 53,
+          "success": false,
+          "final": false,
+          "tests": 148,
+          "failures": 10,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 74,
+          "success": false,
+          "final": false,
+          "tests": 148,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 76,
+          "success": true,
+          "final": false,
+          "tests": 148,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 81,
+          "success": true,
+          "final": false,
+          "tests": 148,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 84,
+          "success": true,
+          "final": false,
+          "tests": 148,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        },
+        {
+          "sequence": 85,
+          "success": true,
+          "final": true,
+          "tests": 148,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0
+        }
+      ],
+      "result": {
+        "tests_passed": true,
+        "repair_succeeded": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "414bf457-a740-4d05-9760-772bd04e7616"
+        ],
+        "experience_save_error": null,
+        "error_message": "决策次数已用完。"
+      },
+      "error": "决策次数已用完。"
+    }
+  },
+  "automation": [
+    {
+      "id": "414bf457-a740-4d05-9760-772bd04e7616",
+      "source_task_id": "01403326-4f55-4098-887a-9136838899a1",
+      "state": "succeeded",
+      "local_pending": false,
+      "notice": "比较完成。",
+      "changes": [
+        {
+          "kind": "shared_principle",
+          "state": "merged",
+          "id": "a94ae79b-3e23-5623-b9f4-943daf817fcb",
+          "reason": "两源共享的是 MRO 显式先序聚合、只读本地声明并保持本地优先的修复原则；候选将 Sphinx 的成员名去重、截止类、文档合并规则与 pytest 的 marker 去重单位、consider_mro 参数及 store_mark 本地写入策略分别留在各自业务边界内，未把一源的常量、参数或写入策略迁移到另一源，也未遗漏关键限定，故批准。"
+        }
+      ]
+    },
+    {
+      "id": "b6716e28-3f6f-409a-a462-17f008382321",
+      "source_task_id": "a85747f6-0acf-4670-9bb0-280d38298b19",
+      "state": "succeeded",
+      "local_pending": false,
+      "notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。",
+      "changes": []
+    }
+  ]
+}

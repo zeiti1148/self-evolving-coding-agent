@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from backend.shared import (ApplicationError, ErrorCode, ExperienceCreate, PromotionDraft, PromotionPreview, RepairIssue)
 from .database import connect
 from .policy import to_model_reference
-from .store import COLUMNS, SUPERSEDED, _uuid, _insert, _new_experience, decode_row, validation_error
+from .store import COLUMNS, SUPERSEDED, RETIRED, QUARANTINED, _uuid, _insert, _new_experience, decode_row, validation_error
 
 
 def conflict(message):
@@ -31,6 +31,12 @@ def is_superseded(connection, identifier):
 
 def source_conflicts(connection, source):
     reasons = []
+    from .knowledge import source_requires_review,effective_rules
+    source_rules={r[0] for r in connection.execute('SELECT rule_id FROM knowledge_sources WHERE experience_id=?',(source.id,))}
+    if source_requires_review(connection,source.id) or source_rules & effective_rules(connection):
+        reasons.append("来源包含尚未完成整理或已暂停的规则，请完成审阅后再发布。")
+    if connection.execute(f"SELECT 1 WHERE ? IN ({RETIRED} UNION {QUARANTINED})", (source.id,)).fetchone():
+        reasons.append("来源存在待处理冲突或已暂停复用，请先处理冲突。")
     if not source.evidence:
         reasons.append("来源经验必须具有程序独立运行且通过的最终测试证据。")
     if source.reuse_status == "candidate" or source.scope == "project" and source.reuse_status != "active":
@@ -96,7 +102,7 @@ def validate_draft(source, draft):
         raise validation_error("发布草稿无效。") from None
     if draft.language != source.language:
         raise conflict("发布时必须保留来源的编程语言。")
-    if any(issue.files for issue in draft.issues):
+    if any(issue.files or issue.symbols for issue in draft.issues):
         raise conflict("通用规则不得包含来源文件路径。")
     private = [source.repository_id, source.source_revision, source.source_task_id,
                *(file for issue in source.issues for file in issue.files)]

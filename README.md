@@ -4,6 +4,8 @@
 
 ## 经验演进 V3
 
+新增自动经验整理：成功保存后自动合并同条件、同规则的已验证项目经验；规则重叠、证据不一致或修复顺序矛盾会进入持久化冲突队列，暂停相关经验的模型注入。经验页面支持整理历史记录、对比来源、选择可信来源或暂停两条记录，并保存处理依据。采用 Python 标准库拓扑排序、SQLite 索引与事务，无新增运行时依赖。详见 [自动合并与冲突处理](docs/experience-consolidation.md)。
+
 当前实现：一次成功修复直接生成并原子保存多条经验、仓库隔离、可追溯合并、显式通用发布，以及诊断—修复提案—独立复核的运行时协作。保持 Python + FastAPI + SQLite + Vue 3，默认 single，可选 multi。最终成功始终由程序独立运行 Maven/pytest 验证。
 
 Java/Python checkout 来源各有 18 项固定测试，booking 目标各有 12 项不同业务合同测试。页面支持角色过程、多条经验直达、仓库/状态筛选、合并预览、来源图和通用草稿编辑发布。
@@ -69,6 +71,8 @@ Copy-Item .env.example .env.local
 
 根目录 `.env` 填写 `LLM_API_BASE_URL`（通常以 /v1 结尾）、`LLM_API_KEY`、`LLM_MODEL`。模型必须支持 Chat Completions function tool calls。配置缺失或服务失败会显示真实错误，不回退为模拟成功。密钥不能放入任何 `VITE_` 变量。
 
+地址、密钥、模型现在从同一个配置文件读取，默认使用本仓库 `.env`，不会用继承的 `LLM_*` 值覆盖其中某一项，也不会从环境补齐缺项。需要另一个文件时，在启动环境设置 `LLM_CONFIG_FILE`；仅使用部署环境变量时显式设置 `LLM_CONFIG_SOURCE=environment`。文件里的模型配置不作 `${...}` 插值。每次模型请求记录脱敏来源、API 域名、模型及密钥指纹，不记录密钥内容。两个项目若填入同一把密钥，仍然共享同一账户额度；配置隔离不等于账户隔离。详见 [本次 API 来源核查](docs/reports/knowledge-remediation-2026-11-14/api-configuration-audit.md)。
+
 模型连接默认 `LLM_TRUST_ENV=false`，直接连接服务，避免后台继承终端的全局代理。需要使用环境代理或自定义 CA 时显式设为 `true`，此时 HTTPX 会读取 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY` 和 `SSL_CERT_*`。两种模式都保留 HTTPS 证书验证。连接审计只记录阶段、异常类型和机器错误码，不记录密钥、异常原文或请求正文；连接重试仍最多三次，读取超时不自动重试。
 
 将 `frontend/.env.local` 设置为：
@@ -82,6 +86,14 @@ VITE_SOURCE_PROJECT_LABEL=Java 空指针修复样例
 ```
 
 ## 启动真实应用
+
+Windows 可运行 `./scripts/start_local.ps1`，以后台进程启动前后端，固定读取本仓库 `.env`；已有端口不会被强制占用。访问 http://127.0.0.1:5173/#/ ，在“新建任务”上传自己的项目 ZIP、填写问题并提交修复。
+
+当前支持 **Python/pytest、Java/Maven、Go/go test、C++/CMake+CTest**。新建任务默认提供上传入口，已登记样例保留为备选。上传支持 GitHub 的单层包装目录和手动指定子目录；项目、测试设置与任务记录持久保存。Python 可以选本机解释器、测试范围和插件；声明精确依赖版本的包会匹配本机环境。编译器和项目依赖仍须安装，上传副本不等于操作系统沙箱，请仅运行自己信任的项目。
+
+任务页展示执行过程、测试前后对比和代码差异；成功修复并保存经验后，后台自动与已有经验比较，同仓库合并等价规则，不同项目归纳并复核共同规则。在“经验记录”直接查看合并前后对照、原文证据、业务约束，以及冲突处理结果和撤销历史。比较失败可以单独重试，修复不重跑。详见 [上传项目与运行环境](docs/uploaded-projects.md)。
+
+C++ 可选工具安装：`.\.venv\Scripts\python.exe -m pip install -r requirements-native.txt`，另需本机 C/C++ 编译器；Go 需要 Go 工具链。
 
 仓库根目录终端：
 
@@ -109,6 +121,8 @@ npm.cmd run dev
 内置登记还包括 V3 checkout/booking 和 V2 fulfillment 两种语言样例，以及 `java-null-greeting`、`java-null-profile`、`java-null-list`、`java-null-map`、`java-range-end` 和 `java-parse-count`。案例描述、错误类型与预期测试数量见 `benchmarks/catalog.json`。页面读取 `/api/projects` 目录，可直接选择登记项目。
 
 ## 验证
+
+自动经验整理现采用后台持久化作业、规范规则与扁平证据关联，支持规则级冲突决定及撤销。本地 E5/NLI 为可选依赖，安装和校准步骤见 [自动整理说明](docs/experience-consolidation.md)；问题、官方方案和实验结果集中记录在 [修复文档](docs/experience-consolidation-remediation.md)。
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest backend/tests -q

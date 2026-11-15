@@ -1,0 +1,213 @@
+--- original/sphinx/sphinx/ext/autodoc/__init__.py
++++ repaired/sphinx/sphinx/ext/autodoc/__init__.py
+@@ -594,18 +594,47 @@
+ 
+         # set sourcename and add content from attribute documentation
+         sourcename = self.get_sourcename()
+-        if self.analyzer:
+-            attr_docs = self.analyzer.find_attr_docs()
+-            if self.objpath:
+-                key = ('.'.join(self.objpath[:-1]), self.objpath[-1])
+-                if key in attr_docs:
+-                    no_docstring = True
+-                    # make a copy of docstring for attributes to avoid cache
+-                    # the change of autodoc-process-docstring event.
+-                    docstrings = [list(attr_docs[key])]
+-
+-                    for i, line in enumerate(self.process_doc(docstrings)):
+-                        self.add_line(line, sourcename, i)
++
++        def get_attribute_docstring() -> Optional[List[str]]:
++            if not self.objpath:
++                return None
++
++            if self.analyzer:
++                attr_docs = self.analyzer.find_attr_docs()
++            else:
++                attr_docs = {}
++
++            key = ('.'.join(self.objpath[:-1]), self.objpath[-1])
++            if key in attr_docs:
++                return attr_docs[key]
++
++            # search the base class namespaces for the attribute (refs: #741)
++            if inspect.isclass(self.parent):
++                name = self.objpath[-1]
++                for cls in self.parent.__mro__:
++                    try:
++                        module = safe_getattr(cls, '__module__')
++                        qualname = safe_getattr(cls, '__qualname__')
++                        if module is None or qualname is None:
++                            continue
++                        class_analyzer = ModuleAnalyzer.for_module(module)
++                        docs = class_analyzer.find_attr_docs().get((qualname, name))
++                    except (AttributeError, PycodeError):
++                        continue
++                    if docs is not None:
++                        return docs
++
++            return None
++
++        attr_docstring = get_attribute_docstring()
++        if attr_docstring is not None:
++            no_docstring = True
++            # make a copy of docstring for attributes to avoid cache
++            # the change of autodoc-process-docstring event.
++            docstrings = [list(attr_docstring)]
++
++            for i, line in enumerate(self.process_doc(docstrings)):
++                self.add_line(line, sourcename, i)
+ 
+         # add content from docstrings
+         if not no_docstring:
+@@ -666,6 +695,18 @@
+         The user can override the skipping decision by connecting to the
+         ``autodoc-skip-member`` event.
+         """
++        def get_attr_docstring(cls: Any, name: str) -> Optional[List[str]]:
++            """Get the docstring of the attribute *name* defined in *cls*."""
++            try:
++                module = safe_getattr(cls, '__module__')
++                qualname = safe_getattr(cls, '__qualname__')
++                if module is None or qualname is None:
++                    return None
++                class_analyzer = ModuleAnalyzer.for_module(module)
++                return class_analyzer.find_attr_docs().get((qualname, name))
++            except (AttributeError, PycodeError):
++                return None
++
+         def is_filtered_inherited_member(name: str) -> bool:
+             if inspect.isclass(self.object):
+                 for cls in self.object.__mro__:
+@@ -676,6 +717,9 @@
+                         return False
+                     elif name in self.get_attr(cls, '__annotations__', {}):
+                         return False
++                    elif get_attr_docstring(cls, name) is not None:
++                        # the member is an attribute documented in the class
++                        return False
+ 
+             return False
+ 
+@@ -688,6 +732,22 @@
+             attr_docs = self.analyzer.find_attr_docs()
+         else:
+             attr_docs = {}
++
++        def find_attr_docstring(name: str) -> Optional[List[str]]:
++            """Find the docstring of the attribute *name* from the class MRO."""
++            if not inspect.isclass(self.object):
++                return attr_docs.get((namespace, name))
++
++            for cls in self.object.__mro__:
++                if cls is self.object:
++                    docstring = attr_docs.get((namespace, name))
++                else:
++                    docstring = get_attr_docstring(cls, name)
++
++                if docstring is not None:
++                    return docstring
++
++            return None
+ 
+         # process members and determine which to skip
+         for obj in members:
+@@ -715,6 +775,11 @@
+             if isinstance(obj, ObjectMember) and obj.docstring:
+                 # hack for ClassDocumenter to inject docstring via ObjectMember
+                 doc = obj.docstring
++            elif doc is None:
++                # the member may be an attribute documented in a base class
++                attr_docstring = find_attr_docstring(membername)
++                if attr_docstring:
++                    doc = '\n'.join(attr_docstring)
+ 
+             has_doc = bool(doc)
+ 
+@@ -746,8 +811,10 @@
+                         keep = has_doc or self.options.undoc_members
+                 else:
+                     keep = False
+-            elif (namespace, membername) in attr_docs:
+-                if want_all and isprivate:
++            elif find_attr_docstring(membername) is not None:
++                if want_all and is_filtered_inherited_member(membername):
++                    keep = False
++                elif want_all and isprivate:
+                     if self.options.private_members is None:
+                         keep = False
+                     else:
+--- original/sphinx/sphinx/ext/autodoc/importer.py
++++ repaired/sphinx/sphinx/ext/autodoc/importer.py
+@@ -9,12 +9,13 @@
+ """
+ 
+ import importlib
++import os
+ import traceback
+ import warnings
+ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
+ 
+ from sphinx.deprecation import RemovedInSphinx40Warning, deprecated_alias
+-from sphinx.pycode import ModuleAnalyzer
++from sphinx.pycode import ModuleAnalyzer, PycodeError
+ from sphinx.util import logging
+ from sphinx.util.inspect import (getannotations, getmro, getslots, isclass, isenumclass,
+                                  safe_getattr)
+@@ -24,6 +25,11 @@
+     from typing import Type  # NOQA
+ 
+ logger = logging.getLogger(__name__)
++
++try:
++    os.remove(os.path.join(os.path.dirname(__file__), '_debug_members.txt'))
++except OSError:
++    pass
+ 
+ 
+ def mangle(subject: Any, name: str) -> str:
+@@ -307,13 +313,37 @@
+         except AttributeError:
+             pass
+ 
+-    if analyzer:
+-        # append instance attributes (cf. self.attr1) if analyzer knows
+-        namespace = '.'.join(objpath)
+-        for (ns, name), docstring in analyzer.attr_docs.items():
+-            if namespace == ns and name not in members:
+-                members[name] = ClassAttribute(subject, name, INSTANCEATTR,
+-                                               '\n'.join(docstring))
++    # append instance attributes (cf. self.attr1) if analyzer knows.
++    # Search the namespaces of the class and its base classes to support
++    # inherited instance attributes (refs: #741).
++    namespace = '.'.join(objpath)
++    for cls in getmro(subject):
++        if cls is subject:
++            if analyzer is None:
++                continue
++            cls_analyzer = analyzer
++            cls_namespace = namespace
++        else:
++            try:
++                module = safe_getattr(cls, '__module__')
++                cls_namespace = safe_getattr(cls, '__qualname__')
++                if module is None or cls_namespace is None:
++                    continue
++                cls_analyzer = ModuleAnalyzer.for_module(module)
++            except (AttributeError, PycodeError):
++                continue
++
++        try:
++            attr_docs = cls_analyzer.find_attr_docs()
++        except PycodeError:
++            continue
++
++        for (ns, name), docstring in attr_docs.items():
++            if cls_namespace == ns:
++                unmangled = unmangle(cls, name)
++                if unmangled and unmangled not in members:
++                    members[unmangled] = ClassAttribute(cls, unmangled, INSTANCEATTR,
++                                                        '\n'.join(docstring))
+ 
+     return members
+ 

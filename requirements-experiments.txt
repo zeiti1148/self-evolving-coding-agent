@@ -1,0 +1,3 @@
+-r requirements-dev.txt
+-r requirements-semantic.txt
+matplotlib>=3.9,<4

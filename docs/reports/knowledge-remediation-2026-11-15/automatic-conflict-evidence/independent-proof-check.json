@@ -1,0 +1,88 @@
+{
+  "review_id": "47b041f9-73d5-5adb-9d61-8ff95bf7d990",
+  "resolution": "keep_separate",
+  "actor": "system",
+  "evidence_hash": "604364bfbabad998499c9d541602878a64a366348dd70df6ff133a6e388717a0",
+  "six_artifacts_verified": true,
+  "original_workspaces_unchanged": true,
+  "prior_manual_decisions_unchanged": true,
+  "only_conflicting_function_file_replaced": true,
+  "matrix": [
+    {
+      "id": "f395ff58-cdab-475d-a2fc-c7155089e011",
+      "target_source_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+      "implementation_source_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+      "repeat": 1,
+      "outcome": "passed",
+      "tests": 277,
+      "failures": 0,
+      "failed_tests": [],
+      "reproduces_baseline": false
+    },
+    {
+      "id": "3c6ec157-1e77-417a-8d35-dfd6a4892a91",
+      "target_source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+      "implementation_source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+      "repeat": 1,
+      "outcome": "passed",
+      "tests": 275,
+      "failures": 0,
+      "failed_tests": [],
+      "reproduces_baseline": false
+    },
+    {
+      "id": "adfef301-9fdb-4c06-8346-2c6a26d63927",
+      "target_source_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+      "implementation_source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+      "repeat": 1,
+      "outcome": "failed",
+      "tests": 277,
+      "failures": 2,
+      "failed_tests": [
+        "testing.test_mark.test_mark_fixture_order_mro",
+        "testing.test_mark.test_mark_mro"
+      ],
+      "reproduces_baseline": true
+    },
+    {
+      "id": "0c828cd4-6291-4d66-a0b5-12bbe894a9d1",
+      "target_source_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+      "implementation_source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+      "repeat": 2,
+      "outcome": "failed",
+      "tests": 277,
+      "failures": 2,
+      "failed_tests": [
+        "testing.test_mark.test_mark_fixture_order_mro",
+        "testing.test_mark.test_mark_mro"
+      ],
+      "reproduces_baseline": true
+    },
+    {
+      "id": "5fb0f8e1-310d-4f43-9d0c-6726384e8fa7",
+      "target_source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+      "implementation_source_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+      "repeat": 1,
+      "outcome": "failed",
+      "tests": 275,
+      "failures": 1,
+      "failed_tests": [
+        "testing.test_mark.test_mark_mro"
+      ],
+      "reproduces_baseline": true
+    },
+    {
+      "id": "d56d9a43-f36f-42f1-adea-ad58d161ce6c",
+      "target_source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+      "implementation_source_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+      "repeat": 2,
+      "outcome": "failed",
+      "tests": 275,
+      "failures": 1,
+      "failed_tests": [
+        "testing.test_mark.test_mark_mro"
+      ],
+      "reproduces_baseline": true
+    }
+  ]
+}

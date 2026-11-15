@@ -44,5 +44,5 @@ def to_model_reference(entry: Experience) -> dict:
             "reuse_status": entry.reuse_status, "task_summary": entry.task_summary, "error_type": entry.error_type,
             "root_cause": entry.root_cause, "solution": entry.solution, "tags": entry.tags,
             "applicability": entry.applicability, "required_capabilities": entry.required_capabilities,
-            "issues": [issue.model_dump(exclude={"files"}) for issue in entry.issues],
+            "issues": [issue.model_dump(exclude={"files", "symbols"}) for issue in entry.issues],
             "evidence_summary": [e.model_dump(exclude={"source_task_id", "tool_call_id"}) for e in entry.evidence]}

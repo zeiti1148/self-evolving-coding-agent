@@ -1,0 +1,125 @@
+--- a/sphinx/ext/autodoc/importer.py
++++ b/sphinx/ext/autodoc/importer.py
+@@ -14,6 +14,7 @@
+ from typing import Any, Callable, Dict, List, Mapping, NamedTuple, Optional, Tuple
+ 
+ from sphinx.deprecation import RemovedInSphinx40Warning, deprecated_alias
++from sphinx.errors import PycodeError
+ from sphinx.pycode import ModuleAnalyzer
+ from sphinx.util import logging
+ from sphinx.util.inspect import (getannotations, getmro, getslots, isclass, isenumclass,
+@@ -315,6 +316,21 @@
+                 members[name] = ClassAttribute(subject, name, INSTANCEATTR,
+                                                '\n'.join(docstring))
+ 
++    # append instance attributes (cf. self.attr1) defined in super classes.
++    # The first class in the MRO defining an attribute wins, so that an attribute
++    # overridden by a subclass (or by a preceding base class) is documented once.
++    for cls in getmro(subject)[1:]:
++        try:
++            module = safe_getattr(cls, '__module__')
++            qualname = safe_getattr(cls, '__qualname__')
++            base_analyzer = ModuleAnalyzer.for_module(module)
++            for (ns, name), docstring in base_analyzer.find_attr_docs().items():
++                if ns == qualname and name not in members:
++                    members[name] = ClassAttribute(cls, name, INSTANCEATTR,
++                                                   '\n'.join(docstring))
++        except (AttributeError, PycodeError):
++            pass
++
+     return members
+ 
+ 
+--- a/sphinx/ext/autodoc/__init__.py
++++ b/sphinx/ext/autodoc/__init__.py
+@@ -276,11 +276,12 @@
+         return super().__new__(cls, (name, obj))  # type: ignore
+ 
+     def __init__(self, name: str, obj: Any, docstring: Optional[str] = None,
+-                 skipped: bool = False) -> None:
++                 skipped: bool = False, class_: Any = None) -> None:
+         self.__name__ = name
+         self.object = obj
+         self.docstring = docstring
+         self.skipped = skipped
++        self.class_ = class_
+ 
+ 
+ ObjectMembers = Union[List[ObjectMember], List[Tuple[str, Any]]]
+@@ -666,7 +667,7 @@
+         The user can override the skipping decision by connecting to the
+         ``autodoc-skip-member`` event.
+         """
+-        def is_filtered_inherited_member(name: str) -> bool:
++        def is_filtered_inherited_member(name: str, obj: Any) -> bool:
+             if inspect.isclass(self.object):
+                 for cls in self.object.__mro__:
+                     if cls.__name__ == self.options.inherited_members and cls != self.object:
+@@ -675,6 +676,8 @@
+                     elif name in cls.__dict__:
+                         return False
+                     elif name in self.get_attr(cls, '__annotations__', {}):
++                        return False
++                    elif isinstance(obj, ObjectMember) and obj.class_ is cls:
+                         return False
+ 
+             return False
+@@ -740,7 +743,7 @@
+                 if self.options.special_members and membername in self.options.special_members:
+                     if membername == '__doc__':
+                         keep = False
+-                    elif is_filtered_inherited_member(membername):
++                    elif is_filtered_inherited_member(membername, obj):
+                         keep = False
+                     else:
+                         keep = has_doc or self.options.undoc_members
+@@ -760,14 +763,14 @@
+                 if has_doc or self.options.undoc_members:
+                     if self.options.private_members is None:
+                         keep = False
+-                    elif is_filtered_inherited_member(membername):
++                    elif is_filtered_inherited_member(membername, obj):
+                         keep = False
+                     else:
+                         keep = membername in self.options.private_members
+                 else:
+                     keep = False
+             else:
+-                if self.options.members is ALL and is_filtered_inherited_member(membername):
++                if self.options.members is ALL and is_filtered_inherited_member(membername, obj):
+                     keep = False
+                 else:
+                     # ignore undocumented members if :undoc-members: is not given
+@@ -816,7 +819,8 @@
+ 
+         # document non-skipped members
+         memberdocumenters = []  # type: List[Tuple[Documenter, bool]]
+-        for (mname, member, isattr) in self.filter_members(members, want_all):
++        filtered = self.filter_members(members, want_all)
++        for (mname, member, isattr) in filtered:
+             classes = [cls for cls in self.documenters.values()
+                        if cls.can_document_member(member, mname, isattr, self)]
+             if not classes:
+@@ -1593,16 +1597,19 @@
+             for name in self.options.members:  # type: str
+                 if name in members:
+                     selected.append(ObjectMember(name, members[name].value,
+-                                                 docstring=members[name].docstring))
++                                                 docstring=members[name].docstring,
++                                                 class_=members[name].class_))
+                 else:
+                     logger.warning(__('missing attribute %s in object %s') %
+                                    (name, self.fullname), type='autodoc')
+             return False, selected
+         elif self.options.inherited_members:
+-            return False, [ObjectMember(m.name, m.value, docstring=m.docstring)
++            return False, [ObjectMember(m.name, m.value, docstring=m.docstring,
++                                        class_=m.class_)
+                            for m in members.values()]
+         else:
+-            return False, [ObjectMember(m.name, m.value, docstring=m.docstring)
++            return False, [ObjectMember(m.name, m.value, docstring=m.docstring,
++                                        class_=m.class_)
+                            for m in members.values() if m.class_ == self.object]
+ 
+     def get_doc(self, encoding: str = None, ignore: int = None) -> List[List[str]]:

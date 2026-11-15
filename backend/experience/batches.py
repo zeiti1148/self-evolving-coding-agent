@@ -32,7 +32,7 @@ def save_batch(path: Path, items: list[ExperienceCreate], *, source_task_id: str
     identities = {(item.language, item.repository_id, item.source_revision) for item in validated}
     knowledge = set()
     for item in validated:
-        if (item.schema_version != 3 or item.scope != "project" or item.reuse_status != "active"
+        if (item.schema_version not in {3, 4} or item.scope != "project" or item.reuse_status != "active"
                 or item.source_task_id != source_task_id or not item.evidence
                 or any(e.source_task_id != source_task_id for e in item.evidence)
                 or item.evidence != first.evidence or len(identities) != 1):
@@ -73,4 +73,6 @@ def save_batch(path: Path, items: list[ExperienceCreate], *, source_task_id: str
             _insert(connection, record)
             connection.execute("INSERT INTO experience_batch_items VALUES (?, ?, ?)", (batch_id, ordinal, record.id))
             saved.append(record)
+        # Ingestion inserted the rule projection and durable jobs in this transaction.
+        # Expensive derivation runs after commit; its failure cannot undo these originals.
         return saved

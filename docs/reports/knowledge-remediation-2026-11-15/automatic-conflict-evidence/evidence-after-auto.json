@@ -1,0 +1,35 @@
+{
+  "task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+  "experience_ids": [
+    "14e95e0b-29b3-4ab1-8a91-085e7333ad19"
+  ],
+  "status": "succeeded",
+  "repair_succeeded": true,
+  "experience_saved": true,
+  "started_at": "2026-11-15T12:42:26.981686Z",
+  "finished_at": "2026-11-15T12:45:50.863240Z",
+  "requests": {
+    "total": 19,
+    "repair": 15,
+    "comparison": 4,
+    "phases": {
+      "decision": 14,
+      "extraction": 1,
+      "principle_induction": 1,
+      "principle_review": 1,
+      "conflict_detection": 1,
+      "conflict_review": 1
+    },
+    "successes": 19,
+    "usage": {
+      "prompt_tokens": 199339,
+      "completion_tokens": 35076,
+      "total_tokens": 234415
+    }
+  },
+  "changed_files": [
+    "src/_pytest/mark/structures.py"
+  ],
+  "original_sources_unchanged": true,
+  "archive_sha256": "4afd719f015cbc1a1b1510605bee39a2363e6bcef0448f93d1c4a675eba114f7"
+}

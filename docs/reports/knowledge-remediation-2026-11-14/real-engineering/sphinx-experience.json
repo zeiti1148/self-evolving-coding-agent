@@ -1,0 +1,91 @@
+{
+  "task_summary": "修复 autodoc 在 `:inherited-members:` 下无法输出基类源码中定义的实例属性（`self.attr = None  #: doc`）的问题：在 `get_class_members()` 里按 MRO 收集基类属性文档，并在 `Documenter.filter_members()` 中保留已发现的继承成员，使跨模块多继承/菱形继承的真实 HTML 输出完整。",
+  "error_type": "AssertionError",
+  "root_cause": "1) `sphinx.ext.autodoc.importer.get_class_members()` 只用 subject 自身命名空间（`namespace = '.'.join(objpath)`）匹配 `analyzer.attr_docs`，基类 `__init__` 里的 `self.attr = None  #: doc` 属于纯源码实例属性，运行时既不在任何类的 `__dict__` 中，也不在 `__annotations__` 中，`dir(subject)` 也取不到，因此完全不会被发现，HTML 中缺少 ROOT/LEFT/RIGHT 等继承属性标记。2) 即使成员被发现，`Documenter.filter_members()` 的 `is_filtered_inherited_member()` 仅用 `name in cls.__dict__` 或 `name in cls.__annotations__` 判断“成员定义在 MRO 的这一类”，纯源码实例属性会一路走到 `:inherited-members:` 的默认截断类（`inherited_members_option(None)` 返回 `'object'`）并返回 True；在 `self.options.members is ALL` 的分支里该返回值直接导致 `keep = False`，继承属性在生成文档前被静默丢弃。3) 排障期在应用源码里加入的写 `XDEBUG2.log`/`XDEBUG5.txt` 的文件日志未清理。",
+  "solution": "在 `get_class_members()` 已有逻辑之后追加对 `getmro(subject)[1:]` 的遍历：对每个基类取 `__module__` 与 `__qualname__`，用 `ModuleAnalyzer.for_module(module).find_attr_docs()` 取该模块属性文档，仅当 `ns == qualname` 且 `name not in members` 时登记 `ClassAttribute(cls, name, INSTANCEATTR, '\\n'.join(docstring))`，并用 `except (AttributeError, PycodeError)` 吞掉内建/C 模块等无法分析的情况。因为 `name not in members` 即视为已定义，MRO 中第一个定义者胜出、共同祖先只出现一次、`Reverse(Right, Left)` 选中新的第一父类都自然满足。随后把 `filter_members()` 内的判定改成 `is_filtered_inherited_member(name, obj)` 并同步所有调用点，在 MRO 循环里 `name in cls.__dict__` / `__annotations__` 之后追加 `elif isinstance(obj, ObjectMember) and obj.class_ is cls: return False`，表示“该成员确实由这个类定义（含源码实例属性）”，从而不会因到达默认或命名截断基类而被过滤。定义类信息由成员发现阶段的 `ClassAttribute.class_` 记录并经 `ObjectMember` 透传，`ClassDocumenter.get_object_members()` 仍用 `m.class_ == self.object` 实现继承成员的 opt-in。",
+  "verification": "程序独立运行 pytest 最终验证，142 项测试全部通过；工具调用编号：1b873f41-5aa9-43de-a237-12d6407e2971。",
+  "tags": [
+    "python",
+    "autodoc",
+    "inherited-members",
+    "MRO",
+    "实例属性",
+    "成员过滤",
+    "ModuleAnalyzer",
+    "菱形继承"
+  ],
+  "source_task_id": "a7165a30-883c-49a0-af94-ee35ff5a9232",
+  "schema_version": 4,
+  "language": "python",
+  "scope": "project",
+  "repository_id": "sphinx-doc/sphinx",
+  "source_revision": "continuation:0f49f972ded464f740959ff7e50709791cc29266dab49614c55d5eb50832295a",
+  "compatibility_key": "sphinx-doc__sphinx-8548",
+  "constraints": [
+    "仅用 `name not in members` 判断属性是否已登记，保证 MRO 中第一个定义该属性的类胜出，同一属性只输出一次。",
+    "遍历基类时必须跳过 subject 自身，即使用 `getmro(subject)[1:]`。",
+    "读取基类属性文档必须使用该基类自己的 `__module__` 与 `__qualname__` 构造 analyzer 并按 `ns == qualname` 匹配，不能沿用子类命名空间或 `'.'.join(objpath)`。",
+    "基类缺少 `__module__`/`__qualname__`（AttributeError）或无源码可分析（PycodeError）时必须静默跳过，不得让构建失败或产生新警告。",
+    "纯源码实例属性的成员值必须是 `INSTANCEATTR` 哨兵，不得尝试 `getattr` 取值或输出 `:value:`。",
+    "必须保留 `inherited_members_option` 的默认截断类 `'object'`（`:inherited-members:` 不带参数时）以及 `:inherited-members: <BaseName>` 的命名基类排除语义：进入 `cls.__name__ == self.options.inherited_members and cls != self.object` 时仍返回 True。",
+    "`obj.class_ is cls` 的新增判断只能作为对“该类确实定义该成员”的短路返回 False，位置在 `name in cls.__dict__`/`__annotations__` 检查之后，不得改变原有判断优先级。",
+    "未开启 `:inherited-members:` 时仍只输出本类成员（`ClassDocumenter.get_object_members()` 以 `m.class_ == self.object` 过滤），因此继承来的属性必须携带其定义类标记。",
+    "继承属性的定义类信息需要从 `ClassAttribute.class_` 透传到 `ObjectMember`，过滤逻辑依赖 `obj.class_` 且需 `isinstance(obj, ObjectMember)` 保护。",
+    "不得改变特殊成员、私有成员、`exclude-members`、`undoc-members`、`autodoc-skip-member` 事件等既有过滤行为。",
+    "不得修改测试、配置、依赖或测试选择。",
+    "最终验证前必须删除应用源码中的临时调试文件写入（`XDEBUG2.log`、`XDEBUG5.txt`、`_XDEBUG_FLAG`）并清理产物。"
+  ],
+  "applicability": [
+    "Sphinx 3.x/4.0 的 `sphinx.ext.autodoc` 需要在类文档中输出基类 `__init__` 里以 `#:` 注释或紧随字符串记录的实例属性。",
+    "使用 `:inherited-members:` 指令选项或 `inherited-members` 选项按 MRO 展示继承的数据成员。",
+    "跨模块多继承/菱形继承场景，需要“首个定义者胜出、共同祖先只输出一次、属性可被子类覆盖”的确定性行为。"
+  ],
+  "issues": [
+    {
+      "error_type": "AssertionError",
+      "root_cause": "`get_class_members()` 只收集 subject 自身命名空间的实例属性文档，基类 `__init__` 中的 `self.attr = None  #: doc` 在运行时不存在于任何类 `__dict__`/`__annotations__`，`dir(subject)` 也无法暴露，导致继承属性完全缺失：真实 HTML 里 `ROOT_UNIQUE_DOC`/`LEFT_UNIQUE_DOC`/`RIGHT_UNIQUE_DOC` 都不出现，`assert token in built['inherited']` 失败且 `count('ROOT_UNIQUE_DOC') == 0`。",
+      "solution": "在 `get_class_members()` 末尾追加对 `getmro(subject)[1:]` 的遍历：取基类 `__module__`/`__qualname__`，用 `ModuleAnalyzer.for_module(module).find_attr_docs()` 找到 `ns == qualname` 的属性文档，在 `name not in members` 时登记 `ClassAttribute(cls, name, INSTANCEATTR, '\\n'.join(docstring))`，并用 `except (AttributeError, PycodeError)` 忽略内建/C 模块。借助“已存在即跳过”，自动获得 MRO 首个定义者优先、共同祖先只出现一次、反转基类列表后选择新第一父类的行为。",
+      "files": [
+        "sphinx/ext/autodoc/importer.py"
+      ],
+      "symbols": [
+        "sphinx/ext/autodoc/importer.py#get_class_members"
+      ],
+      "depends_on": []
+    },
+    {
+      "error_type": "AssertionError",
+      "root_cause": "`Documenter.filter_members()` 内的 `is_filtered_inherited_member(name)` 仅凭 `name in cls.__dict__` 或 `name in cls.__annotations__` 判断成员定义位置；纯源码实例属性两者都不满足，循环继续到 `:inherited-members:` 的默认截断类（无参时为 `'object'`）后返回 True，在 `self.options.members is ALL` 分支直接把 `keep` 置为 False，已发现的继承属性在生成 reST/HTML 前被丢弃。",
+      "solution": "把判定改为 `is_filtered_inherited_member(name, obj)` 并更新所有调用点；在 MRO 循环中于 `name in cls.__dict__`、`name in cls.__annotations__` 之后追加 `elif isinstance(obj, ObjectMember) and obj.class_ is cls: return False`，使由该类（含源码实例属性）定义的成员不被截断类过滤；定义类经由 `ClassAttribute.class_` 传入 `ObjectMember`，同时保持命名基类排除与 MRO 顺序不变。",
+      "files": [
+        "sphinx/ext/autodoc/__init__.py",
+        "sphinx/ext/autodoc/importer.py"
+      ],
+      "symbols": [
+        "sphinx/ext/autodoc/__init__.py#Documenter.filter_members"
+      ],
+      "depends_on": [
+        0
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "source_task_id": "a7165a30-883c-49a0-af94-ee35ff5a9232",
+      "tool_call_id": "1b873f41-5aa9-43de-a237-12d6407e2971",
+      "runner": "pytest",
+      "tests": 142,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "merged_from": [],
+  "batch_id": "be068107-36ba-4fea-9121-61e94ce137ab",
+  "reuse_status": "active",
+  "derived_from": [],
+  "supersedes_id": null,
+  "required_capabilities": [],
+  "id": "f1536c87-595f-4070-96d1-6a0ca89bb36b",
+  "created_at": "2026-11-14T15:48:41.392888Z"
+}

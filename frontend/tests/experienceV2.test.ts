@@ -166,7 +166,7 @@ describe('complex experience display and merge', () => {
     const fetcher = vi.fn().mockImplementation((url: string) => Promise.resolve(new Response(JSON.stringify(
       url.endsWith('merge-preview') ? wrong : entries,
     ))))
-    const { wrapper } = await setup(ExperiencesView, createHttpApi('', fetcher))
+    const { wrapper } = await setup(ExperiencesView, { ...createHttpApi('', fetcher), getExperienceLibrary: undefined })
     try {
       for (const input of wrapper.findAll('.merge-selection input')) await input.setValue(true)
       await wrapper.get('[data-testid="preview-merge"]').trigger('click'); await flushPromises()

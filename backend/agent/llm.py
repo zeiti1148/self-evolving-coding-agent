@@ -9,6 +9,7 @@ from typing import Any, Protocol
 import httpx
 
 from backend.config import Settings
+from backend.llm_configuration import api_identity
 from backend.shared import ApplicationError, ErrorCode
 from backend.tools.service import ARGUMENTS
 from .transport import TransportTrace, exception_chain
@@ -18,7 +19,9 @@ TOOL_DESCRIPTIONS = {
     "read_file": "Read a UTF-8 file using relative POSIX paths. Preserves whitespace.",
     "write_file": "Atomically replace a source file. Tests and build configuration are read-only.",
     "run_command": "Only java/javac -version, mvn -version, mvn compile, mvn test are permitted.",
-    "run_tests": "Run original acceptance tests with the registered Java/Maven or Python/pytest runner. Read test_failures, error_types and output, and repair every failure. Tests and build configuration are read-only.",
+    "run_tests": "Run the configured full acceptance suite using Maven, pytest, go test or CMake/CTest. Read test_failures, error_types and output, and repair every failure. Tests and build configuration are read-only.",
+    'replace_text': 'Replace exactly one occurrence of literal old text in a source file. Read before editing. Tests and build configuration are read-only.',
+    'search_text': 'Search literal text in the project. Returns up to 100 matching lines with paths and line numbers.',
 }
 TOOLS = [{"type": "function", "function": {"name": name, "description": TOOL_DESCRIPTIONS[name],
           "parameters": model.model_json_schema()}} for name, model in ARGUMENTS.items()]
@@ -35,6 +38,7 @@ class ChatClient:
         self.audit: list[dict] = []
         self.deadline: float | None = None
         self._client: httpx.Client | None = None
+        self.api_identity = api_identity(settings)
 
     def close(self) -> None:
         if self._client is not None:
@@ -86,6 +90,7 @@ class ChatClient:
             started = time.monotonic()
             trace = TransportTrace(started)
             event = {"phase": role or ("decision" if tools else "extraction"), "attempt": attempt + 1,
+                     "api_configuration": dict(self.api_identity),
                      "transport_policy": "environment" if config.llm_trust_env else "direct",
                      "transport_events": trace.events,
                      "requested_model": config.llm_model, "success": False,

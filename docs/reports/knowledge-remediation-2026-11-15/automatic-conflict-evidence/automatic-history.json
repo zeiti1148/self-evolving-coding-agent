@@ -1,0 +1,17 @@
+[
+  {
+    "version": 2,
+    "action": "resolve",
+    "data": {
+      "actor": "system",
+      "evidence_hash": "604364bfbabad998499c9d541602878a64a366348dd70df6ff133a6e388717a0",
+      "note": "系统自动处理：双方各自在原测试上下文通过，交叉使用却重复复现原始缺陷。自动分别保留并隔离互斥规则，暂停其自动复用；不按时间新旧选择。",
+      "policy": "verified-cross-tests-v1",
+      "preferred_source_id": null,
+      "previous_kind": "conflict",
+      "resolution": "keep_separate",
+      "version": 1
+    },
+    "created_at": "2026-11-15T12:51:20.715953Z"
+  }
+]

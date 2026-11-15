@@ -38,7 +38,7 @@ from backend.config import Settings
 from backend.experience import ExperienceStore
 from backend.experience.store import (
     COLUMNS, ORDER, _matches_keywords, _matches_tags, _same_text,
-    decode_row, validate_integer, validation_error,
+    decode_row, validate_integer, validation_error, unavailable_source_query,
 )
 from backend.shared import ApplicationError, TaskStatusResponse, TaskStepsResponse, ToolCall
 from backend.tools import ToolService, WorkspaceManager
@@ -107,6 +107,18 @@ class FrozenSearchStore:
     def save_experiences(self, items, *, source_task_id):
         return self.output.save_experiences(items, source_task_id=source_task_id)
 
+    def retrieve_model_references(self, query='', **context):
+        from backend.experience.database import read_only
+        with read_only(self.frozen) as connection:
+            current=connection.execute("SELECT 1 FROM sqlite_master WHERE name='knowledge_rules'").fetchone()
+        if current:
+            from backend.experience.retrieval import retrieve
+            return retrieve(self.frozen,query,**context)
+        from backend.experience.policy import to_model_reference
+        context.pop('compatibility_key',None)
+        context.pop('source_revision',None)
+        return [to_model_reference(item) for item in self.retrieve_experiences(query,**context)]
+
     def retrieve_experiences(self, query="", *, language, repository_id, error_types, limit=5, capabilities=None):
         from backend.experience.policy import RetrievalContext, rank_references
         from backend.experience.store import _validate_filters
@@ -118,9 +130,7 @@ class FrozenSearchStore:
         with closing(sqlite3.connect(self.frozen.as_uri() + "?mode=ro", uri=True)) as connection:
             connection.row_factory = sqlite3.Row
             connection.execute("PRAGMA query_only=ON")
-            excluded = "SELECT source_id FROM experience_merge_sources"
-            if connection.execute("SELECT 1 FROM sqlite_master WHERE name='experience_publication_revisions'").fetchone():
-                excluded += " UNION SELECT previous_id FROM experience_publication_revisions"
+            excluded = unavailable_source_query(connection)
             entries = (decode_row(row) for row in connection.execute(
                 f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({excluded}){ORDER}"))
             return rank_references(entries, RetrievalContext(language, repository_id, frozenset(capabilities or [])),
@@ -145,7 +155,6 @@ class FrozenSearchStore:
         if error_type is not None:
             conditions.append("same_text(error_type, ?)")
             parameters.append(error_type.strip().casefold())
-        where = " WHERE " + " AND ".join(conditions) if conditions else ""
         parameters.append(limit)
         with closing(sqlite3.connect(self.frozen.as_uri() + "?mode=ro", uri=True)) as connection:
             connection.row_factory = sqlite3.Row
@@ -153,6 +162,8 @@ class FrozenSearchStore:
             connection.create_function("matches_keywords", 6, _matches_keywords, deterministic=True)
             connection.create_function("matches_tags", 2, _matches_tags, deterministic=True)
             connection.create_function("same_text", 2, _same_text, deterministic=True)
+            conditions.insert(0, f"id NOT IN ({unavailable_source_query(connection)})")
+            where = " WHERE " + " AND ".join(conditions)
             rows = connection.execute(
                 f"SELECT {COLUMNS} FROM experiences{where}{ORDER} LIMIT ?", parameters,
             ).fetchall()

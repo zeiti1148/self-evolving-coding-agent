@@ -27,11 +27,13 @@ def sensitive_path(path: str | Path) -> bool:
 
 
 def ignored_path(path: str | Path) -> bool:
-    return any(part.casefold() in IGNORED for part in Path(path).parts) or sensitive_path(path)
+    parts = [part.casefold() for part in Path(path).parts]
+    return any(part in IGNORED and not (part == 'target' and any(p in {'test', 'tests', 'testing'} for p in parts[:i]))
+               for i, part in enumerate(parts)) or sensitive_path(path)
 
 
 def copy_ignored(directory: str, names: list[str]) -> set[str]:
-    return {name for name in names if ignored_path(name)}
+    return {name for name in names if ignored_path(Path(directory) / name)}
 
 
 def reject_links(path: Path) -> None:
@@ -74,10 +76,13 @@ def protected(files: dict[str, str]) -> dict[str, str]:
         base = parts[-1]
         return (sensitive_path(name) or base == "pom.xml" or "src/test/" in name.casefold() or
                 ".mvn" in parts or base.startswith("mvnw") or
-                any(part in {"test", "tests"} for part in parts) or
+                any(part in {"test", "tests", "testing"} for part in parts) or
+                base in {'go.mod', 'go.sum', 'go.work', 'go.work.sum', 'cmakelists.txt', 'cmakepresets.json', 'ctestcustom.cmake'} or
+                base.endswith(('.cmake', '_test.go')) or
+                (Path(base).suffix in {'.c', '.cc', '.cpp', '.cxx', '.h', '.hpp'} and (base.startswith('test') or '_test.' in base or Path(base).stem.endswith(('test', 'tests')))) or
                 base in {"pyproject.toml", "pytest.ini", "setup.cfg", "setup.py", "tox.ini",
                          "conftest.py", "sitecustomize.py", "usercustomize.py", "uv.lock",
-                         "poetry.lock", "pipfile", "pipfile.lock", ".python-version", ".agent-project.json"} or
+                         "poetry.lock", "pipfile", "pipfile.lock", ".python-version", ".agent-project.json", ".agent-upload.json"} or
                 base.startswith("requirements") or
                 base.endswith(".py") and (base.startswith("test_") or base.endswith("_test.py")))
     return {name: digest for name, digest in files.items() if is_protected(name)}

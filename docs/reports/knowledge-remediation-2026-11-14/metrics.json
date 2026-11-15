@@ -1,0 +1,335 @@
+{
+  "live": {
+    "none": {
+      "tasks": 32,
+      "passed": 32,
+      "visible_passed": 32,
+      "heldout_passed": 32,
+      "success_wilson95": [
+        0.8928208017449293,
+        1.0
+      ],
+      "mean_total_tokens": 21988.625,
+      "median_total_tokens": 22522.5,
+      "mean_seconds": 50.7620625,
+      "median_seconds": 49.525,
+      "mean_decisions": 5.25,
+      "mean_reference_characters": 0,
+      "with_references": 0,
+      "with_references_by_language": {
+        "java": 0,
+        "python": 0
+      },
+      "requests": 200,
+      "requests_with_token_counts": 197
+    },
+    "old": {
+      "tasks": 32,
+      "passed": 32,
+      "visible_passed": 32,
+      "heldout_passed": 32,
+      "success_wilson95": [
+        0.8928208017449293,
+        1.0
+      ],
+      "mean_total_tokens": 31987.4375,
+      "median_total_tokens": 29500.0,
+      "mean_seconds": 48.249625,
+      "median_seconds": 46.0975,
+      "mean_decisions": 5.09375,
+      "mean_reference_characters": 4486.803680981595,
+      "with_references": 16,
+      "with_references_by_language": {
+        "java": 0,
+        "python": 16
+      },
+      "requests": 195,
+      "requests_with_token_counts": 192
+    },
+    "new": {
+      "tasks": 32,
+      "passed": 32,
+      "visible_passed": 32,
+      "heldout_passed": 32,
+      "success_wilson95": [
+        0.8928208017449293,
+        1.0
+      ],
+      "mean_total_tokens": 28149.125,
+      "median_total_tokens": 27244.0,
+      "mean_seconds": 49.92478125,
+      "median_seconds": 50.2855,
+      "mean_decisions": 5.34375,
+      "mean_reference_characters": 2308.5847953216376,
+      "with_references": 16,
+      "with_references_by_language": {
+        "java": 0,
+        "python": 16
+      },
+      "requests": 203,
+      "requests_with_token_counts": 201
+    }
+  },
+  "paired_token_difference_new_minus_old": {
+    "mean_tokens": -3838.3125,
+    "cluster_bootstrap95": [
+      -8817.96875,
+      843.90625
+    ],
+    "clusters": 8
+  },
+  "total_live_tasks": 108,
+  "total_live_tokens": 2917710,
+  "all_originals_unchanged": true,
+  "frozen_unchanged": true,
+  "training_saved_tasks": 8,
+  "training_records": 9,
+  "semantic": {
+    "deterministic": {
+      "development": {
+        "count": 306,
+        "accuracy": 0.6666666666666666,
+        "unknown_rate": 0.5,
+        "false_merges": 0,
+        "missed_conflicts": 51,
+        "false_conflicts": 0,
+        "equivalent": {
+          "precision": 1.0,
+          "recall": 0.5,
+          "decisions": 51
+        },
+        "conflict": {
+          "precision": null,
+          "recall": 0.0,
+          "decisions": 0
+        }
+      },
+      "heldout": {
+        "count": 294,
+        "accuracy": 0.6666666666666666,
+        "unknown_rate": 0.5,
+        "false_merges": 0,
+        "missed_conflicts": 49,
+        "false_conflicts": 0,
+        "equivalent": {
+          "precision": 1.0,
+          "recall": 0.5,
+          "decisions": 49
+        },
+        "conflict": {
+          "precision": null,
+          "recall": 0.0,
+          "decisions": 0
+        }
+      }
+    },
+    "local_nli": {
+      "development": {
+        "count": 306,
+        "accuracy": 0.9444444444444444,
+        "unknown_rate": 0.2222222222222222,
+        "false_merges": 0,
+        "missed_conflicts": 0,
+        "false_conflicts": 0,
+        "equivalent": {
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "decisions": 85
+        },
+        "conflict": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "decisions": 51
+        }
+      },
+      "heldout": {
+        "count": 294,
+        "accuracy": 1.0,
+        "unknown_rate": 0.16666666666666666,
+        "false_merges": 0,
+        "missed_conflicts": 0,
+        "false_conflicts": 0,
+        "equivalent": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "decisions": 98
+        },
+        "conflict": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "decisions": 49
+        }
+      }
+    }
+  },
+  "old_semantic": {
+    "development": {
+      "count": 306,
+      "accuracy": 0.5,
+      "unknown_rate": 0.16666666666666666,
+      "false_merges": 0,
+      "missed_conflicts": 0,
+      "false_conflicts": 153,
+      "equivalent": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "decisions": 51
+      },
+      "conflict": {
+        "precision": 0.25,
+        "recall": 1.0,
+        "decisions": 204
+      }
+    },
+    "heldout": {
+      "count": 294,
+      "accuracy": 0.5,
+      "unknown_rate": 0.16666666666666666,
+      "false_merges": 0,
+      "missed_conflicts": 0,
+      "false_conflicts": 147,
+      "equivalent": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "decisions": 49
+      },
+      "conflict": {
+        "precision": 0.25,
+        "recall": 1.0,
+        "decisions": 196
+      }
+    }
+  },
+  "embedding_retrieval": {
+    "queries": 100,
+    "candidates": 200,
+    "recall_at_1": 0.84,
+    "recall_at_5": 1.0,
+    "recall_at_10": 1.0,
+    "caveat": "Exact fixture identity recall; numbered near-duplicate targets make rank ties difficult. Similarity never authorizes merging."
+  },
+  "challenge": {
+    "count": 16,
+    "accuracy": 0.6875,
+    "unknown_rate": 0.625,
+    "false_merges": 0,
+    "missed_conflicts": 4,
+    "false_conflicts": 0,
+    "equivalent": {
+      "precision": 1.0,
+      "recall": 0.75,
+      "decisions": 3
+    },
+    "conflict": {
+      "precision": 1.0,
+      "recall": 0.42857142857142855,
+      "decisions": 3
+    }
+  },
+  "capacity": [
+    {
+      "size": 100,
+      "save_seconds": 1.4045342999743298,
+      "save_p50_ms": 12.066600000252947,
+      "save_p95_ms": 20.748799957800657,
+      "queue_seconds": 2.2996844999725,
+      "pending_before": 100,
+      "pending_after": 0,
+      "retrieval_p50_ms": 6.831199978478253,
+      "retrieval_p95_ms": 11.321900004986674,
+      "reference_count": 5,
+      "database_bytes": 839680,
+      "counts": {
+        "experiences": 100,
+        "knowledge_rules": 100,
+        "knowledge_evidence": 100,
+        "knowledge_sources": 100,
+        "knowledge_relations": 0
+      },
+      "integrity": "ok",
+      "workload": "Distinct exact file scopes, no semantic inference; dense overlaps are separately tested at 61 rules."
+    },
+    {
+      "size": 1000,
+      "save_seconds": 16.177154399978463,
+      "save_p50_ms": 15.670599968871102,
+      "save_p95_ms": 21.66530000977218,
+      "queue_seconds": 28.076170700020157,
+      "pending_before": 1000,
+      "pending_after": 0,
+      "retrieval_p50_ms": 35.36555002210662,
+      "retrieval_p95_ms": 42.82450000755489,
+      "reference_count": 5,
+      "database_bytes": 4808704,
+      "counts": {
+        "experiences": 1000,
+        "knowledge_rules": 1000,
+        "knowledge_evidence": 1000,
+        "knowledge_sources": 1000,
+        "knowledge_relations": 0
+      },
+      "integrity": "ok",
+      "workload": "Distinct exact file scopes, no semantic inference; dense overlaps are separately tested at 61 rules."
+    },
+    {
+      "size": 10000,
+      "save_seconds": 171.15894110000227,
+      "save_p50_ms": 15.796499996213242,
+      "save_p95_ms": 23.299199994653463,
+      "queue_seconds": 534.3376547999796,
+      "pending_before": 10000,
+      "pending_after": 0,
+      "retrieval_p50_ms": 340.50950000528246,
+      "retrieval_p95_ms": 721.014600014314,
+      "reference_count": 5,
+      "database_bytes": 45133824,
+      "counts": {
+        "experiences": 10000,
+        "knowledge_rules": 10000,
+        "knowledge_evidence": 10000,
+        "knowledge_sources": 10000,
+        "knowledge_relations": 0
+      },
+      "integrity": "ok",
+      "workload": "Distinct exact file scopes, no semantic inference; dense overlaps are separately tested at 61 rules."
+    }
+  ],
+  "groups_passed": 40,
+  "final_replay": {
+    "trials": 32,
+    "calls": 204,
+    "identical": 204,
+    "context_source": "Agent retrieval_events: immutable per-call error type snapshots",
+    "original_frozen_unchanged": true,
+    "policy_version": "fe7c0c2ef5d77c3dd7298deebb066551a2d52c65124ee88d274fd158bef874da",
+    "maintenance": {
+      "examined": 120,
+      "merged_ids": [],
+      "conflict_ids": [],
+      "deferred_groups": 0,
+      "next_cursor": null,
+      "job_id": null,
+      "pending_jobs": 0,
+      "failed_jobs": 0,
+      "unknown_pairs": 16
+    }
+  },
+  "environment": {
+    "python": "3.13.7",
+    "platform": "Windows",
+    "sqlite": "3.50.4",
+    "packages": {
+      "sentence-transformers": "5.7.0",
+      "transformers": "4.57.6",
+      "torch": "2.15.0",
+      "tree-sitter": "0.26.1",
+      "tree-sitter-java": "0.23.5",
+      "tree-sitter-python": "0.25.0",
+      "hypothesis": "6.170.15",
+      "pydantic": "2.14.1",
+      "fastapi": "0.162.0"
+    }
+  },
+  "source_archive_sha256": "9fd5f833b63f203e9eef905217ef782336a2c3fb971b79ddc228bc89a2105bf9",
+  "capacity_source_archive_sha256": "8145c5290eec4dac0c93bf986a9ddf986abc0617eb9125d1dc22755613a2d0c9"
+}

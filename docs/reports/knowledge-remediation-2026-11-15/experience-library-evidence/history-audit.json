@@ -1,0 +1,158 @@
+{
+  "id": "3e07f801-b668-46b4-9057-9d8038d88408",
+  "state": "succeeded",
+  "notice": "已将 4 份历史记录归并为 1 组待验证经验；原始记录保留。",
+  "created_at": "2026-11-15T13:11:20.256195+00:00",
+  "updated_at": "2026-11-15T13:11:44.886643+00:00",
+  "proposal": {
+    "groups": [
+      {
+        "bindings": [
+          {
+            "solution_quote": "在 GreetingService.greet 中增加 null 判断：当 name == null 时返回 \"Hello, guest!\"；非空字符串仍按原逻辑 trim 后拼接 \"Hello, \" + name.trim() + \"!\"。修改文件 src/main/java/dev/selfevolving/benchmark/GreetingService.java。",
+            "source_id": "9b4ac439-156f-45ff-9646-98e0e2dc7108"
+          },
+          {
+            "solution_quote": "在 greet 方法中增加 null 检查：name == null 时返回 \"Hello, guest!\"；非 null 时继续使用 \"Hello, \" + name.trim() + \"!\"。仅修改 src/main/java/dev/selfevolving/benchmark/GreetingService.java。",
+            "source_id": "d82598d9-fb0e-46f6-96e5-86037645e864"
+          },
+          {
+            "solution_quote": "Add a null guard in GreetingService.greet: return \"Hello, guest!\" when name is null; otherwise return \"Hello, \" + name.trim() + \"!\".",
+            "source_id": "c182ef5d-1cce-498f-ade1-ee820dc4e851"
+          },
+          {
+            "solution_quote": "在 greet 方法中增加 null 判断：name == null 时返回 \"Hello, guest!\"；否则保留原有逻辑，返回 \"Hello, \" + name.trim() + \"!\"。",
+            "source_id": "db3934e1-87ba-47b2-805c-ea3ca8b689da"
+          }
+        ],
+        "reason": "四条记录均针对 GreetingService.greet 的同一具体行为：name 为 null 时返回固定字符串 \"Hello, guest!\"，非空时保持 trim 后拼接 \"Hello, \" + name.trim() + \"!\"，且都通过增加 null 判断修复空指针异常。目标方法、前置条件、输出常量、非空分支逻辑和异常类型一致，可互换。",
+        "representative_id": "9b4ac439-156f-45ff-9646-98e0e2dc7108",
+        "source_ids": [
+          "9b4ac439-156f-45ff-9646-98e0e2dc7108",
+          "d82598d9-fb0e-46f6-96e5-86037645e864",
+          "c182ef5d-1cce-498f-ade1-ee820dc4e851",
+          "db3934e1-87ba-47b2-805c-ea3ca8b689da"
+        ]
+      }
+    ],
+    "reason": "仅发现一组语义等价的历史修复记录；四个来源描述相同的 GreetingService.greet 空指针修复行为，因此合并为一组，并选用最早记录作为代表。"
+  },
+  "reviews": [
+    {
+      "approved": true,
+      "checks": [
+        {
+          "conditions_preserved": true,
+          "equivalent_to_representative": true,
+          "source_id": "9b4ac439-156f-45ff-9646-98e0e2dc7108"
+        },
+        {
+          "conditions_preserved": true,
+          "equivalent_to_representative": true,
+          "source_id": "d82598d9-fb0e-46f6-96e5-86037645e864"
+        },
+        {
+          "conditions_preserved": true,
+          "equivalent_to_representative": true,
+          "source_id": "c182ef5d-1cce-498f-ade1-ee820dc4e851"
+        },
+        {
+          "conditions_preserved": true,
+          "equivalent_to_representative": true,
+          "source_id": "db3934e1-87ba-47b2-805c-ea3ca8b689da"
+        }
+      ],
+      "reason": "四个来源均描述 GreetingService.greet 的同一修复行为：先判断 name 是否为 null，为 null 时返回常量 \"Hello, guest!\"，非 null 时保持原逻辑返回 \"Hello, \" + name.trim() + \"!\"。目标方法、判断顺序、常量、输出和非空分支的 trim 拼接行为一致；中英文表述及是否显式写出文件路径的差异不改变具体修复语义。此审核仅确认归档分组等价，不评估或提升 legacy 来源的测试可信度。"
+    }
+  ],
+  "accepted": [
+    {
+      "bindings": [
+        {
+          "solution_quote": "在 GreetingService.greet 中增加 null 判断：当 name == null 时返回 \"Hello, guest!\"；非空字符串仍按原逻辑 trim 后拼接 \"Hello, \" + name.trim() + \"!\"。修改文件 src/main/java/dev/selfevolving/benchmark/GreetingService.java。",
+          "source_id": "9b4ac439-156f-45ff-9646-98e0e2dc7108"
+        },
+        {
+          "solution_quote": "在 greet 方法中增加 null 检查：name == null 时返回 \"Hello, guest!\"；非 null 时继续使用 \"Hello, \" + name.trim() + \"!\"。仅修改 src/main/java/dev/selfevolving/benchmark/GreetingService.java。",
+          "source_id": "d82598d9-fb0e-46f6-96e5-86037645e864"
+        },
+        {
+          "solution_quote": "Add a null guard in GreetingService.greet: return \"Hello, guest!\" when name is null; otherwise return \"Hello, \" + name.trim() + \"!\".",
+          "source_id": "c182ef5d-1cce-498f-ade1-ee820dc4e851"
+        },
+        {
+          "solution_quote": "在 greet 方法中增加 null 判断：name == null 时返回 \"Hello, guest!\"；否则保留原有逻辑，返回 \"Hello, \" + name.trim() + \"!\"。",
+          "source_id": "db3934e1-87ba-47b2-805c-ea3ca8b689da"
+        }
+      ],
+      "id": "33565bd0-6786-5f7b-9a8b-20550c06d669",
+      "reason": "四条记录均针对 GreetingService.greet 的同一具体行为：name 为 null 时返回固定字符串 \"Hello, guest!\"，非空时保持 trim 后拼接 \"Hello, \" + name.trim() + \"!\"，且都通过增加 null 判断修复空指针异常。目标方法、前置条件、输出常量、非空分支逻辑和异常类型一致，可互换。",
+      "representative_id": "9b4ac439-156f-45ff-9646-98e0e2dc7108",
+      "review": {
+        "approved": true,
+        "checks": [
+          {
+            "conditions_preserved": true,
+            "equivalent_to_representative": true,
+            "source_id": "9b4ac439-156f-45ff-9646-98e0e2dc7108"
+          },
+          {
+            "conditions_preserved": true,
+            "equivalent_to_representative": true,
+            "source_id": "d82598d9-fb0e-46f6-96e5-86037645e864"
+          },
+          {
+            "conditions_preserved": true,
+            "equivalent_to_representative": true,
+            "source_id": "c182ef5d-1cce-498f-ade1-ee820dc4e851"
+          },
+          {
+            "conditions_preserved": true,
+            "equivalent_to_representative": true,
+            "source_id": "db3934e1-87ba-47b2-805c-ea3ca8b689da"
+          }
+        ],
+        "reason": "四个来源均描述 GreetingService.greet 的同一修复行为：先判断 name 是否为 null，为 null 时返回常量 \"Hello, guest!\"，非 null 时保持原逻辑返回 \"Hello, \" + name.trim() + \"!\"。目标方法、判断顺序、常量、输出和非空分支的 trim 拼接行为一致；中英文表述及是否显式写出文件路径的差异不改变具体修复语义。此审核仅确认归档分组等价，不评估或提升 legacy 来源的测试可信度。"
+      },
+      "source_hashes": {
+        "9b4ac439-156f-45ff-9646-98e0e2dc7108": "4c358401d923380a4efca71ada86e7122903cbd1355fd6ffda45d35e6dc41b65",
+        "c182ef5d-1cce-498f-ade1-ee820dc4e851": "2272de3eb52a9d74f74c2f36b63da23565b8c02ea507cc99ec7ce01570952712",
+        "d82598d9-fb0e-46f6-96e5-86037645e864": "ab34eb6fb5c06d8ca45e8bf221566a6a99961dfe6cfb67fd2bda74a0f494de78",
+        "db3934e1-87ba-47b2-805c-ea3ca8b689da": "db69d3c2caaa3b2d55d8a44bb3e379ce6ec8f8a1a20492ff216e79e6f916fa18"
+      },
+      "source_ids": [
+        "9b4ac439-156f-45ff-9646-98e0e2dc7108",
+        "d82598d9-fb0e-46f6-96e5-86037645e864",
+        "c182ef5d-1cce-498f-ade1-ee820dc4e851",
+        "db3934e1-87ba-47b2-805c-ea3ca8b689da"
+      ],
+      "state": "unverified"
+    }
+  ],
+  "model_requests": [
+    {
+      "phase": "history_grouping",
+      "success": true,
+      "http_status": 200,
+      "returned_model": "deepseek-flash",
+      "usage": {
+        "completion_tokens": 1129,
+        "prompt_tokens": 1916,
+        "total_tokens": 3045
+      },
+      "duration_ms": 5055
+    },
+    {
+      "phase": "history_grouping_review",
+      "success": true,
+      "http_status": 200,
+      "returned_model": "deepseek-flash",
+      "usage": {
+        "completion_tokens": 3158,
+        "prompt_tokens": 2330,
+        "total_tokens": 5488
+      },
+      "duration_ms": 18244
+    }
+  ]
+}

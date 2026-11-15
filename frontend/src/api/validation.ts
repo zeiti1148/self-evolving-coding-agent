@@ -1,5 +1,6 @@
 import type { AgentEvent, AgentResult, Experience, ExperienceKnowledge, MergePreview, PromotionDraft, PromotionPreview, ProvenanceGraph, RegisteredProject, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse, ToolCall, ToolResult } from './contracts'
 import type { TestSourceFile, TestSourceIndex, TestSourceInfo } from './contracts'
+import type { MergeConflictDetail } from './contracts'
 
 // Guard the fields consumed by the UI. Public Pydantic models remain authoritative.
 type Data = Record<string, unknown>
@@ -31,7 +32,7 @@ function readSourceInfo(value: unknown): TestSourceInfo {
   const data = object(value)
   check(text(data.path) && data.path.length <= 1000 && !/[\\:\u0000-\u001f]/.test(data.path)
     && data.path.split('/').every(part => part !== '' && part !== '.' && part !== '..'))
-  check(data.language === 'java' || data.language === 'python')
+  check(['java', 'python', 'go', 'cpp'].includes(String(data.language)))
   check(typeof data.sha256 === 'string' && /^[a-f0-9]{64}$/.test(data.sha256))
   return data as unknown as TestSourceInfo
 }
@@ -98,7 +99,10 @@ function readResult(value: unknown): AgentResult {
     check(!steps.slice(finalTest + 1).some(call => call.name === 'write_file' || call.name === 'run_command'))
   }
   check(data.status !== 'succeeded' || data.repair_succeeded === true && data.tests_passed === true && data.experience_saved !== null)
-  check(data.status === 'succeeded' || data.experience_saved === null)
+  const verifiedStop = data.status === 'stopped' && data.repair_succeeded === true && data.tests_passed === true
+    && steps.at(-1)?.name === 'run_tests' && tool_results.at(-1)?.call_id === steps.at(-1)?.id
+    && tool_results.at(-1)?.success === true && tool_results.at(-1)?.metadata.final_verification === true
+  check(data.status === 'succeeded' || verifiedStop || data.experience_saved === null)
   check(data.experience_saved === true ? uuid(data.experience_id) && data.experience_save_error === null
     : data.experience_saved === false ? data.experience_id === null && text(data.experience_save_error)
       : data.experience_id === null && data.experience_save_error === null)
@@ -134,37 +138,41 @@ function readKnowledge(value: unknown): ExperienceKnowledge {
     language: 'java', scope: 'global', repository_id: null, source_revision: null,
     applicability: [], issues: [], evidence: [], merged_from: [], batch_id: null, derived_from: [], supersedes_id: null,
     required_capabilities: [], ...object(value) }
-  data.reuse_status ??= data.scope === 'project' ? 'active' : data.schema_version === 3 ? 'candidate' : 'legacy_unreviewed'
+  data.reuse_status ??= data.scope === 'project' ? 'active' : Number(data.schema_version) >= 3 ? 'candidate' : 'legacy_unreviewed'
   check(['task_summary', 'root_cause', 'solution', 'verification'].every(key => text(data[key])))
   check(nullable(data.error_type, text) && nullable(data.source_task_id, uuid))
-  check(data.schema_version === 1 || data.schema_version === 2 || data.schema_version === 3)
+  check(data.schema_version === 1 || data.schema_version === 2 || data.schema_version === 3 || data.schema_version === 4)
   check(['active', 'candidate', 'legacy_unreviewed'].includes(String(data.reuse_status)))
   check(nullable(data.batch_id, uuid) && nullable(data.supersedes_id, uuid))
   list(data.derived_from, item => { check(uuid(item)); return item })
   list(data.required_capabilities, item => { check(text(item)); return item })
-  check(data.language === 'java' || data.language === 'python')
+  check(['java', 'python', 'go', 'cpp'].includes(String(data.language)))
   check(data.scope === 'global' || data.scope === 'project')
   check(nullable(data.repository_id, text) && nullable(data.source_revision, text))
   check(data.scope === 'project' ? text(data.repository_id) : data.repository_id === null)
   for (const field of ['tags', 'applicability']) list(data[field], item => { check(text(item)); return item })
+  if (data.constraints !== undefined) list(data.constraints, item => { check(text(item)); return item })
+  if (data.compatibility_key !== undefined) check(nullable(data.compatibility_key, text))
   const mergedFrom = list(data.merged_from, id => { check(uuid(id)); return id as string })
   check(mergedFrom.length <= 10 && sameIds(mergedFrom, mergedFrom))
   list(data.issues, value => {
     const issue = object(value)
     check(['error_type', 'root_cause', 'solution'].every(key => text(issue[key])))
     list(issue.files, file => { check(text(file)); return file })
+    if (issue.symbols !== undefined) list(issue.symbols, symbol => { check(text(symbol)); return symbol })
+    if (issue.depends_on !== undefined) list(issue.depends_on, index => { check(Number.isSafeInteger(index) && Number(index) >= 0); return index })
     return issue
   })
   list(data.evidence, value => {
     const evidence = object(value)
     check(uuid(evidence.source_task_id) && uuid(evidence.tool_call_id))
-    check(evidence.runner === 'maven' || evidence.runner === 'pytest')
-    check(evidence.runner === (data.language === 'python' ? 'pytest' : 'maven'))
+    check(['maven', 'pytest', 'go', 'ctest'].includes(String(evidence.runner)))
+    check(evidence.runner === ({ java: 'maven', python: 'pytest', go: 'go', cpp: 'ctest' }[String(data.language) as 'java' | 'python' | 'go' | 'cpp']))
     check(Number.isInteger(evidence.tests) && Number(evidence.tests) > 0)
     check(evidence.failures === 0 && evidence.errors === 0 && evidence.skipped === 0)
     return evidence
   })
-  check(data.schema_version !== 3 || data.reuse_status !== 'active' || (data.evidence as unknown[]).length > 0)
+  check(Number(data.schema_version) < 3 || data.reuse_status !== 'active' || (data.evidence as unknown[]).length > 0)
   return data as unknown as ExperienceKnowledge
 }
 export function readExperience(value: unknown): Experience {
@@ -183,7 +191,7 @@ export function readProjects(value: unknown): RegisteredProject[] {
   const projects = list(value, value => {
     const data = object(value)
     check(text(data.id) && text(data.label) && text(data.repository_id))
-    check(data.language === 'java' || data.language === 'python')
+    check(['java', 'python', 'go', 'cpp'].includes(String(data.language)))
     check(nullable(data.source_revision, text) && typeof data.task_example === 'string')
     if (data.capabilities !== undefined) list(data.capabilities, item => { check(text(item)); return item })
     return data as unknown as RegisteredProject
@@ -236,6 +244,19 @@ export function readProvenance(value: unknown, rootId: string): ProvenanceGraph 
   })
   return { nodes, edges, truncated: data.truncated }
 }
+export function readConflictDetails(value: unknown, sourceIds: string[]): MergeConflictDetail[] {
+  const codes = ['scope_mismatch', 'applicability_mismatch', 'status_mismatch', 'capability_mismatch',
+    'rule_overlap', 'evidence_mismatch', 'order_cycle', 'content_limit', 'source_unavailable', 'unknown_relation', 'version_mismatch', 'semantic_equivalent']
+  return list(value, item => {
+    const data = object(item)
+    const sources = list(data.source_ids, id => { check(uuid(id)); return id as string })
+    check(codes.includes(String(data.code)) && text(data.message) && text(data.field) && text(data.suggestion))
+    const sourceQuotation = sources.length === 1 && data.code === 'rule_overlap' && /^issues\[\d+\]\.solution$/.test(String(data.field))
+    check((sources.length >= 2 || sourceQuotation) && sameIds(sources, sources) && sources.every(id => sourceIds.includes(id)))
+    return data as unknown as MergeConflictDetail
+  })
+}
+
 export function readMergePreview(value: unknown, expectedIds?: readonly string[]): MergePreview {
   const data = object(value)
   check(boolean(data.can_merge))
@@ -246,5 +267,7 @@ export function readMergePreview(value: unknown, expectedIds?: readonly string[]
   const preview = data.preview === null ? null : readKnowledge(data.preview)
   check(data.can_merge ? preview !== null && conflicts.length === 0 : preview === null && conflicts.length > 0)
   if (preview) check(sameIds(preview.merged_from ?? [], source_ids))
-  return { can_merge: data.can_merge, conflicts, source_ids, preview }
+  const conflict_details = data.conflict_details === undefined ? undefined : readConflictDetails(data.conflict_details, source_ids)
+  if (data.can_merge && conflict_details) check(conflict_details.length === 0)
+  return { can_merge: data.can_merge, conflicts, source_ids, preview, ...(conflict_details ? { conflict_details } : {}) }
 }

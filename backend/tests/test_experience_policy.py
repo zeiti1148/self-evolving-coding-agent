@@ -25,6 +25,8 @@ def seed(store, *, scope="project", repository_id="A", language="python", status
         applicability=["Respect the target project's missing-value policy"]))
     with connect(store.database_path) as db:
         _insert(db, record)
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     return record
 
 

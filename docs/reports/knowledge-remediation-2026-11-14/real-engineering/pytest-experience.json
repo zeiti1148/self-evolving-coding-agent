@@ -1,0 +1,105 @@
+{
+  "task_summary": "修复 pytest 在多重继承下获取类标记时只读取 MRO 中第一个 pytestmark 而丢失其他基类标记的问题，并确保 get_unpacked_marks 返回具体列表以兼容相等性断言；最终 266 项测试通过。",
+  "error_type": "AssertionError",
+  "root_cause": "原实现用 getattr(obj, \"pytestmark\", []) 读取类标记，类属性按 MRO 查找只会得到最先命中的 pytestmark，因此多重继承时其他基类的标记被覆盖。修复需要让 get_unpacked_marks 对类按 obj.__mro__ 收集每个类 __dict__ 中的 pytestmark，本地类在前、基类按 C3 MRO 在后；consider_mro=False 时只读取当前类 __dict__；非类对象保持 getattr 路径；单个标记要包装成列表；不得按名称去重。还必须把归一化结果物化为 list 返回，否则生成器无法与列表做相等比较；store_mark 追加时只能使用对象自身已有标记，不能把继承标记复制进子类，也不能修改父类或兄弟类。",
+  "solution": "在 src/_pytest/mark/structures.py 修改 get_unpacked_marks：增加 consider_mro 默认 True；类对象按 __mro__ 展平 __dict__.get(\"pytestmark\", [])，consider_mro=False 时只取当前类；非类对象保持原 getattr 读取；最后 return list(normalize_mark_list(mark_list))。同时调整 store_mark 使用 consider_mro=False 的本地标记列表追加新标记。保留函数装饰顺序、无标记类返回 []、同名标记不去重、父类后加标记对子类可见以及父子/兄弟隔离行为。",
+  "verification": "程序独立运行 pytest 最终验证，266 项测试全部通过；工具调用编号：ade80b09-eb94-45fe-82f9-cba853d53931。",
+  "tags": [
+    "python",
+    "pytest",
+    "标记继承",
+    "MRO",
+    "多重继承",
+    "get_unpacked_marks",
+    "store_mark",
+    "列表返回",
+    "类属性"
+  ],
+  "source_task_id": "1f7e897f-1ff7-4784-83fc-5b55adb0d05d",
+  "schema_version": 4,
+  "language": "python",
+  "scope": "project",
+  "repository_id": "pytest-dev/pytest",
+  "source_revision": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+  "compatibility_key": "pytest-dev__pytest-10356",
+  "constraints": [
+    "类对象且 consider_mro=True 时，必须按 obj.__mro__ 的顺序收集每个类 __dict__ 中的 pytestmark。",
+    "本地类的标记必须排在基类标记之前，基类按 C3 MRO 从左到右排列，菱形继承的根类由 __mro__ 保证只出现一次。",
+    "consider_mro=False 时只能读取当前类 obj.__dict__ 中的 pytestmark，绝不能读取基类标记。",
+    "get_unpacked_marks 的 consider_mro 参数默认值为 True。",
+    "非类对象保持原逻辑：通过 getattr(obj, \"pytestmark\", []) 读取，并按需把单个标记包装成列表。",
+    "任何位置遇到非列表的单个 pytestmark 时，都要包装为单元素列表后再归一化。",
+    "不得按标记名去重；两个基类上同名但不同参数的标记都必须保留，按 MRO 顺序输出。",
+    "get_unpacked_marks 必须返回可与列表做相等比较的具体 list；无标记类返回 []。",
+    "store_mark 追加新标记时只能基于对象自身已有标记（consider_mro=False），不得把继承标记复制到子类。",
+    "装饰子类不得修改父类或兄弟类的 pytestmark。",
+    "父类后续新增的标记必须能在已定义子类下一次读取时看到，不能缓存成陈旧副本。",
+    "函数标记的返回顺序保持原有装饰顺序，不因类 MRO 逻辑改变。",
+    "只修改 src/_pytest/mark/structures.py，不修改测试、配置、依赖或测试选择。",
+    "必须保留现有行为：无标记类返回空列表，单个标记和 MarkDecorator 都归一化为 Mark。"
+  ],
+  "applicability": [
+    "适用于 Python 测试框架中通过类属性汇总继承标记的逻辑，特别是 pytest 的 get_unpacked_marks 和 store_mark。",
+    "适用于需要按 C3 MRO 合并多个基类元数据且不能去重或缓存的场景。",
+    "适用于返回 Iterable 的 API 被调用方按 list 相等性断言的场景。"
+  ],
+  "issues": [
+    {
+      "error_type": "AssertionError",
+      "root_cause": "get_unpacked_marks 原实现用 getattr(obj, \"pytestmark\", []) 读取类标记；类属性查找遵循 MRO，只返回最先命中的 pytestmark，导致 Foo、Bar 多重继承时一个基类的标记被另一个覆盖。",
+      "solution": "在 get_unpacked_marks 中判断 isinstance(obj, type)：consider_mro=True 时用 [x.__dict__.get(\"pytestmark\", []) for x in obj.__mro__] 收集并展平；consider_mro=False 时只用 obj.__dict__.get(\"pytestmark\", [])；单个标记包装为列表；不按名称去重；非类对象维持 getattr 路径。",
+      "files": [
+        "src/_pytest/mark/structures.py"
+      ],
+      "symbols": [
+        "src/_pytest/mark/structures.py#get_unpacked_marks"
+      ],
+      "depends_on": []
+    },
+    {
+      "error_type": "AssertionError",
+      "root_cause": "get_unpacked_marks 若返回 normalize_mark_list 的生成器，调用方用 == 与列表比较（如 all_marks == [...] 或 get_unpacked_marks(Plain) == []）会失败，即使标记内容正确。",
+      "solution": "在 get_unpacked_marks 末尾 return list(normalize_mark_list(mark_list))；保持 normalize_mark_list 负责类型校验并逐项产出 Mark，确保无标记类为 []，有标记类为有序 Mark 列表。",
+      "files": [
+        "src/_pytest/mark/structures.py"
+      ],
+      "symbols": [
+        "src/_pytest/mark/structures.py#get_unpacked_marks"
+      ],
+      "depends_on": []
+    },
+    {
+      "error_type": "AssertionError",
+      "root_cause": "store_mark 在装饰子类时若使用 get_unpacked_marks(obj) 的默认 MRO 结果，会把父类标记复制进子类自身的 pytestmark；随后 consider_mro=False 读取子类会错误包含父类标记，破坏父子/兄弟隔离。",
+      "solution": "store_mark 追加时使用 get_unpacked_marks(obj, consider_mro=False)，只把对象自身已有标记与新标记组合后写回 obj.pytestmark；不要修改父类或兄弟类，也不要缓存继承标记。",
+      "files": [
+        "src/_pytest/mark/structures.py"
+      ],
+      "symbols": [
+        "src/_pytest/mark/structures.py#store_mark"
+      ],
+      "depends_on": [
+        0
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "source_task_id": "1f7e897f-1ff7-4784-83fc-5b55adb0d05d",
+      "tool_call_id": "ade80b09-eb94-45fe-82f9-cba853d53931",
+      "runner": "pytest",
+      "tests": 266,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "merged_from": [],
+  "batch_id": "9b8fd876-58b4-40d2-bddc-1d3cd2e4cd83",
+  "reuse_status": "active",
+  "derived_from": [],
+  "supersedes_id": null,
+  "required_capabilities": [],
+  "id": "e46e2ce6-377b-4829-858f-8c3d2d5cc9b8",
+  "created_at": "2026-11-14T15:35:40.842353Z"
+}

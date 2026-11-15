@@ -119,6 +119,12 @@ class TaskStore:
             })
             self._write_status(connection, recovered)
             agent_events.recover_roles(connection, current.task_id, recovered.finished_at)
+        for row in connection.execute("SELECT id,audit_json FROM api_tasks WHERE json_extract(audit_json,'$.experience_retry.state')='running'"):
+            audit = json.loads(row['audit_json'])
+            retry = audit['experience_retry']
+            retry.update(state='failed', notice='服务重启中断了经验提取，请手动重试。', finished_at=now().isoformat())
+            audit.setdefault('experience_retry_history', []).append(dict(retry))
+            self._write_audit(connection, row['id'], audit)
 
     def initialize(self) -> None:
         with self._transaction():
@@ -222,6 +228,44 @@ class TaskStore:
                 return audit
             except (ValueError, TypeError):
                 raise TaskStorageError() from None
+
+    def begin_experience_retry(self, task_id: str) -> str | None:
+        """Persist a claim before the model call; concurrent/repeated POSTs cannot duplicate it."""
+        with self._transaction() as connection:
+            row = self._row(connection, task_id)
+            current = self._status(row)
+            result = current.result
+            if not result or not result.repair_succeeded or result.tests_passed is not True:
+                raise ValueError('只有最终验证通过的修复才能提取经验。')
+            if result.experience_saved:
+                return None
+            audit = json.loads(row['audit_json'])
+            if audit.get('experience_retry', {}).get('state') == 'running':
+                return None
+            token = str(uuid4())
+            audit['experience_retry'] = dict(token=token, state='running', started_at=now().isoformat(), notice='正在依据原始修复证据提取经验。')
+            self._write_audit(connection, task_id, audit)
+            return token
+
+    def finish_experience_retry(self, task_id, token, *, experience_ids, diagnostic, model_requests, error=None):
+        """Update knowledge fields only; preserve repair status, original trace and completion time."""
+        with self._transaction() as connection:
+            row = self._row(connection, task_id)
+            current = self._status(row)
+            audit = json.loads(row['audit_json'])
+            retry = audit.get('experience_retry', {})
+            if retry.get('token') != token or retry.get('state') != 'running':
+                raise ValueError('经验提取记录已更新。')
+            updated = current.result.model_dump()
+            updated.update(experience_saved=error is None, experience_ids=experience_ids,
+                           experience_id=next(iter(experience_ids), None), experience_save_error=error)
+            result = AgentResult.model_validate(updated)
+            self._write_status(connection, TaskStatusResponse(**{**current.model_dump(), 'result': result}))
+            retry.update(state='failed' if error else 'succeeded', finished_at=now().isoformat(),
+                         notice=error or '经验已保存，后台将自动比较已有经验。', diagnostic=diagnostic,
+                         model_requests=model_requests, experience_ids=experience_ids)
+            audit.setdefault('experience_retry_history', []).append(dict(retry))
+            self._write_audit(connection, task_id, audit)
 
     def create(self, request: TaskCreateRequest | None = None) -> TaskCreateResponse:
         request_json = (TaskCreateRequest.model_validate(request.model_dump()).model_dump_json()

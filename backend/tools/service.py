@@ -1,7 +1,8 @@
-"""Synchronous five-tool dispatcher with strict argument validation."""
+"""Bounded source editing, search and language-specific test tools."""
 from __future__ import annotations
 
 import os
+import json
 import re
 import shutil
 import sys
@@ -40,6 +41,17 @@ class WriteArgs(Arguments):
     create_parent: bool = False
 
 
+class ReplaceArgs(Arguments):
+    path: str
+    old: str = Field(min_length=1, max_length=100_000)
+    new: str = Field(max_length=100_000)
+
+
+class SearchArgs(Arguments):
+    text: str = Field(min_length=1, max_length=500)
+    path: str = '.'
+
+
 class CommandArgs(Arguments):
     command: list[str] = Field(min_length=1, max_length=8)
     cwd: str = "."
@@ -48,22 +60,38 @@ class CommandArgs(Arguments):
 
 class TestArgs(Arguments):
     project_path: str = "."
-    timeout_seconds: int = Field(default=180, ge=1, le=300)
+    timeout_seconds: int = Field(default=180, ge=1, le=900)
 
 
 ARGUMENTS = {"list_files": ListArgs, "read_file": ReadArgs, "write_file": WriteArgs,
-             "run_command": CommandArgs, "run_tests": TestArgs}
+             "run_command": CommandArgs, "run_tests": TestArgs, 'replace_text': ReplaceArgs, 'search_text': SearchArgs}
 RESULT_ERRORS = {ErrorCode.COMMAND_TIMEOUT: "命令执行超时。", ErrorCode.COMMAND_FAILED: "命令执行失败，请查看原始输出。",
                  ErrorCode.OUTPUT_LIMIT_EXCEEDED: "命令输出超过限制。", ErrorCode.TEST_FAILED: "测试未通过，请查看失败详情。"}
 
 
 class ToolService:
-    def __init__(self, manager: WorkspaceManager, maven_home: Path, *, python_executable: str | Path | None = None):
+    def __init__(self, manager: WorkspaceManager, maven_home: Path, *, python_executable: str | Path | None = None, runner_config=None):
         self.manager = manager
         # Child processes run in their workspaces, so classpaths must not depend
         # on the caller's current directory or an unexpanded relative .env path.
         self.maven_home = maven_home.resolve()
         self.python_executable = str(python_executable or sys.executable)
+        self.runner_config = runner_config
+        if runner_config and runner_config.python_executable:
+            self.python_executable = runner_config.python_executable
+
+    def _configured_test(self, relative):
+        if not self.runner_config:
+            return False
+        targets = [item.split('::', 1)[0].rstrip('/') for item in self.runner_config.test_targets]
+        return any(target not in {'.', ''} and (relative == target or relative.startswith(target + '/')) for target in targets)
+
+    def _verify_tests(self, record):
+        self.manager.verify_tests(record)
+        if self.runner_config:
+            current = inventory(record.path)
+            if {p:v for p,v in current.items() if self._configured_test(p)} != {p:v for p,v in record.baseline.items() if self._configured_test(p)}:
+                raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, '不得修改所配置的原始验收测试。')
 
     def execute_tool(self, workspace: Path, call: ToolCall) -> ToolResult:
         base = {"call_id": call.id, "tool_name": call.name}
@@ -124,7 +152,7 @@ class ToolService:
     def _write_file(self, record, args: WriteArgs):
         path = self.manager.resolve(record, args.path)
         relative = path.relative_to(record.path).as_posix()
-        if protected({relative: ""}):
+        if protected({relative: ""}) or self._configured_test(relative):
             raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, "样例测试和构建配置为只读。")
         if args.create_parent:
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -140,6 +168,36 @@ class ToolService:
                 temp_path.unlink()
         return "文件已写入。", {"path": relative, "changed_files": self.manager.changed_files(record.path)}, None
 
+    def _replace_text(self, record, args: ReplaceArgs):
+        target = self.manager.resolve(record, args.path)
+        if protected({args.path: ''}) or target.stat().st_size > 2_000_000:
+            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, '测试和构建配置为只读；单文件最多 2 MB。')
+        with target.open(encoding='utf-8', newline='') as stream:
+            original = stream.read()
+        if original.count(args.old) != 1:
+            raise ApplicationError(ErrorCode.INVALID_TOOL_CALL, '旧文本必须准确匹配一次，请先读取文件。')
+        return self._write_file(record, WriteArgs(path=args.path, content=original.replace(args.old, args.new, 1)))
+
+    def _search_text(self, record, args: SearchArgs):
+        root = self.manager.resolve(record, args.path)
+        matches = []
+        for name in sorted(inventory(record.path)):
+            target = record.path / name
+            if target != root and not target.is_relative_to(root):
+                continue
+            if target.stat().st_size > 200_000:
+                continue
+            try:
+                lines = target.read_text(encoding='utf-8').splitlines()
+            except UnicodeError:
+                continue
+            for line, text in enumerate(lines, 1):
+                if args.text in text:
+                    matches.append(f'{name}:{line}:{text[:300]}')
+                    if len(matches) == 100:
+                        return '\n'.join(matches), {'truncated': True}, None
+        return '\n'.join(matches), {}, None
+
     def _run_command(self, record, args: CommandArgs):
         cwd = self.manager.resolve(record, args.cwd)
         command = args.command
@@ -151,7 +209,7 @@ class ToolService:
                 raise ApplicationError(ErrorCode.COMMAND_FAILED, "未找到 Java 可执行程序。")
             argv = [executable, "-version"]
         elif command in (["mvn", "-version"], ["mvn", "compile"], ["mvn", "test"], ["mvn", "-B", "test"], ["mvn", "-B", "compile"]):
-            self.manager.verify_tests(record)
+            self._verify_tests(record)
             argv = maven_argv(self.maven_home, cwd, [a for a in command[1:] if a != "-B"])
         elif command in (["python", "--version"], ["python", "-V"]):
             argv = [self.python_executable, "-I", "--version"]
@@ -163,18 +221,26 @@ class ToolService:
 
     def _run_tests(self, record, args: TestArgs):
         cwd = self.manager.resolve(record, args.project_path)
-        self.manager.verify_tests(record)
+        self._verify_tests(record)
         relative = cwd.relative_to(record.path)
         prefix = relative.as_posix() + "/" if relative != Path(".") else ""
         java = prefix + "pom.xml" in record.baseline
-        python = any(prefix + marker in record.baseline for marker in ("pyproject.toml", "pytest.ini", "setup.cfg", ".agent-project.json"))
-        if java and python:
+        python = any(prefix + marker in record.baseline for marker in ("pyproject.toml", "pytest.ini", "setup.cfg", 'setup.py', ".agent-project.json"))
+        go = prefix + 'go.mod' in record.baseline
+        cpp = prefix + 'CMakeLists.txt' in record.baseline
+        if sum((java, python, go, cpp)) > 1:
             raise ApplicationError(ErrorCode.COMMAND_FAILED, "无法确定测试工具，请登记仅包含一种编程语言的项目根目录。")
+        timeout = min(self.runner_config.timeout_seconds, args.timeout_seconds) if self.runner_config else args.timeout_seconds
+        if self.runner_config and cwd != record.path:
+            raise ApplicationError(ErrorCode.COMMAND_NOT_ALLOWED, '验收必须使用上传项目配置的根目录与完整测试集。')
+        if go or cpp:
+            from .native_runners import run_native_tests
+            return run_native_tests(self, record, cwd, timeout, 'go' if go else 'ctest')
         if python:
-            return self._run_python_tests(record, cwd, args.timeout_seconds)
+            return self._run_python_tests(record, cwd, timeout)
         if not java:
             raise ApplicationError(ErrorCode.COMMAND_FAILED, "此路径下没有已登记的 Maven 或 Python 项目。")
-        return self._run_maven_tests(record, cwd, args.timeout_seconds)
+        return self._run_maven_tests(record, cwd, timeout)
 
     def _run_maven_tests(self, record, cwd: Path, timeout_seconds: int):
         # Delete only validated in-workspace report directories; never reuse stale reports.
@@ -184,7 +250,7 @@ class ToolService:
                 reject_links(reports)
                 shutil.rmtree(reports)
         output, metadata, code = run_process(maven_argv(self.maven_home, cwd, ["clean", "test"]), cwd, timeout_seconds)
-        self.manager.verify_tests(record)
+        self._verify_tests(record)
         metadata["changed_files"] = self.manager.changed_files(record.path)
         metadata["runner"] = "maven"
         if code == ErrorCode.COMMAND_TIMEOUT:
@@ -201,8 +267,21 @@ class ToolService:
         report = report_dir / (str(uuid4()) + ".xml")
         argv = [self.python_executable, "-I", "-m", "pytest", "-q", "-p", "no:cacheprovider",
                 "-o", "addopts=", "-o", "python_files=test_*.py *_test.py", "--junitxml=" + str(report)]
-        output, metadata, code = run_process(argv, cwd, timeout_seconds)
-        self.manager.verify_tests(record)
+        extra_env = None
+        if self.runner_config:
+            config = self.runner_config
+            paths = [str(self.manager.resolve(record, path)) for path in config.python_paths]
+            test_args = argv[4:]
+            for plugin in config.pytest_plugins:
+                test_args.extend(['-p', plugin])
+            test_args.extend('--deselect=' + name for name in config.deselect)
+            test_args.extend(config.test_targets)
+            script = ('import sys,json; sys.path[:0]=json.loads(sys.argv[1]); '
+                      'import pytest; raise SystemExit(pytest.main(json.loads(sys.argv[2])))')
+            argv = [self.python_executable, '-I', '-c', script, json.dumps(paths), json.dumps(test_args)]
+            extra_env = {'PYTHONPATH': os.pathsep.join(paths)}
+        output, metadata, code = run_process(argv, cwd, timeout_seconds, **({'extra_env': extra_env} if extra_env else {}))
+        self._verify_tests(record)
         metadata.update(changed_files=self.manager.changed_files(record.path), runner="pytest")
         if code == ErrorCode.COMMAND_TIMEOUT:
             return output, metadata, code

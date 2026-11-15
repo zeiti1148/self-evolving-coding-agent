@@ -19,6 +19,7 @@ from backend.agent.llm import ChatClient
 from backend.config import Settings
 from backend.projects import public_project, source_revision, validate_project_language
 from backend.experience import ExperienceStore
+from backend.experience.knowledge import digest
 from backend.shared import (AgentRequest, ApplicationError, Experience, TaskCreateRequest,
                             TaskCreateResponse, TaskStatusResponse, TaskStepsResponse, ErrorCode)
 from backend.tools import ToolService, WorkspaceManager
@@ -43,10 +44,27 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
     recording_failures: set[str] = set()
     recording_lock = Lock()
 
+    from backend.experience.jobs import MaintenanceWorker
+    maintenance = MaintenanceWorker(settings.database_path, semantic_enabled=settings.enable_knowledge_models)
+    from backend.experience.automation import AutomaticMergeWorker
+    from .conflict_verification import ConflictVerifier
+    from backend.experience.recovery import RecoveryService, attach_task
+    from .experience_recovery import register_recovery_routes
+    conflict_verifier = ConflictVerifier(settings, tasks, manager)
+    recovery = RecoveryService(settings.database_path, conflict_verifier, llm_factory or (lambda: ChatClient(settings)))
+    automatic_merge = AutomaticMergeWorker(settings.database_path, llm_factory or (lambda: ChatClient(settings)),
+                                           conflict_verifier, recovery)
+    from .project_uploads import UploadRegistry
+    uploads = UploadRegistry(settings, manager)
+
     @asynccontextmanager
     async def lifespan(app):
         try:
             tasks.initialize()
+            experiences.initialize()
+            uploads.initialize()
+            maintenance.start()
+            automatic_merge.start()
         except TaskStorageError:
             logger.warning("Task storage unavailable at startup; task endpoints will report 503.")
         try:
@@ -55,6 +73,8 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             try:
                 executor.shutdown(wait=True, cancel_futures=False)
             finally:
+                automatic_merge.close() if automatic_merge.thread.is_alive() else None
+                maintenance.close() if maintenance.thread.is_alive() else None
                 tasks.close()
 
     app = FastAPI(title="Self-Evolving Coding Agent", lifespan=lifespan)
@@ -64,6 +84,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
     app.state.tools = tools
     app.state.settings = settings
     app.state.experiences = experiences
+    register_recovery_routes(app, recovery)
 
     @app.exception_handler(TaskStorageError)
     async def task_storage_error(request, exc):
@@ -99,22 +120,25 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             validate_project_language(project)
             workspace = manager.create_workspace(settings.projects[request.source_project], task_id)
             revision = source_revision(project.source, manager.get(workspace).baseline)
+            task_tools = ToolService(manager, settings.maven_home, python_executable=settings.python_executable,
+                                    runner_config=project.runner_config) if project.origin == 'upload' else tools
             factory = llm_factory or (lambda: ChatClient(settings))
             if request.execution_mode == "multi":
-                agent = multi_agent_factory(tools, experiences) if multi_agent_factory else MultiAgentCoordinator(
-                    factory, tools.execute_tool, experiences, use_experience=settings.use_experience,
+                agent = multi_agent_factory(task_tools, experiences) if multi_agent_factory else MultiAgentCoordinator(
+                    factory, task_tools.execute_tool, experiences, use_experience=settings.use_experience,
                     timeout_seconds=settings.task_timeout)
             else:
-                agent = agent_factory(tools, experiences) if agent_factory else Agent(
-                    factory(), tools.execute_tool, experiences, use_experience=settings.use_experience,
-                    timeout_seconds=settings.task_timeout)
+                agent = agent_factory(task_tools, experiences) if agent_factory else Agent(
+                    factory(), task_tools.execute_tool, experiences, use_experience=settings.use_experience,
+                    timeout_seconds=settings.task_timeout, verify_before=project.origin == 'upload')
             callbacks = {"on_step": lambda step: tasks.append(task_id, step)}
             if request.execution_mode == "multi":
                 callbacks["on_event"] = lambda event: tasks.append_agent_event(task_id, event)
             result = agent.run(AgentRequest(task_id=task_id, workspace=workspace,
                                task_description=request.task_description, max_steps=request.max_steps,
                                language=project.language, repository_id=project.repository_id,
-                               source_revision=revision, capabilities=project.capabilities,
+                               source_revision=revision, experience_contract=project.experience_contract, capabilities=project.capabilities,
+                               runner_hash=digest(project.runner_config.model_dump(mode='json')),
                                execution_mode=request.execution_mode), **callbacks)
             save_code_snapshot(task_id)
             tasks.finish(task_id, result=result, audit=getattr(agent, "last_run_audit", {}))
@@ -134,6 +158,12 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         except (ApplicationError, ValueError):
             raise HTTPException(400, "源项目尚未登记或当前不可用。") from None
         response = tasks.create(request)
+        if request.knowledge_recovery_id:
+            try:
+                attach_task(settings.database_path, request.knowledge_recovery_id, response.task_id)
+            except ApplicationError as exc:
+                fail_task(response.task_id, exc.message)
+                raise HTTPException(409, exc.message) from None
         try:
             executor.submit(run_task, response.task_id, request.model_copy(deep=True))
         except RuntimeError:
@@ -171,15 +201,18 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
         except KeyError:
             raise HTTPException(404, "未找到该任务。") from None
 
-    register_experience_routes(app, experiences)
+    register_experience_routes(app, experiences, lambda:[settings.project(key) for key in settings.projects])
     register_test_source_routes(app, tasks, manager, ensure_recorded)
     register_code_diff_routes(app, tasks, manager, ensure_recorded)
     register_task_evidence_routes(app, tasks, manager, experiences, settings, ensure_recorded)
+    from .experience_retry import register_experience_retry_routes
+    register_experience_retry_routes(app, tasks, manager, experiences, settings, executor,
+                                    llm_factory or (lambda: ChatClient(settings)), ensure_recorded)
 
     @app.get("/api/projects")
     def get_projects():
         result = []
-        for identifier in settings.projects:
+        for identifier in list(settings.projects):
             project = settings.project(identifier)
             try:
                 manager.validate_source(project.source)
@@ -188,6 +221,9 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             except (ApplicationError, OSError, ValueError):
                 continue
         return result
+
+    uploads.routes(app)
+    app.state.uploads = uploads
 
     return app
 

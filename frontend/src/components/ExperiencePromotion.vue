@@ -66,7 +66,7 @@ onBeforeUnmount(() => { generation++; controller?.abort() })
         <p v-if="preview?.current_global_id" class="field-hint">修订当前版本 <code>{{ preview.current_global_id }}</code>；发布后旧版本保留查询并停止注入。</p>
         <button class="button primary" data-testid="publish-global" type="submit" :disabled="busy || refreshRequired || !!publishedId">{{ busy ? '正在发布…' : '发布通用经验' }}</button>
       </form>
-      <p v-if="publishedId" class="success-notice" role="status">通用经验已发布。<RouterLink :to="{ path: '/experiences', query: { id: publishedId } }">查看新记录</RouterLink></p>
+      <p v-if="publishedId" class="success-notice" role="status">通用经验已发布。<RouterLink :to="{ path: '/experiences', query: { id: publishedId, view: 'originals' } }">查看新记录</RouterLink></p>
     </div>
   </section>
 </template>

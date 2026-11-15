@@ -1,0 +1,119 @@
+[
+  {
+    "task_summary": "修复 pytest 标记获取未按 MRO 合并多个基类标记的问题：get_unpacked_marks 需返回列表、支持 consider_mro，并按 MRO 汇总各类本地 pytestmark，同时 store_mark 不得把父类标记复制到子类。",
+    "error_type": "AssertionError",
+    "root_cause": "`get_unpacked_marks` 原先只通过 `getattr(obj, \"pytestmark\", [])` 读取标记，Python 属性查找只会返回 MRO 中第一个 pytestmark，导致 `class TestDings(Foo, Bar)` 丢失 `Bar` 的标记；同时 `store_mark` 在装饰子类时把从父类继承来的标记写进子类自己的 pytestmark，造成重复、陈旧副本和菱形继承重复。`get_unpacked_marks` 还直接返回生成器且不接受 `consider_mro` 参数。",
+    "solution": "在 `src/_pytest/mark/structures.py` 中调整标记读取与存储：`get_unpacked_marks` 返回 `list`，并接受 `consider_mro`；默认对类按 `__mro__` 顺序收集每个类的本地 `pytestmark`，当前类优先，菱形继承的根类只出现一次；`consider_mro=False` 或非类对象只读取对象自身定义并归一化为本地标记；不同父类中的同名标记不去重；`store_mark` 只基于本地标记追加，避免污染父类、兄弟类或产生陈旧副本。",
+    "verification": "程序独立运行 pytest 最终验证，302 项测试全部通过；工具调用编号：cfb33768-39ac-44a7-9aba-7e61e7420dd5。",
+    "tags": [
+      "python",
+      "pytest",
+      "标记继承",
+      "MRO",
+      "C3",
+      "get_unpacked_marks",
+      "store_mark"
+    ],
+    "source_task_id": "a85747f6-0acf-4670-9bb0-280d38298b19",
+    "schema_version": 4,
+    "language": "python",
+    "scope": "project",
+    "repository_id": "uploaded/c653740a4d1ef9d522e61768e6b0debb",
+    "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+    "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+    "constraints": [
+      "仅修改生产源码 `src/_pytest/mark/structures.py`，不修改测试或构建配置。",
+      "`get_unpacked_marks` 必须返回列表而不是生成器，默认考虑 MRO，并支持 `consider_mro=False`。",
+      "MRO 聚合只对类生效，按 `obj.__mro__` 顺序收集每个类 `__dict__` 中本地定义的 `pytestmark`，当前类优先，避免菱形继承根类重复。",
+      "不同父类中同名 marker 不得去重，必须保留所有 marker 对象；仅依靠 MRO 中唯一的类来避免同一类重复贡献。",
+      "`consider_mro=False` 或非类对象必须回退到对象本地 `pytestmark` 的归一化，不得尝试访问 `__mro__`。",
+      "`store_mark` 写入时只能使用对象本地已有标记，不能读取继承标记，以免装饰子类时修改父类/兄弟类语义或复制陈旧标记。",
+      "函数装饰顺序及非类对象的本地标记顺序必须保持不变。",
+      "保持未涉及的业务行为不变。"
+    ],
+    "applicability": [
+      "适用于 pytest 中通过类继承收集 `pytestmark` 的场景，尤其是多基类或菱形继承。",
+      "适用于需要区分本地标记与包含 MRO 标记的 API 调用，例如 `consider_mro=False`。",
+      "适用于装饰类/函数时写入 `pytestmark` 且不能污染父类或兄弟类的场景。",
+      "适用于非类对象仅有本地 `pytestmark` 的兼容场景。"
+    ],
+    "issues": [
+      {
+        "error_type": "AssertionError",
+        "root_cause": "`get_unpacked_marks` 直接返回 `normalize_mark_list` 生成器，导致未标记类与 `[]` 比较、标记列表与 `[Mark]` 比较时断言失败。",
+        "solution": "在 `get_unpacked_marks` 的所有返回路径中把归一化结果物化为 `list`，保证未标记类返回 `[]`，有标记类返回 `Mark` 列表。",
+        "files": [
+          "src/_pytest/mark/structures.py"
+        ],
+        "symbols": [
+          "src/_pytest/mark/structures.py#get_unpacked_marks",
+          "src/_pytest/mark/structures.py#normalize_mark_list"
+        ],
+        "depends_on": []
+      },
+      {
+        "error_type": "TypeError",
+        "root_cause": "`get_unpacked_marks` 没有 `consider_mro` 参数，测试传入 `consider_mro=False` 时抛出 `TypeError: get_unpacked_marks() got an unexpected keyword argument 'consider_mro'`。",
+        "solution": "为 `get_unpacked_marks` 增加 `consider_mro` 参数并默认考虑 MRO；当 `consider_mro=False` 时只读取对象本地定义的 `pytestmark`。",
+        "files": [
+          "src/_pytest/mark/structures.py"
+        ],
+        "symbols": [
+          "src/_pytest/mark/structures.py#get_unpacked_marks"
+        ],
+        "depends_on": []
+      },
+      {
+        "error_type": "AssertionError",
+        "root_cause": "`store_mark` 使用 `[*get_unpacked_marks(obj), mark]` 保存标记，在 `get_unpacked_marks` 可能返回继承标记时，会把父类标记复制进子类自己的 `pytestmark`，导致子类重复、父类后加标记不可见以及兄弟类/父类被污染。",
+        "solution": "`store_mark` 保存时只读取对象的本地标记，例如使用 `get_unpacked_marks(obj, consider_mro=False)` 或等价本地读取方式，再追加新标记；不得把继承来的标记写入当前对象。",
+        "files": [
+          "src/_pytest/mark/structures.py"
+        ],
+        "symbols": [
+          "src/_pytest/mark/structures.py#get_unpacked_marks",
+          "src/_pytest/mark/structures.py#store_mark"
+        ],
+        "depends_on": [
+          1
+        ]
+      },
+      {
+        "error_type": "AssertionError",
+        "root_cause": "`get_unpacked_marks` 只对对象执行一次 `getattr(obj, \"pytestmark\", [])`，无法合并多个基类的本地标记；若在 MRO 聚合中对每个类继续使用 `getattr`，又会重复读取继承值，导致菱形继承中根类标记重复或顺序错误。",
+        "solution": "对类且 `consider_mro=True` 时遍历 `obj.__mro__`，每个类只读取其 `__dict__` 中本地 `pytestmark`，分别归一化后按 MRO/C3 顺序拼接；本地类标记优先，菱形根类只出现一次；不同基类的同名 marker 不去重。`consider_mro=False` 或非类对象只处理本地标记。",
+        "files": [
+          "src/_pytest/mark/structures.py"
+        ],
+        "symbols": [
+          "src/_pytest/mark/structures.py#get_unpacked_marks",
+          "src/_pytest/mark/structures.py#normalize_mark_list"
+        ],
+        "depends_on": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "source_task_id": "a85747f6-0acf-4670-9bb0-280d38298b19",
+        "tool_call_id": "cfb33768-39ac-44a7-9aba-7e61e7420dd5",
+        "runner": "pytest",
+        "tests": 302,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "merged_from": [],
+    "batch_id": "26782a72-b116-4b0a-8cae-e0f6ffef2e36",
+    "reuse_status": "active",
+    "derived_from": [],
+    "supersedes_id": null,
+    "required_capabilities": [],
+    "id": "b6716e28-3f6f-409a-a462-17f008382321",
+    "created_at": "2026-11-15T06:14:01.215629Z"
+  }
+]

@@ -1,0 +1,1378 @@
+[
+  {
+    "id": "a15ec30e-5482-538b-858d-2acd886e60fa",
+    "left_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+    "right_id": "b6716e28-3f6f-409a-a462-17f008382321",
+    "inputs": [
+      {
+        "applicability": [
+          "pytest 中通过类装饰器或类属性 pytestmark 定义标记，且测试类多继承自多个带标记的基类。",
+          "需要按 MRO 合并基类标记，而不是让 MRO 中第一个基类的 pytestmark 覆盖其余基类。",
+          "需要 get_unpacked_marks(C, consider_mro=False) 只返回 C 自身标记的调用场景。",
+          "对 get_unpacked_marks 返回值做列表相等断言（如 assert all_marks == [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）的测试。"
+        ],
+        "batch_id": "3f4d4461-f149-44d8-9129-bd162b57318a",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "constraints": [
+          "仅在 obj 为类且 consider_mro 为真时才展开 MRO 合并基类标记，否则只取对象自身的 pytestmark。",
+          "结果顺序必须是：被查询类自身的标记在前，随后按 MRO 顺序排列其基类的标记。",
+          "合并 MRO 标记时必须按 Mark 去重，避免同一标记重复出现。",
+          "consider_mro=False 必须只返回对象自身存放的标记，不包含任何基类标记。",
+          "get_unpacked_marks 的返回值必须是可直接与 list 比较的具体列表（List[Mark]），不能是生成器。",
+          "normalize_mark_list 对非 Mark、非 MarkDecorator 的值必须继续抛出 TypeError，保持既有错误行为。",
+          "store_mark 追加标记时必须使用 consider_mro=False，禁止把继承来的标记写回对象自身的 pytestmark。",
+          "只修改生产源码 src/_pytest/mark/structures.py，保留其他行为不变。"
+        ],
+        "created_at": "2026-11-15T12:45:50.435809Z",
+        "derived_from": [],
+        "error_type": "AssertionError",
+        "evidence": [
+          {
+            "errors": 0,
+            "failures": 0,
+            "runner": "pytest",
+            "skipped": 0,
+            "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+            "tests": 275,
+            "tool_call_id": "05ede317-f569-4e91-aa57-b59bcc96bc0b"
+          }
+        ],
+        "id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+        "issues": [
+          {
+            "depends_on": [],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 通过 normalize_mark_list 生成器惰性产出标记，调用方得到的是 <generator object ...>，与期望的 Mark 列表比较时断言失败（assert <generator ob...> == [...]）。",
+            "solution": "在 get_unpacked_marks 中把 normalize_mark_list(mark_list) 的结果物化为列表后返回（例如 return list(normalize_mark_list(mark_list))），并把返回类型标注为 List[Mark]；保持 normalize_mark_list 原有的 TypeError 校验逻辑不变。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#normalize_mark_list"
+            ]
+          },
+          {
+            "depends_on": [
+              0
+            ],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+            "solution": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "depends_on": [],
+            "error_type": "标记重复累积（存储路径回归，未观察到独立异常）",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "store_mark 用 obj.pytestmark = [*get_unpacked_marks(obj), mark] 重新赋值；在 get_unpacked_marks 改为按 MRO 展开后，这会把基类继承来的标记也写进当前类自身的 pytestmark，导致标记重复累积，并破坏 consider_mro=False 只反映自身标记的语义。",
+            "solution": "store_mark 改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，只基于对象自身的标记追加新标记，保持“总是重新赋值以避免修改借用引用”的原有注释语义。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#store_mark"
+            ]
+          }
+        ],
+        "language": "python",
+        "merged_from": [],
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "required_capabilities": [],
+        "reuse_status": "active",
+        "root_cause": "pytest 把标记存放在单一属性 pytestmark 上，get_unpacked_marks 仅用 getattr(obj, \"pytestmark\", []) 取值，属性查找按 MRO 只命中最先出现的那个类，因此 class C(A, B) 只保留 A 的标记、丢失 B 的标记；并且该函数经 normalize_mark_list 惰性返回生成器，调用方拿到的是 <generator object ...> 而不是可与期望值比较的 Mark 列表。实现时若只是简单按 MRO 遍历并先收集基类标记，还会出现顺序错误：结果首元素变成 A 的 xfail(\"a\") 而不是 C 自身的 xfail(\"c\")。",
+        "schema_version": 4,
+        "scope": "project",
+        "solution": "在 src/_pytest/mark/structures.py 中改造标记收集：1) 让 get_unpacked_marks 返回具体列表（List[Mark]），把 normalize_mark_list 的结果物化后返回，保留其对非 Mark/MarkDecorator 值抛 TypeError 的校验；2) 增加关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 为真时，按 obj.__mro__ 顺序遍历，对每个类以 consider_mro=False 取出该类自身的标记并追加，用集合按 Mark 去重，得到“被查询类自身标记在前、随后按 MRO 顺序的基类标记”的结果（如 [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）；3) consider_mro=False 时只规范化并返回该对象自身通过 pytestmark 存放的标记（非 list 的单值包装成单元素列表）；4) store_mark 追加标记时改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，避免把继承标记写进当前类自身属性；调用处（如 _pytest/python.py 中的收集逻辑）保持默认 consider_mro=True 的合并行为。",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+        "supersedes_id": null,
+        "tags": [
+          "python",
+          "pytest",
+          "marks",
+          "MRO",
+          "多继承",
+          "标记合并",
+          "列表返回"
+        ],
+        "task_summary": "修复 pytest 中测试类多继承多个带标记基类时丢失标记的问题：让 src/_pytest/mark/structures.py#get_unpacked_marks 在对象为类时按 MRO 收集自身与各基类的标记、以列表形式返回并支持 consider_mro 开关，同时让 store_mark 只在对象自身标记上追加，不把继承来的标记写回。",
+        "verification": "程序独立运行 pytest 最终验证，275 项测试全部通过；工具调用编号：05ede317-f569-4e91-aa57-b59bcc96bc0b。"
+      },
+      {
+        "applicability": [
+          "适用于 pytest 中通过类继承收集 `pytestmark` 的场景，尤其是多基类或菱形继承。",
+          "适用于需要区分本地标记与包含 MRO 标记的 API 调用，例如 `consider_mro=False`。",
+          "适用于装饰类/函数时写入 `pytestmark` 且不能污染父类或兄弟类的场景。",
+          "适用于非类对象仅有本地 `pytestmark` 的兼容场景。"
+        ],
+        "batch_id": "26782a72-b116-4b0a-8cae-e0f6ffef2e36",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+        "constraints": [
+          "仅修改生产源码 `src/_pytest/mark/structures.py`，不修改测试或构建配置。",
+          "`get_unpacked_marks` 必须返回列表而不是生成器，默认考虑 MRO，并支持 `consider_mro=False`。",
+          "MRO 聚合只对类生效，按 `obj.__mro__` 顺序收集每个类 `__dict__` 中本地定义的 `pytestmark`，当前类优先，避免菱形继承根类重复。",
+          "不同父类中同名 marker 不得去重，必须保留所有 marker 对象；仅依靠 MRO 中唯一的类来避免同一类重复贡献。",
+          "`consider_mro=False` 或非类对象必须回退到对象本地 `pytestmark` 的归一化，不得尝试访问 `__mro__`。",
+          "`store_mark` 写入时只能使用对象本地已有标记，不能读取继承标记，以免装饰子类时修改父类/兄弟类语义或复制陈旧标记。",
+          "函数装饰顺序及非类对象的本地标记顺序必须保持不变。",
+          "保持未涉及的业务行为不变。"
+        ],
+        "created_at": "2026-11-15T06:14:01.215629Z",
+        "derived_from": [],
+        "error_type": "AssertionError",
+        "evidence": [
+          {
+            "errors": 0,
+            "failures": 0,
+            "runner": "pytest",
+            "skipped": 0,
+            "source_task_id": "a85747f6-0acf-4670-9bb0-280d38298b19",
+            "tests": 302,
+            "tool_call_id": "cfb33768-39ac-44a7-9aba-7e61e7420dd5"
+          }
+        ],
+        "id": "b6716e28-3f6f-409a-a462-17f008382321",
+        "issues": [
+          {
+            "depends_on": [],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "`get_unpacked_marks` 直接返回 `normalize_mark_list` 生成器，导致未标记类与 `[]` 比较、标记列表与 `[Mark]` 比较时断言失败。",
+            "solution": "在 `get_unpacked_marks` 的所有返回路径中把归一化结果物化为 `list`，保证未标记类返回 `[]`，有标记类返回 `Mark` 列表。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#normalize_mark_list"
+            ]
+          },
+          {
+            "depends_on": [],
+            "error_type": "TypeError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "`get_unpacked_marks` 没有 `consider_mro` 参数，测试传入 `consider_mro=False` 时抛出 `TypeError: get_unpacked_marks() got an unexpected keyword argument 'consider_mro'`。",
+            "solution": "为 `get_unpacked_marks` 增加 `consider_mro` 参数并默认考虑 MRO；当 `consider_mro=False` 时只读取对象本地定义的 `pytestmark`。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "depends_on": [
+              1
+            ],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "`store_mark` 使用 `[*get_unpacked_marks(obj), mark]` 保存标记，在 `get_unpacked_marks` 可能返回继承标记时，会把父类标记复制进子类自己的 `pytestmark`，导致子类重复、父类后加标记不可见以及兄弟类/父类被污染。",
+            "solution": "`store_mark` 保存时只读取对象的本地标记，例如使用 `get_unpacked_marks(obj, consider_mro=False)` 或等价本地读取方式，再追加新标记；不得把继承来的标记写入当前对象。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#store_mark"
+            ]
+          },
+          {
+            "depends_on": [
+              0,
+              1,
+              2
+            ],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "`get_unpacked_marks` 只对对象执行一次 `getattr(obj, \"pytestmark\", [])`，无法合并多个基类的本地标记；若在 MRO 聚合中对每个类继续使用 `getattr`，又会重复读取继承值，导致菱形继承中根类标记重复或顺序错误。",
+            "solution": "对类且 `consider_mro=True` 时遍历 `obj.__mro__`，每个类只读取其 `__dict__` 中本地 `pytestmark`，分别归一化后按 MRO/C3 顺序拼接；本地类标记优先，菱形根类只出现一次；不同基类的同名 marker 不去重。`consider_mro=False` 或非类对象只处理本地标记。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#normalize_mark_list"
+            ]
+          }
+        ],
+        "language": "python",
+        "merged_from": [],
+        "repository_id": "uploaded/c653740a4d1ef9d522e61768e6b0debb",
+        "required_capabilities": [],
+        "reuse_status": "active",
+        "root_cause": "`get_unpacked_marks` 原先只通过 `getattr(obj, \"pytestmark\", [])` 读取标记，Python 属性查找只会返回 MRO 中第一个 pytestmark，导致 `class TestDings(Foo, Bar)` 丢失 `Bar` 的标记；同时 `store_mark` 在装饰子类时把从父类继承来的标记写进子类自己的 pytestmark，造成重复、陈旧副本和菱形继承重复。`get_unpacked_marks` 还直接返回生成器且不接受 `consider_mro` 参数。",
+        "schema_version": 4,
+        "scope": "project",
+        "solution": "在 `src/_pytest/mark/structures.py` 中调整标记读取与存储：`get_unpacked_marks` 返回 `list`，并接受 `consider_mro`；默认对类按 `__mro__` 顺序收集每个类的本地 `pytestmark`，当前类优先，菱形继承的根类只出现一次；`consider_mro=False` 或非类对象只读取对象自身定义并归一化为本地标记；不同父类中的同名标记不去重；`store_mark` 只基于本地标记追加，避免污染父类、兄弟类或产生陈旧副本。",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+        "source_task_id": "a85747f6-0acf-4670-9bb0-280d38298b19",
+        "supersedes_id": null,
+        "tags": [
+          "python",
+          "pytest",
+          "标记继承",
+          "MRO",
+          "C3",
+          "get_unpacked_marks",
+          "store_mark"
+        ],
+        "task_summary": "修复 pytest 标记获取未按 MRO 合并多个基类标记的问题：get_unpacked_marks 需返回列表、支持 consider_mro，并按 MRO 汇总各类本地 pytestmark，同时 store_mark 不得把父类标记复制到子类。",
+        "verification": "程序独立运行 pytest 最终验证，302 项测试全部通过；工具调用编号：cfb33768-39ac-44a7-9aba-7e61e7420dd5。"
+      }
+    ],
+    "state": "rejected",
+    "attempt": 1,
+    "result": null,
+    "notice": "来源规则已在冲突处理中暂停，保留原经验。",
+    "updated_at": "2026-11-15T12:51:23.880308+00:00"
+  },
+  {
+    "id": "b05ce788-17c6-5be9-8faf-53dc30a2c7e7",
+    "left_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+    "right_id": "414bf457-a740-4d05-9760-772bd04e7616",
+    "inputs": [
+      {
+        "applicability": [
+          "pytest 中通过类装饰器或类属性 pytestmark 定义标记，且测试类多继承自多个带标记的基类。",
+          "需要按 MRO 合并基类标记，而不是让 MRO 中第一个基类的 pytestmark 覆盖其余基类。",
+          "需要 get_unpacked_marks(C, consider_mro=False) 只返回 C 自身标记的调用场景。",
+          "对 get_unpacked_marks 返回值做列表相等断言（如 assert all_marks == [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）的测试。"
+        ],
+        "batch_id": "3f4d4461-f149-44d8-9129-bd162b57318a",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "constraints": [
+          "仅在 obj 为类且 consider_mro 为真时才展开 MRO 合并基类标记，否则只取对象自身的 pytestmark。",
+          "结果顺序必须是：被查询类自身的标记在前，随后按 MRO 顺序排列其基类的标记。",
+          "合并 MRO 标记时必须按 Mark 去重，避免同一标记重复出现。",
+          "consider_mro=False 必须只返回对象自身存放的标记，不包含任何基类标记。",
+          "get_unpacked_marks 的返回值必须是可直接与 list 比较的具体列表（List[Mark]），不能是生成器。",
+          "normalize_mark_list 对非 Mark、非 MarkDecorator 的值必须继续抛出 TypeError，保持既有错误行为。",
+          "store_mark 追加标记时必须使用 consider_mro=False，禁止把继承来的标记写回对象自身的 pytestmark。",
+          "只修改生产源码 src/_pytest/mark/structures.py，保留其他行为不变。"
+        ],
+        "created_at": "2026-11-15T12:45:50.435809Z",
+        "derived_from": [],
+        "error_type": "AssertionError",
+        "evidence": [
+          {
+            "errors": 0,
+            "failures": 0,
+            "runner": "pytest",
+            "skipped": 0,
+            "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+            "tests": 275,
+            "tool_call_id": "05ede317-f569-4e91-aa57-b59bcc96bc0b"
+          }
+        ],
+        "id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+        "issues": [
+          {
+            "depends_on": [],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 通过 normalize_mark_list 生成器惰性产出标记，调用方得到的是 <generator object ...>，与期望的 Mark 列表比较时断言失败（assert <generator ob...> == [...]）。",
+            "solution": "在 get_unpacked_marks 中把 normalize_mark_list(mark_list) 的结果物化为列表后返回（例如 return list(normalize_mark_list(mark_list))），并把返回类型标注为 List[Mark]；保持 normalize_mark_list 原有的 TypeError 校验逻辑不变。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#normalize_mark_list"
+            ]
+          },
+          {
+            "depends_on": [
+              0
+            ],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+            "solution": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "depends_on": [],
+            "error_type": "标记重复累积（存储路径回归，未观察到独立异常）",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "store_mark 用 obj.pytestmark = [*get_unpacked_marks(obj), mark] 重新赋值；在 get_unpacked_marks 改为按 MRO 展开后，这会把基类继承来的标记也写进当前类自身的 pytestmark，导致标记重复累积，并破坏 consider_mro=False 只反映自身标记的语义。",
+            "solution": "store_mark 改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，只基于对象自身的标记追加新标记，保持“总是重新赋值以避免修改借用引用”的原有注释语义。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#store_mark"
+            ]
+          }
+        ],
+        "language": "python",
+        "merged_from": [],
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "required_capabilities": [],
+        "reuse_status": "active",
+        "root_cause": "pytest 把标记存放在单一属性 pytestmark 上，get_unpacked_marks 仅用 getattr(obj, \"pytestmark\", []) 取值，属性查找按 MRO 只命中最先出现的那个类，因此 class C(A, B) 只保留 A 的标记、丢失 B 的标记；并且该函数经 normalize_mark_list 惰性返回生成器，调用方拿到的是 <generator object ...> 而不是可与期望值比较的 Mark 列表。实现时若只是简单按 MRO 遍历并先收集基类标记，还会出现顺序错误：结果首元素变成 A 的 xfail(\"a\") 而不是 C 自身的 xfail(\"c\")。",
+        "schema_version": 4,
+        "scope": "project",
+        "solution": "在 src/_pytest/mark/structures.py 中改造标记收集：1) 让 get_unpacked_marks 返回具体列表（List[Mark]），把 normalize_mark_list 的结果物化后返回，保留其对非 Mark/MarkDecorator 值抛 TypeError 的校验；2) 增加关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 为真时，按 obj.__mro__ 顺序遍历，对每个类以 consider_mro=False 取出该类自身的标记并追加，用集合按 Mark 去重，得到“被查询类自身标记在前、随后按 MRO 顺序的基类标记”的结果（如 [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）；3) consider_mro=False 时只规范化并返回该对象自身通过 pytestmark 存放的标记（非 list 的单值包装成单元素列表）；4) store_mark 追加标记时改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，避免把继承标记写进当前类自身属性；调用处（如 _pytest/python.py 中的收集逻辑）保持默认 consider_mro=True 的合并行为。",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+        "supersedes_id": null,
+        "tags": [
+          "python",
+          "pytest",
+          "marks",
+          "MRO",
+          "多继承",
+          "标记合并",
+          "列表返回"
+        ],
+        "task_summary": "修复 pytest 中测试类多继承多个带标记基类时丢失标记的问题：让 src/_pytest/mark/structures.py#get_unpacked_marks 在对象为类时按 MRO 收集自身与各基类的标记、以列表形式返回并支持 consider_mro 开关，同时让 store_mark 只在对象自身标记上追加，不把继承来的标记写回。",
+        "verification": "程序独立运行 pytest 最终验证，275 项测试全部通过；工具调用编号：05ede317-f569-4e91-aa57-b59bcc96bc0b。"
+      },
+      {
+        "applicability": [
+          "适用于 Sphinx autodoc 中 inherited-members 与实例属性（__init__ 中的 self.attr #: 注释）结合的场景。",
+          "适用于继承层次跨模块、菱形继承、同名属性覆盖、反向基类顺序以及显式继承截止类的场景。",
+          "需要沿用现有 ModuleAnalyzer.attr_docs 与 ClassAttribute/ObjectMember 机制。"
+        ],
+        "batch_id": "4115984a-a427-44f1-a6e5-7498198c3590",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:657f4172e6c42adf67a99898e0514a6dd9bc6cf46e543606c003f547269cfafb",
+        "constraints": [
+          "测试与构建配置不可修改。",
+          "只修改生产源码，保持未涉及的业务行为不变。",
+          "必须在 :inherited-members: 启用时包含继承实例属性；未启用时仍只包含直接定义成员。",
+          "显式 :inherited-members: <base> 表示截止类：排除该基类及更上层基类的声明。",
+          "同一成员名在 MRO 中先出现者优先：当前类/本地声明优先于基类，左侧基类优先于右侧基类。",
+          "共同祖先的成员只能输出一次。",
+          "反向列出基类时，以新的第一个父类为准。",
+          "不得让更深或右侧父类的同名属性文档覆盖已有更靠前成员。",
+          "只有当前成员缺少 docstring 且尚未由更靠前 MRO 类提供文档时，才合并基类文档。",
+          "filter_members 必须同时识别基类 namespace 的 attr_docs。",
+          "已文档化属性的截止类过滤仅在 want_all 为真且 members 为 ALL 时执行。"
+        ],
+        "created_at": "2026-11-15T06:30:26.419524Z",
+        "derived_from": [],
+        "error_type": "AssertionError",
+        "evidence": [
+          {
+            "errors": 0,
+            "failures": 0,
+            "runner": "pytest",
+            "skipped": 0,
+            "source_task_id": "01403326-4f55-4098-887a-9136838899a1",
+            "tests": 148,
+            "tool_call_id": "84266cab-ac58-4195-9562-cf4183d3d4e5"
+          }
+        ],
+        "id": "414bf457-a740-4d05-9760-772bd04e7616",
+        "issues": [
+          {
+            "depends_on": [],
+            "error_type": "AssertionError",
+            "files": [
+              "sphinx/ext/autodoc/importer.py",
+              "sphinx/ext/autodoc/__init__.py"
+            ],
+            "root_cause": "get_class_members 只用当前类模块 analyzer 中 namespace == '.'.join(objpath) 的 attr_docs 补充实例属性，未按 MRO 查看父类/父模块的 (qualname, attrname) 键；因此 test_inherited_instance_variable 缺少 Bar.attr1，跨模块继承页面缺少 ROOT/LEFT/RIGHT/LEAF 等基类声明。简单改为遍历父类若不做先序合并，还会导致菱形继承重复、共享祖先重复、同名属性被右侧或更深父类覆盖。",
+            "solution": "按 MRO 从当前类到基类遍历：对每个 cls 使用 ModuleAnalyzer.for_module(cls.__module__)，读取 attr_docs[(cls.__qualname__, name)]。若 name 尚不存在，添加 INSTANCEATTR/ClassAttribute 并带上 docstring；若已存在，仅当尚未有更靠前 MRO 类提供 docstring 时补充，绝不覆盖已有文档，也不重复添加。ClassDocumenter.get_object_members 将 m.docstring 写入 ObjectMember，filter_members 同时检查基类 namespace 的 attr_docs 以保留文档属性。",
+            "symbols": [
+              "sphinx/ext/autodoc/__init__.py#ClassDocumenter.get_object_members",
+              "sphinx/ext/autodoc/__init__.py#Documenter.filter_members",
+              "sphinx/ext/autodoc/importer.py#get_class_members"
+            ]
+          },
+          {
+            "depends_on": [
+              0
+            ],
+            "error_type": "AssertionError",
+            "files": [
+              "sphinx/ext/autodoc/__init__.py"
+            ],
+            "root_cause": "Documenter.filter_members 在 (namespace, membername) 命中 attr_docs 的已文档化属性分支直接 keep=True，没有执行 is_filtered_inherited_member；因此 :inherited-members: Root 时 Root.__init__ 中的实例属性仍被输出到 Leaf，test_explicit_cutoff_hides_root_declarations 失败。",
+            "solution": "在已文档化属性分支中同样执行继承截止检查：当 want_all 且 members 为 ALL 时，若 is_filtered_inherited_member(membername) 为真则 keep=False；否则 keep=True 并保持 isattr=True。is_filtered_inherited_member 应按 MRO 判断成员来自指定截止类或更上层，保留截止类以下（更派生）的 Middle/Leaf 声明。",
+            "symbols": [
+              "sphinx/ext/autodoc/__init__.py#Documenter.filter_members"
+            ]
+          }
+        ],
+        "language": "python",
+        "merged_from": [],
+        "repository_id": "uploaded/4bacceb1dadf21def7d393e463d2d2a8",
+        "required_capabilities": [],
+        "reuse_status": "active",
+        "root_cause": "get_class_members 仅用当前文档类模块 analyzer.attr_docs 中 namespace 等于当前类 objpath 的条目补充实例属性；Documenter.filter_members 也只按当前 (namespace, membername) 查 attr_docs。父类（尤其跨模块父类）中的 self.attr #: 注释因此不会被发现或识别。扩展为遍历基类时还必须按 MRO 先序合并：本地声明优先，左侧基类优先，共同祖先只输出一次，反向基类时以新的首个父类为准；不能让更深或右侧父类覆盖同名成员。另有已文档化属性分支直接 keep=True，绕过了 :inherited-members: 截止类过滤，导致显式指定 Root 时 Root 的声明仍被输出。",
+        "schema_version": 4,
+        "scope": "project",
+        "solution": "在 get_class_members 中按 getmro(subject) 从当前类到基类顺序，使用各 cls.__module__ 的 ModuleAnalyzer 查询 (cls.__qualname__, attrname) 的注释；对不存在成员添加 ClassAttribute(..., INSTANCEATTR, docstring)，对已存在成员仅在其 docstring 为空且尚无更靠前 MRO 类提供的文档时补充。Documenter.filter_members 同步识别基类 namespace 的 attr_docs，并把 ObjectMember.docstring 保留到成员文档。对已文档化属性分支也调用 is_filtered_inherited_member：当 want_all 且 members 为 ALL 时，命中截止类或更上层则 keep=False；保留截止类以下（更派生）的 Middle/Leaf 声明。",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:657f4172e6c42adf67a99898e0514a6dd9bc6cf46e543606c003f547269cfafb",
+        "source_task_id": "01403326-4f55-4098-887a-9136838899a1",
+        "supersedes_id": null,
+        "tags": [
+          "python",
+          "Sphinx",
+          "autodoc",
+          "inherited-members",
+          "实例属性",
+          "MRO",
+          "文档注释",
+          "跨模块继承",
+          "截止类"
+        ],
+        "task_summary": "修复 Sphinx autodoc 在启用 inherited-members 时无法为继承实例属性（self.attr #: doc）收集和输出基类文档的问题；同时保证 MRO 优先级、共同祖先去重、反向基类顺序、本地覆盖，以及显式 :inherited-members: <base> 截止类语义。",
+        "verification": "程序独立运行 pytest 最终验证，148 项测试全部通过；工具调用编号：84266cab-ac58-4195-9562-cf4183d3d4e5。"
+      }
+    ],
+    "state": "succeeded",
+    "attempt": 1,
+    "result": {
+      "conflict_check": {
+        "candidates": [],
+        "conflict_ids": [],
+        "policy": "cross-upload-conflicts-v1",
+        "state": "not_applicable"
+      },
+      "id": "4abb6174-b642-54a7-8248-958b167f78b8",
+      "model_requests": [
+        {
+          "api_configuration": {
+            "identity": "4f003362858407b3c4f55d13",
+            "key_fingerprint": "c5f83d792da0",
+            "key_present": true,
+            "model": "deepseek-flash",
+            "origin": "https://api.deepseek.com",
+            "source": "explicit_file",
+            "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+            "transport": "direct"
+          },
+          "attempt": 1,
+          "duration_ms": 34104,
+          "finish_reason": "stop",
+          "http_status": 200,
+          "phase": "principle_induction",
+          "request_experience_hashes": [],
+          "request_experience_ids": [],
+          "requested_model": "deepseek-flash",
+          "response_id": "e6284071-f0e5-4ce1-876d-c21a6054b279",
+          "returned_model": "deepseek-flash",
+          "success": true,
+          "transport_events": [
+            {
+              "elapsed_ms": 1,
+              "event": "connection.connect_tcp.started"
+            },
+            {
+              "elapsed_ms": 49,
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "elapsed_ms": 49,
+              "event": "connection.start_tls.started"
+            },
+            {
+              "elapsed_ms": 73,
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "elapsed_ms": 73,
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "elapsed_ms": 73,
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "elapsed_ms": 73,
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "elapsed_ms": 74,
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "elapsed_ms": 74,
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "elapsed_ms": 199,
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "elapsed_ms": 200,
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "elapsed_ms": 34104,
+              "event": "http11.receive_response_body.complete"
+            }
+          ],
+          "transport_policy": "direct",
+          "usage": {
+            "completion_tokens": 7175,
+            "prompt_tokens": 4456,
+            "total_tokens": 11631
+          }
+        },
+        {
+          "api_configuration": {
+            "identity": "4f003362858407b3c4f55d13",
+            "key_fingerprint": "c5f83d792da0",
+            "key_present": true,
+            "model": "deepseek-flash",
+            "origin": "https://api.deepseek.com",
+            "source": "explicit_file",
+            "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+            "transport": "direct"
+          },
+          "attempt": 1,
+          "duration_ms": 45114,
+          "finish_reason": "stop",
+          "http_status": 200,
+          "phase": "principle_review",
+          "request_experience_hashes": [],
+          "request_experience_ids": [],
+          "requested_model": "deepseek-flash",
+          "response_id": "0f70e877-1567-4a34-89c4-2e8abf5011b1",
+          "returned_model": "deepseek-flash",
+          "success": true,
+          "transport_events": [
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "elapsed_ms": 134,
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "elapsed_ms": 135,
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "elapsed_ms": 45114,
+              "event": "http11.receive_response_body.complete"
+            }
+          ],
+          "transport_policy": "direct",
+          "usage": {
+            "completion_tokens": 8032,
+            "prompt_tokens": 6119,
+            "total_tokens": 14151
+          }
+        }
+      ],
+      "principle": {
+        "applicability": [
+          "适用于 Python 类需要聚合沿 MRO 分布在同一业务语义下的元数据，而单次属性查找只命中最先出现的类、导致其他基类数据丢失的修复。",
+          "适用于需要保证当前类/派生类优先、左侧基类优先于右侧基类、共同祖先或同名项去重的收集逻辑。",
+          "适用于聚合结果与“仅对象自身/显式截止类”结果必须区分的调用场景。",
+          "适用于已有文档或已有 mark 不得被更深或更右侧来源覆盖，且文档只能在空缺时补充的合并场景。"
+        ],
+        "bindings": [
+          {
+            "business_parameters": {
+              "consider_mro_default": "True",
+              "dedup": "按 Mark 去重",
+              "error_behavior": "normalize_mark_list 对非 Mark、非 MarkDecorator 继续抛 TypeError",
+              "order": "被查询类自身标记在前，基类标记按 MRO 顺序跟随",
+              "return_type": "List[Mark]",
+              "scope": "仅修改 src/_pytest/mark/structures.py",
+              "self_only_write_flag": "consider_mro=False",
+              "store_mark_expression": "obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]"
+            },
+            "source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+            "supports": [
+              {
+                "field": "root_cause",
+                "issue_index": 1,
+                "quote": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 1,
+                "quote": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 2,
+                "quote": "store_mark 改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，只基于对象自身的标记追加新标记，保持“总是重新赋值以避免修改借用引用”的原有注释语义。"
+              }
+            ]
+          },
+          {
+            "business_parameters": {
+              "attr_docs_key": "(cls.__qualname__, attrname)",
+              "cutoff_condition": "want_all 且 members 为 ALL",
+              "dedup": "共同祖先只输出一次",
+              "doc_merge": "仅当当前成员缺少 docstring 且尚无更靠前 MRO 类提供文档时补充",
+              "filter_flag": "is_filtered_inherited_member(membername)",
+              "inherited_switch": ":inherited-members:",
+              "module_analyzer": "ModuleAnalyzer.for_module(cls.__module__)",
+              "precedence": "当前类/本地声明优先，左侧基类优先于右侧基类",
+              "scope": "修改 sphinx/ext/autodoc/importer.py 与 sphinx/ext/autodoc/__init__.py；测试与构建配置不可修改"
+            },
+            "source_id": "414bf457-a740-4d05-9760-772bd04e7616",
+            "supports": [
+              {
+                "field": "root_cause",
+                "issue_index": 0,
+                "quote": "get_class_members 只用当前类模块 analyzer 中 namespace == '.'.join(objpath) 的 attr_docs 补充实例属性，未按 MRO 查看父类/父模块的 (qualname, attrname) 键；因此 test_inherited_instance_variable 缺少 Bar.attr1，跨模块继承页面缺少 ROOT/LEFT/RIGHT/LEAF 等基类声明。简单改为遍历父类若不做先序合并，还会导致菱形继承重复、共享祖先重复、同名属性被右侧或更深父类覆盖。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 0,
+                "quote": "按 MRO 从当前类到基类遍历：对每个 cls 使用 ModuleAnalyzer.for_module(cls.__module__)，读取 attr_docs[(cls.__qualname__, name)]。若 name 尚不存在，添加 INSTANCEATTR/ClassAttribute 并带上 docstring；若已存在，仅当尚未有更靠前 MRO 类提供 docstring 时补充，绝不覆盖已有文档，也不重复添加。ClassDocumenter.get_object_members 将 m.docstring 写入 ObjectMember，filter_members 同时检查基类 namespace 的 attr_docs 以保留文档属性。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 1,
+                "quote": "在已文档化属性分支中同样执行继承截止检查：当 want_all 且 members 为 ALL 时，若 is_filtered_inherited_member(membername) 为真则 keep=False；否则 keep=True 并保持 isattr=True。is_filtered_inherited_member 应按 MRO 判断成员来自指定截止类或更上层，保留截止类以下（更派生）的 Middle/Leaf 声明。"
+              }
+            ]
+          }
+        ],
+        "boundaries": [
+          "该原则不统一两个业务的具体开关：pytest 源使用 consider_mro 且默认 True，store_mark 必须传 consider_mro=False；Sphinx 源使用 :inherited-members: 截止类，且已文档化属性的截止过滤仅在 want_all 且 members 为 ALL 时执行。",
+          "不共享返回类型与对象模型：pytest 源要求 get_unpacked_marks 返回 List[Mark] 并保留 normalize_mark_list 对非 Mark、非 MarkDecorator 抛 TypeError；Sphinx 源通过 ModuleAnalyzer.attr_docs、ClassAttribute/INSTANCEATTR、ObjectMember 和 docstring 合并处理。",
+          "修改范围不同：pytest 源仅修改 src/_pytest/mark/structures.py；Sphinx 源需修改 sphinx/ext/autodoc/importer.py 与 sphinx/ext/autodoc/__init__.py，且测试与构建配置不可修改。",
+          "pytest 源中 store_mark 只基于对象自身的标记追加，禁止把继承标记写回自身；Sphinx 源中仅在成员缺少 docstring 且尚无更靠前 MRO 类提供文档时补充，绝不覆盖已有文档。",
+          "pytest 源中 consider_mro=False 只返回对象自身存放的标记；Sphinx 源未启用 :inherited-members: 时仍只包含直接定义成员。",
+          "两源的具体字段名、测试名、异常行为、去重键和截止条件保持各自绑定，不能互换或取一个业务值套用到全部来源。"
+        ],
+        "evidence_summary": {
+          "tests_per_run": [
+            275,
+            148
+          ],
+          "verified_runs": 2
+        },
+        "id": "4abb6174-b642-54a7-8248-958b167f78b8",
+        "instances": [
+          {
+            "applicability": [
+              "pytest 中通过类装饰器或类属性 pytestmark 定义标记，且测试类多继承自多个带标记的基类。",
+              "需要按 MRO 合并基类标记，而不是让 MRO 中第一个基类的 pytestmark 覆盖其余基类。",
+              "需要 get_unpacked_marks(C, consider_mro=False) 只返回 C 自身标记的调用场景。",
+              "对 get_unpacked_marks 返回值做列表相等断言（如 assert all_marks == [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）的测试。"
+            ],
+            "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+            "constraints": [
+              "仅在 obj 为类且 consider_mro 为真时才展开 MRO 合并基类标记，否则只取对象自身的 pytestmark。",
+              "结果顺序必须是：被查询类自身的标记在前，随后按 MRO 顺序排列其基类的标记。",
+              "合并 MRO 标记时必须按 Mark 去重，避免同一标记重复出现。",
+              "consider_mro=False 必须只返回对象自身存放的标记，不包含任何基类标记。",
+              "get_unpacked_marks 的返回值必须是可直接与 list 比较的具体列表（List[Mark]），不能是生成器。",
+              "normalize_mark_list 对非 Mark、非 MarkDecorator 的值必须继续抛出 TypeError，保持既有错误行为。",
+              "store_mark 追加标记时必须使用 consider_mro=False，禁止把继承来的标记写回对象自身的 pytestmark。",
+              "只修改生产源码 src/_pytest/mark/structures.py，保留其他行为不变。"
+            ],
+            "evidence": [
+              {
+                "errors": 0,
+                "failures": 0,
+                "runner": "pytest",
+                "skipped": 0,
+                "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+                "tests": 275,
+                "tool_call_id": "05ede317-f569-4e91-aa57-b59bcc96bc0b"
+              }
+            ],
+            "experience_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+            "issues": [
+              {
+                "depends_on": [],
+                "error_type": "AssertionError",
+                "files": [
+                  "src/_pytest/mark/structures.py"
+                ],
+                "root_cause": "get_unpacked_marks 通过 normalize_mark_list 生成器惰性产出标记，调用方得到的是 <generator object ...>，与期望的 Mark 列表比较时断言失败（assert <generator ob...> == [...]）。",
+                "solution": "在 get_unpacked_marks 中把 normalize_mark_list(mark_list) 的结果物化为列表后返回（例如 return list(normalize_mark_list(mark_list))），并把返回类型标注为 List[Mark]；保持 normalize_mark_list 原有的 TypeError 校验逻辑不变。",
+                "symbols": [
+                  "src/_pytest/mark/structures.py#get_unpacked_marks",
+                  "src/_pytest/mark/structures.py#normalize_mark_list"
+                ]
+              },
+              {
+                "depends_on": [
+                  0
+                ],
+                "error_type": "AssertionError",
+                "files": [
+                  "src/_pytest/mark/structures.py"
+                ],
+                "root_cause": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+                "solution": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+                "symbols": [
+                  "src/_pytest/mark/structures.py#get_unpacked_marks"
+                ]
+              },
+              {
+                "depends_on": [],
+                "error_type": "标记重复累积（存储路径回归，未观察到独立异常）",
+                "files": [
+                  "src/_pytest/mark/structures.py"
+                ],
+                "root_cause": "store_mark 用 obj.pytestmark = [*get_unpacked_marks(obj), mark] 重新赋值；在 get_unpacked_marks 改为按 MRO 展开后，这会把基类继承来的标记也写进当前类自身的 pytestmark，导致标记重复累积，并破坏 consider_mro=False 只反映自身标记的语义。",
+                "solution": "store_mark 改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，只基于对象自身的标记追加新标记，保持“总是重新赋值以避免修改借用引用”的原有注释语义。",
+                "symbols": [
+                  "src/_pytest/mark/structures.py#get_unpacked_marks",
+                  "src/_pytest/mark/structures.py#store_mark"
+                ]
+              }
+            ],
+            "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+            "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f"
+          },
+          {
+            "applicability": [
+              "适用于 Sphinx autodoc 中 inherited-members 与实例属性（__init__ 中的 self.attr #: 注释）结合的场景。",
+              "适用于继承层次跨模块、菱形继承、同名属性覆盖、反向基类顺序以及显式继承截止类的场景。",
+              "需要沿用现有 ModuleAnalyzer.attr_docs 与 ClassAttribute/ObjectMember 机制。"
+            ],
+            "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:657f4172e6c42adf67a99898e0514a6dd9bc6cf46e543606c003f547269cfafb",
+            "constraints": [
+              "测试与构建配置不可修改。",
+              "只修改生产源码，保持未涉及的业务行为不变。",
+              "必须在 :inherited-members: 启用时包含继承实例属性；未启用时仍只包含直接定义成员。",
+              "显式 :inherited-members: <base> 表示截止类：排除该基类及更上层基类的声明。",
+              "同一成员名在 MRO 中先出现者优先：当前类/本地声明优先于基类，左侧基类优先于右侧基类。",
+              "共同祖先的成员只能输出一次。",
+              "反向列出基类时，以新的第一个父类为准。",
+              "不得让更深或右侧父类的同名属性文档覆盖已有更靠前成员。",
+              "只有当前成员缺少 docstring 且尚未由更靠前 MRO 类提供文档时，才合并基类文档。",
+              "filter_members 必须同时识别基类 namespace 的 attr_docs。",
+              "已文档化属性的截止类过滤仅在 want_all 为真且 members 为 ALL 时执行。"
+            ],
+            "evidence": [
+              {
+                "errors": 0,
+                "failures": 0,
+                "runner": "pytest",
+                "skipped": 0,
+                "source_task_id": "01403326-4f55-4098-887a-9136838899a1",
+                "tests": 148,
+                "tool_call_id": "84266cab-ac58-4195-9562-cf4183d3d4e5"
+              }
+            ],
+            "experience_id": "414bf457-a740-4d05-9760-772bd04e7616",
+            "issues": [
+              {
+                "depends_on": [],
+                "error_type": "AssertionError",
+                "files": [
+                  "sphinx/ext/autodoc/importer.py",
+                  "sphinx/ext/autodoc/__init__.py"
+                ],
+                "root_cause": "get_class_members 只用当前类模块 analyzer 中 namespace == '.'.join(objpath) 的 attr_docs 补充实例属性，未按 MRO 查看父类/父模块的 (qualname, attrname) 键；因此 test_inherited_instance_variable 缺少 Bar.attr1，跨模块继承页面缺少 ROOT/LEFT/RIGHT/LEAF 等基类声明。简单改为遍历父类若不做先序合并，还会导致菱形继承重复、共享祖先重复、同名属性被右侧或更深父类覆盖。",
+                "solution": "按 MRO 从当前类到基类遍历：对每个 cls 使用 ModuleAnalyzer.for_module(cls.__module__)，读取 attr_docs[(cls.__qualname__, name)]。若 name 尚不存在，添加 INSTANCEATTR/ClassAttribute 并带上 docstring；若已存在，仅当尚未有更靠前 MRO 类提供 docstring 时补充，绝不覆盖已有文档，也不重复添加。ClassDocumenter.get_object_members 将 m.docstring 写入 ObjectMember，filter_members 同时检查基类 namespace 的 attr_docs 以保留文档属性。",
+                "symbols": [
+                  "sphinx/ext/autodoc/__init__.py#ClassDocumenter.get_object_members",
+                  "sphinx/ext/autodoc/__init__.py#Documenter.filter_members",
+                  "sphinx/ext/autodoc/importer.py#get_class_members"
+                ]
+              },
+              {
+                "depends_on": [
+                  0
+                ],
+                "error_type": "AssertionError",
+                "files": [
+                  "sphinx/ext/autodoc/__init__.py"
+                ],
+                "root_cause": "Documenter.filter_members 在 (namespace, membername) 命中 attr_docs 的已文档化属性分支直接 keep=True，没有执行 is_filtered_inherited_member；因此 :inherited-members: Root 时 Root.__init__ 中的实例属性仍被输出到 Leaf，test_explicit_cutoff_hides_root_declarations 失败。",
+                "solution": "在已文档化属性分支中同样执行继承截止检查：当 want_all 且 members 为 ALL 时，若 is_filtered_inherited_member(membername) 为真则 keep=False；否则 keep=True 并保持 isattr=True。is_filtered_inherited_member 应按 MRO 判断成员来自指定截止类或更上层，保留截止类以下（更派生）的 Middle/Leaf 声明。",
+                "symbols": [
+                  "sphinx/ext/autodoc/__init__.py#Documenter.filter_members"
+                ]
+              }
+            ],
+            "repository_id": "uploaded/4bacceb1dadf21def7d393e463d2d2a8",
+            "source_task_id": "01403326-4f55-4098-887a-9136838899a1"
+          }
+        ],
+        "kind": "shared_principle",
+        "namespace": "project-repairs-v1/attempt-1",
+        "new_target_requires_verification": true,
+        "principle": "在 Python 类层级中，当同一业务内的同类元数据（如 pytest 标记或 autodoc 实例属性文档）既可能定义在当前类、也可能分散在多个基类时，不能依赖单次 getattr 或仅查询当前 namespace 的收集方式；应按 MRO 从当前类向基类先序合并：当前类/更派生类优先，基类按从左到右顺序，先出现的成员或标记先占位并去重，更靠后或更深/右侧来源不得覆盖更靠前结果；文档信息仅在成员尚无文档且没有更靠前 MRO 来源提供文档时补充。对“仅取自身”或“截止类以上不输出”的用途必须提供显式开关/截止条件，避免把继承元数据写回对象自身或越过截止边界。",
+        "review": {
+          "approved": true,
+          "checks": [
+            {
+              "business_conditions_preserved": true,
+              "reason": "该源要求 get_unpacked_marks 在 consider_mro=True 且 obj 为类时按 obj.__mro__ 从当前类到基类收集，自身标记在前、基类按 MRO 顺序跟随，并按 Mark 去重；consider_mro=False 只取自身，store_mark 必须传 False 以避免把继承标记写回自身，同时保留 List[Mark] 返回与 normalize_mark_list 的 TypeError。候选原则的 MRO 先序、先出现者优先、去重及显式自身开关与此一致，边界也保留返回类型、异常行为和文件范围，未强行统一到 Sphinx 模型。",
+              "source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+              "supported": true
+            },
+            {
+              "business_conditions_preserved": true,
+              "reason": "该源要求 get_class_members 按 MRO 从当前类到基类查询各自模块 analyzer 的 attr_docs，当前/左侧优先、共同祖先去重、同名不覆盖；文档仅在已有成员尚无文档且无更靠前 MRO 文档时补充；filter_members 需识别基类 namespace，且 :inherited-members: 截止过滤仅在 want_all 且 members 为 ALL 时执行。候选原则覆盖这些条件，并明确保留 Sphinx 的对象模型、截止语义和修改范围。",
+              "source_id": "414bf457-a740-4d05-9760-772bd04e7616",
+              "supported": true
+            }
+          ],
+          "reason": "两源分别处理 pytest 标记与 Sphinx 继承实例属性文档，输出、对象模型、开关和异常行为不同；但共同暴露了同一因果修复点：单次属性查找或仅查当前 namespace 会遗漏 MRO 上其他基类元数据，简单遍历又会导致顺序错误、重复或右侧/更深来源覆盖。候选原则要求按 MRO 从当前类向基类先序合并、先出现者优先、去重、仅空缺补充文档，并用 consider_mro 或 :inherited-members: 截止类区分仅自身/截止边界；同时以边界保留两源各自参数，未发现被丢弃的必要限定或与源约束冲突的泛化。",
+          "unsafe_generalizations": []
+        },
+        "scope": "explicit_namespace",
+        "source_ids": [
+          "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+          "414bf457-a740-4d05-9760-772bd04e7616"
+        ],
+        "title": "Python 类继承元数据的 MRO 先序合并原则"
+      },
+      "proposal": {
+        "applicability": [
+          "适用于 Python 类需要聚合沿 MRO 分布在同一业务语义下的元数据，而单次属性查找只命中最先出现的类、导致其他基类数据丢失的修复。",
+          "适用于需要保证当前类/派生类优先、左侧基类优先于右侧基类、共同祖先或同名项去重的收集逻辑。",
+          "适用于聚合结果与“仅对象自身/显式截止类”结果必须区分的调用场景。",
+          "适用于已有文档或已有 mark 不得被更深或更右侧来源覆盖，且文档只能在空缺时补充的合并场景。"
+        ],
+        "bindings": [
+          {
+            "business_parameters": {
+              "consider_mro_default": "True",
+              "dedup": "按 Mark 去重",
+              "error_behavior": "normalize_mark_list 对非 Mark、非 MarkDecorator 继续抛 TypeError",
+              "order": "被查询类自身标记在前，基类标记按 MRO 顺序跟随",
+              "return_type": "List[Mark]",
+              "scope": "仅修改 src/_pytest/mark/structures.py",
+              "self_only_write_flag": "consider_mro=False",
+              "store_mark_expression": "obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]"
+            },
+            "source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+            "supports": [
+              {
+                "field": "root_cause",
+                "issue_index": 1,
+                "quote": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 1,
+                "quote": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 2,
+                "quote": "store_mark 改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，只基于对象自身的标记追加新标记，保持“总是重新赋值以避免修改借用引用”的原有注释语义。"
+              }
+            ]
+          },
+          {
+            "business_parameters": {
+              "attr_docs_key": "(cls.__qualname__, attrname)",
+              "cutoff_condition": "want_all 且 members 为 ALL",
+              "dedup": "共同祖先只输出一次",
+              "doc_merge": "仅当当前成员缺少 docstring 且尚无更靠前 MRO 类提供文档时补充",
+              "filter_flag": "is_filtered_inherited_member(membername)",
+              "inherited_switch": ":inherited-members:",
+              "module_analyzer": "ModuleAnalyzer.for_module(cls.__module__)",
+              "precedence": "当前类/本地声明优先，左侧基类优先于右侧基类",
+              "scope": "修改 sphinx/ext/autodoc/importer.py 与 sphinx/ext/autodoc/__init__.py；测试与构建配置不可修改"
+            },
+            "source_id": "414bf457-a740-4d05-9760-772bd04e7616",
+            "supports": [
+              {
+                "field": "root_cause",
+                "issue_index": 0,
+                "quote": "get_class_members 只用当前类模块 analyzer 中 namespace == '.'.join(objpath) 的 attr_docs 补充实例属性，未按 MRO 查看父类/父模块的 (qualname, attrname) 键；因此 test_inherited_instance_variable 缺少 Bar.attr1，跨模块继承页面缺少 ROOT/LEFT/RIGHT/LEAF 等基类声明。简单改为遍历父类若不做先序合并，还会导致菱形继承重复、共享祖先重复、同名属性被右侧或更深父类覆盖。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 0,
+                "quote": "按 MRO 从当前类到基类遍历：对每个 cls 使用 ModuleAnalyzer.for_module(cls.__module__)，读取 attr_docs[(cls.__qualname__, name)]。若 name 尚不存在，添加 INSTANCEATTR/ClassAttribute 并带上 docstring；若已存在，仅当尚未有更靠前 MRO 类提供 docstring 时补充，绝不覆盖已有文档，也不重复添加。ClassDocumenter.get_object_members 将 m.docstring 写入 ObjectMember，filter_members 同时检查基类 namespace 的 attr_docs 以保留文档属性。"
+              },
+              {
+                "field": "solution",
+                "issue_index": 1,
+                "quote": "在已文档化属性分支中同样执行继承截止检查：当 want_all 且 members 为 ALL 时，若 is_filtered_inherited_member(membername) 为真则 keep=False；否则 keep=True 并保持 isattr=True。is_filtered_inherited_member 应按 MRO 判断成员来自指定截止类或更上层，保留截止类以下（更派生）的 Middle/Leaf 声明。"
+              }
+            ]
+          }
+        ],
+        "boundaries": [
+          "该原则不统一两个业务的具体开关：pytest 源使用 consider_mro 且默认 True，store_mark 必须传 consider_mro=False；Sphinx 源使用 :inherited-members: 截止类，且已文档化属性的截止过滤仅在 want_all 且 members 为 ALL 时执行。",
+          "不共享返回类型与对象模型：pytest 源要求 get_unpacked_marks 返回 List[Mark] 并保留 normalize_mark_list 对非 Mark、非 MarkDecorator 抛 TypeError；Sphinx 源通过 ModuleAnalyzer.attr_docs、ClassAttribute/INSTANCEATTR、ObjectMember 和 docstring 合并处理。",
+          "修改范围不同：pytest 源仅修改 src/_pytest/mark/structures.py；Sphinx 源需修改 sphinx/ext/autodoc/importer.py 与 sphinx/ext/autodoc/__init__.py，且测试与构建配置不可修改。",
+          "pytest 源中 store_mark 只基于对象自身的标记追加，禁止把继承标记写回自身；Sphinx 源中仅在成员缺少 docstring 且尚无更靠前 MRO 类提供文档时补充，绝不覆盖已有文档。",
+          "pytest 源中 consider_mro=False 只返回对象自身存放的标记；Sphinx 源未启用 :inherited-members: 时仍只包含直接定义成员。",
+          "两源的具体字段名、测试名、异常行为、去重键和截止条件保持各自绑定，不能互换或取一个业务值套用到全部来源。"
+        ],
+        "decision": "shared_principle",
+        "principle": "在 Python 类层级中，当同一业务内的同类元数据（如 pytest 标记或 autodoc 实例属性文档）既可能定义在当前类、也可能分散在多个基类时，不能依赖单次 getattr 或仅查询当前 namespace 的收集方式；应按 MRO 从当前类向基类先序合并：当前类/更派生类优先，基类按从左到右顺序，先出现的成员或标记先占位并去重，更靠后或更深/右侧来源不得覆盖更靠前结果；文档信息仅在成员尚无文档且没有更靠前 MRO 来源提供文档时补充。对“仅取自身”或“截止类以上不输出”的用途必须提供显式开关/截止条件，避免把继承元数据写回对象自身或越过截止边界。",
+        "reason": "两源业务分别为 pytest 标记收集与 Sphinx autodoc 继承实例属性文档收集，输出、文件、开关和对象模型均不同，不能互换具体规则。但两源独立暴露了同一因果修复点：仅查询当前类/单次属性会因 MRO 只命中最先出现的属性或 namespace 而遗漏其他基类元数据；简单遍历又会造成顺序错误、重复或右侧/更深来源覆盖。两源解决方案均要求按 MRO 先序聚合、先出现者优先、去重、仅在空缺时补充文档，并用 consider_mro 或 :inherited-members: 截止类区分“仅自身/截止边界”的语义，因此支持一个带明确边界的共享原则。",
+        "title": "Python 类继承元数据的 MRO 先序合并原则"
+      },
+      "review": {
+        "approved": true,
+        "checks": [
+          {
+            "business_conditions_preserved": true,
+            "reason": "该源要求 get_unpacked_marks 在 consider_mro=True 且 obj 为类时按 obj.__mro__ 从当前类到基类收集，自身标记在前、基类按 MRO 顺序跟随，并按 Mark 去重；consider_mro=False 只取自身，store_mark 必须传 False 以避免把继承标记写回自身，同时保留 List[Mark] 返回与 normalize_mark_list 的 TypeError。候选原则的 MRO 先序、先出现者优先、去重及显式自身开关与此一致，边界也保留返回类型、异常行为和文件范围，未强行统一到 Sphinx 模型。",
+            "source_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+            "supported": true
+          },
+          {
+            "business_conditions_preserved": true,
+            "reason": "该源要求 get_class_members 按 MRO 从当前类到基类查询各自模块 analyzer 的 attr_docs，当前/左侧优先、共同祖先去重、同名不覆盖；文档仅在已有成员尚无文档且无更靠前 MRO 文档时补充；filter_members 需识别基类 namespace，且 :inherited-members: 截止过滤仅在 want_all 且 members 为 ALL 时执行。候选原则覆盖这些条件，并明确保留 Sphinx 的对象模型、截止语义和修改范围。",
+            "source_id": "414bf457-a740-4d05-9760-772bd04e7616",
+            "supported": true
+          }
+        ],
+        "reason": "两源分别处理 pytest 标记与 Sphinx 继承实例属性文档，输出、对象模型、开关和异常行为不同；但共同暴露了同一因果修复点：单次属性查找或仅查当前 namespace 会遗漏 MRO 上其他基类元数据，简单遍历又会导致顺序错误、重复或右侧/更深来源覆盖。候选原则要求按 MRO 从当前类向基类先序合并、先出现者优先、去重、仅空缺补充文档，并用 consider_mro 或 :inherited-members: 截止类区分仅自身/截止边界；同时以边界保留两源各自参数，未发现被丢弃的必要限定或与源约束冲突的泛化。",
+        "unsafe_generalizations": []
+      },
+      "state": "succeeded"
+    },
+    "notice": "两源分别处理 pytest 标记与 Sphinx 继承实例属性文档，输出、对象模型、开关和异常行为不同；但共同暴露了同一因果修复点：单次属性查找或仅查当前 namespace 会遗漏 MRO 上其他基类元数据，简单遍历又会导致顺序错误、重复或右侧/更深来源覆盖。候选原则要求按 MRO 从当前类向基类先序合并、先出现者优先、去重、仅空缺补充文档，并用 consider_mro 或 :inherited-members: 截止类区分仅自身/截止边界；同时以边界保留两源各自参数，未发现被丢弃的必要限定或与源约束冲突的泛化。",
+    "updated_at": "2026-11-15T12:47:13.449033+00:00"
+  },
+  {
+    "id": "d26bc788-ba8f-528f-aaaa-1c83c4608449",
+    "left_id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+    "right_id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+    "inputs": [
+      {
+        "applicability": [
+          "pytest 中通过类装饰器或类属性 pytestmark 定义标记，且测试类多继承自多个带标记的基类。",
+          "需要按 MRO 合并基类标记，而不是让 MRO 中第一个基类的 pytestmark 覆盖其余基类。",
+          "需要 get_unpacked_marks(C, consider_mro=False) 只返回 C 自身标记的调用场景。",
+          "对 get_unpacked_marks 返回值做列表相等断言（如 assert all_marks == [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）的测试。"
+        ],
+        "batch_id": "3f4d4461-f149-44d8-9129-bd162b57318a",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "constraints": [
+          "仅在 obj 为类且 consider_mro 为真时才展开 MRO 合并基类标记，否则只取对象自身的 pytestmark。",
+          "结果顺序必须是：被查询类自身的标记在前，随后按 MRO 顺序排列其基类的标记。",
+          "合并 MRO 标记时必须按 Mark 去重，避免同一标记重复出现。",
+          "consider_mro=False 必须只返回对象自身存放的标记，不包含任何基类标记。",
+          "get_unpacked_marks 的返回值必须是可直接与 list 比较的具体列表（List[Mark]），不能是生成器。",
+          "normalize_mark_list 对非 Mark、非 MarkDecorator 的值必须继续抛出 TypeError，保持既有错误行为。",
+          "store_mark 追加标记时必须使用 consider_mro=False，禁止把继承来的标记写回对象自身的 pytestmark。",
+          "只修改生产源码 src/_pytest/mark/structures.py，保留其他行为不变。"
+        ],
+        "created_at": "2026-11-15T12:45:50.435809Z",
+        "derived_from": [],
+        "error_type": "AssertionError",
+        "evidence": [
+          {
+            "errors": 0,
+            "failures": 0,
+            "runner": "pytest",
+            "skipped": 0,
+            "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+            "tests": 275,
+            "tool_call_id": "05ede317-f569-4e91-aa57-b59bcc96bc0b"
+          }
+        ],
+        "id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+        "issues": [
+          {
+            "depends_on": [],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 通过 normalize_mark_list 生成器惰性产出标记，调用方得到的是 <generator object ...>，与期望的 Mark 列表比较时断言失败（assert <generator ob...> == [...]）。",
+            "solution": "在 get_unpacked_marks 中把 normalize_mark_list(mark_list) 的结果物化为列表后返回（例如 return list(normalize_mark_list(mark_list))），并把返回类型标注为 List[Mark]；保持 normalize_mark_list 原有的 TypeError 校验逻辑不变。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#normalize_mark_list"
+            ]
+          },
+          {
+            "depends_on": [
+              0
+            ],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+            "solution": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "depends_on": [],
+            "error_type": "标记重复累积（存储路径回归，未观察到独立异常）",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "store_mark 用 obj.pytestmark = [*get_unpacked_marks(obj), mark] 重新赋值；在 get_unpacked_marks 改为按 MRO 展开后，这会把基类继承来的标记也写进当前类自身的 pytestmark，导致标记重复累积，并破坏 consider_mro=False 只反映自身标记的语义。",
+            "solution": "store_mark 改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，只基于对象自身的标记追加新标记，保持“总是重新赋值以避免修改借用引用”的原有注释语义。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#store_mark"
+            ]
+          }
+        ],
+        "language": "python",
+        "merged_from": [],
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "required_capabilities": [],
+        "reuse_status": "active",
+        "root_cause": "pytest 把标记存放在单一属性 pytestmark 上，get_unpacked_marks 仅用 getattr(obj, \"pytestmark\", []) 取值，属性查找按 MRO 只命中最先出现的那个类，因此 class C(A, B) 只保留 A 的标记、丢失 B 的标记；并且该函数经 normalize_mark_list 惰性返回生成器，调用方拿到的是 <generator object ...> 而不是可与期望值比较的 Mark 列表。实现时若只是简单按 MRO 遍历并先收集基类标记，还会出现顺序错误：结果首元素变成 A 的 xfail(\"a\") 而不是 C 自身的 xfail(\"c\")。",
+        "schema_version": 4,
+        "scope": "project",
+        "solution": "在 src/_pytest/mark/structures.py 中改造标记收集：1) 让 get_unpacked_marks 返回具体列表（List[Mark]），把 normalize_mark_list 的结果物化后返回，保留其对非 Mark/MarkDecorator 值抛 TypeError 的校验；2) 增加关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 为真时，按 obj.__mro__ 顺序遍历，对每个类以 consider_mro=False 取出该类自身的标记并追加，用集合按 Mark 去重，得到“被查询类自身标记在前、随后按 MRO 顺序的基类标记”的结果（如 [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）；3) consider_mro=False 时只规范化并返回该对象自身通过 pytestmark 存放的标记（非 list 的单值包装成单元素列表）；4) store_mark 追加标记时改为 obj.pytestmark = [*get_unpacked_marks(obj, consider_mro=False), mark]，避免把继承标记写进当前类自身属性；调用处（如 _pytest/python.py 中的收集逻辑）保持默认 consider_mro=True 的合并行为。",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "source_task_id": "9f9701f9-d149-4a43-9b75-431ebaa71c5f",
+        "supersedes_id": null,
+        "tags": [
+          "python",
+          "pytest",
+          "marks",
+          "MRO",
+          "多继承",
+          "标记合并",
+          "列表返回"
+        ],
+        "task_summary": "修复 pytest 中测试类多继承多个带标记基类时丢失标记的问题：让 src/_pytest/mark/structures.py#get_unpacked_marks 在对象为类时按 MRO 收集自身与各基类的标记、以列表形式返回并支持 consider_mro 开关，同时让 store_mark 只在对象自身标记上追加，不把继承来的标记写回。",
+        "verification": "程序独立运行 pytest 最终验证，275 项测试全部通过；工具调用编号：05ede317-f569-4e91-aa57-b59bcc96bc0b。"
+      },
+      {
+        "applicability": [
+          "适用于 pytest 内部 `_pytest.mark.structures.get_unpacked_marks` 需要按 MRO 解析类标记的场景。",
+          "适用于测试类存在多继承或继承父类的 usefixtures 标记，且子类 fixture 依赖父类 fixture 先执行的场景。",
+          "需要按基类到派生类顺序读取类标记，以保证父类 usefixtures 先注册并先执行。"
+        ],
+        "batch_id": "aa6e1005-896c-4cac-a75f-9f7a0a29a855",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:b0395e04a5cefcb10c9c121027da49c9045ee12b61b824cd05add46c0c5672ea",
+        "constraints": [
+          "只修改生产源码 src/_pytest/mark/structures.py，不得修改测试、依赖或构建配置。",
+          "必须通过全部登记测试并保留正常行为。",
+          "必须保留 consider_mro=False 时只返回直接应用在当前类上的标记这一行为。",
+          "必须保留 get_unpacked_marks 对非类对象使用 getattr(obj, \"pytestmark\", []) 的行为。"
+        ],
+        "created_at": "2026-11-15T09:41:30.134878Z",
+        "derived_from": [],
+        "error_type": "AssertionError",
+        "evidence": [
+          {
+            "errors": 0,
+            "failures": 0,
+            "runner": "pytest",
+            "skipped": 0,
+            "source_task_id": "b176ff8f-4044-4118-a666-150f62a77df2",
+            "tests": 277,
+            "tool_call_id": "c661c66c-4556-4a02-bac6-423e4a840cee"
+          }
+        ],
+        "id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+        "issues": [
+          {
+            "depends_on": [],
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 在 consider_mro=True 时按 `obj.__mro__` 的派生类优先顺序收集标记，导致 C(A, B) 的标记顺序为 C、A、B，而 testing/test_mark.py::test_mark_mro 要求基类优先的 B、A、C，因此断言失败。",
+            "solution": "在 get_unpacked_marks 的类分支中遍历 `reversed(obj.__mro__)` 而不是 `obj.__mro__`，使标记按基类到派生类顺序返回；保持 consider_mro=False 分支不变。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "depends_on": [],
+            "error_type": "AttributeError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "类标记按派生类到基类顺序收集时，子类 TestThings 的 usefixtures('add_attr2') 标记先于父类 Parent 的 usefixtures('add_attr1') 标记被 iter_markers 读取，导致 add_attr2 fixture 先运行并访问尚未由 add_attr1 设置的 request.instance.attr1，抛出 AttributeError: 'TestThings' object has no attribute 'attr1'，最终 testing/test_mark.py::test_mark_fixture_order_mro 结果断言失败。",
+            "solution": "用 `reversed(obj.__mro__)` 遍历类 MRO，让父类 usefixtures 标记先于子类标记进入 own_markers，从而恢复 add_attr1 先于 add_attr2 的 fixture 执行顺序。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          }
+        ],
+        "language": "python",
+        "merged_from": [],
+        "repository_id": "uploaded/709bd261a36d2e9b4146c095bb11f009",
+        "required_capabilities": [],
+        "reuse_status": "active",
+        "root_cause": "src/_pytest/mark/structures.py 的 get_unpacked_marks 在 consider_mro=True 时使用 `obj.__mro__` 顺序生成 mark_lists，因此对 C(A, B) 返回 C、A、B 的标记；测试期望基类优先 [B, A, C]。同一顺序问题使子类上的 usefixtures 标记先于父类 usefixtures 标记被 node.iter_markers 读取，依赖父类 fixture 先执行的子类 fixture 在 attr1 尚未赋值时访问 request.instance.attr1，抛出 AttributeError，最终表现为 pytest 用例结果断言失败。",
+        "schema_version": 4,
+        "scope": "project",
+        "solution": "仅修改 src/_pytest/mark/structures.py 的 get_unpacked_marks：在 consider_mro=True 分支将 `for x in obj.__mro__` 改为 `for x in reversed(obj.__mro__)`，使类标记按基类到派生类收集，同时保留 consider_mro=False 只读取当前类 `__dict__` 的行为。修复后 get_unpacked_marks(C) 对 C(A, B) 返回 [B, A, C]，父类 usefixtures 标记先于子类 usefixtures 标记，父类 fixture 先执行。",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:b0395e04a5cefcb10c9c121027da49c9045ee12b61b824cd05add46c0c5672ea",
+        "source_task_id": "b176ff8f-4044-4118-a666-150f62a77df2",
+        "supersedes_id": null,
+        "tags": [
+          "python",
+          "pytest",
+          "标记",
+          "MRO遍历",
+          "usefixtures",
+          "fixture执行顺序",
+          "回归缺陷"
+        ],
+        "task_summary": "修复 pytest 7.2 回归：get_unpacked_marks 在收集类标记时按派生类到基类的 MRO 顺序返回，导致父类 usefixtures 标记晚于子类标记，父类 fixture 不再先执行。将类标记遍历改为 reversed(obj.__mro__)，恢复基类标记优先顺序。",
+        "verification": "程序独立运行 pytest 最终验证，277 项测试全部通过；工具调用编号：c661c66c-4556-4a02-bac6-423e4a840cee。"
+      }
+    ],
+    "state": "rejected",
+    "attempt": 1,
+    "result": {
+      "conflict_check": {
+        "assessment": {
+          "conflicts": [
+            {
+              "left_issue": 1,
+              "left_quote": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+              "overlapping_condition": "同一函数 get_unpacked_marks 在 obj 为类且 consider_mro=True 时，对 C(A, B) 收集类标记并决定返回列表中的标记顺序。",
+              "reason": "左侧规定按 obj.__mro__ 遍历，并保证被查询类自身的标记排在最前、基类标记随后，对 C(A, B) 是派生类优先；右侧明确要求改用 reversed(obj.__mro__)，使标记按基类到派生类顺序返回，对 C(A, B) 是基类优先。两者对同一 consider_mro=True 类分支规定了互斥的返回顺序，无法同时满足。",
+              "right_issue": 0,
+              "right_quote": "在 get_unpacked_marks 的类分支中遍历 `reversed(obj.__mro__)` 而不是 `obj.__mro__`，使标记按基类到派生类顺序返回；保持 consider_mro=False 分支不变。"
+            },
+            {
+              "left_issue": 1,
+              "left_quote": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+              "overlapping_condition": "同一函数 get_unpacked_marks 在 obj 为类且 consider_mro=True 时按 MRO 收集 usefixtures 等类标记，并决定父类标记与子类标记进入 own_markers 的先后顺序。",
+              "reason": "左侧规定派生类自身标记在前、基类标记按 obj.__mro__ 顺序跟随，这会使子类 usefixtures 标记先于父类标记被读取；右侧明确要求 reversed(obj.__mro__)，让父类 usefixtures 标记先于子类标记进入 own_markers。两者对同一 MRO 标记收集顺序给出互斥规定，左侧顺序会破坏右侧要求的父类 fixture 先执行行为。",
+              "right_issue": 1,
+              "right_quote": "用 `reversed(obj.__mro__)` 遍历类 MRO，让父类 usefixtures 标记先于子类标记进入 own_markers，从而恢复 add_attr1 先于 add_attr2 的 fixture 执行顺序。"
+            }
+          ],
+          "reason": "检测到第一份来源的 issue 1 与第二份来源的 issue 0、issue 1 在 get_unpacked_marks 的类 MRO 标记顺序上存在直接冲突：前者要求被查询类自身标记在前、基类随后，后者要求 reversed(obj.__mro__)、基类在前。其余候选对未显示互斥的适用条件与行为规定。"
+        },
+        "candidates": [
+          {
+            "left_issue": 0,
+            "right_issue": 0,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 0,
+            "right_issue": 1,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 1,
+            "right_issue": 0,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 1,
+            "right_issue": 1,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 2,
+            "right_issue": 0,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          },
+          {
+            "left_issue": 2,
+            "right_issue": 1,
+            "targets": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          }
+        ],
+        "conflict_ids": [
+          "47b041f9-73d5-5adb-9d61-8ff95bf7d990",
+          "afa94e4a-55c6-599a-b7af-cbda07abba04"
+        ],
+        "policy": "cross-upload-conflicts-v1",
+        "review": {
+          "checks": [
+            {
+              "claim_index": 0,
+              "mutually_exclusive": true,
+              "overlapping_scope": true,
+              "reason": "左条针对同一 get_unpacked_marks 函数、同一 consider_mro=True 的类分支，明确遍历 obj.__mro__，并规定“被查询类自身标记排在最前、基类标记按 MRO 顺序跟随”；右条也针对该分支，明确要求改用 reversed(obj.__mro__)，使标记按基类到派生类顺序返回。对 C(A, B)，左侧顺序为 C、A、B（自身优先），右侧顺序为 B、A、C（基类优先），这是同一适用范围下互斥的返回顺序规定，并非单纯措辞差异。",
+              "supported": true
+            },
+            {
+              "claim_index": 1,
+              "mutually_exclusive": true,
+              "overlapping_scope": true,
+              "reason": "左条对 consider_mro=True 的类分支规定被查询类自身标记在前、基类标记随后，这会使子类 usefixtures 标记先于父类 usefixtures 进入 own_markers；右条引文明确要求用 reversed(obj.__mro__) 遍历，使父类 usefixtures 标记先于子类标记进入 own_markers，以恢复父类 fixture 先执行。二者共享 get_unpacked_marks 的同一 MRO 遍历分支，在存在继承 usefixtures 标记时适用范围重叠；左条的自身优先顺序与右条的基类优先顺序互斥，不能同时满足。",
+              "supported": true
+            }
+          ],
+          "reason": "两个 claim 均引用了同一 get_unpacked_marks 的 MRO 类分支，并分别对应 obj.__mro__ 自身优先与 reversed(obj.__mro__) 基类优先两种互斥顺序；所提冲突有源码文本支持，并非兼容步骤或无关条件。"
+        },
+        "state": "confirmed"
+      },
+      "model_requests": [
+        {
+          "api_configuration": {
+            "identity": "4f003362858407b3c4f55d13",
+            "key_fingerprint": "c5f83d792da0",
+            "key_present": true,
+            "model": "deepseek-flash",
+            "origin": "https://api.deepseek.com",
+            "source": "explicit_file",
+            "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+            "transport": "direct"
+          },
+          "attempt": 1,
+          "duration_ms": 13642,
+          "finish_reason": "stop",
+          "http_status": 200,
+          "phase": "conflict_detection",
+          "request_experience_hashes": [],
+          "request_experience_ids": [],
+          "requested_model": "deepseek-flash",
+          "response_id": "a557a72a-b5ba-4083-a414-1cbeb69e1338",
+          "returned_model": "deepseek-flash",
+          "success": true,
+          "transport_events": [
+            {
+              "elapsed_ms": 0,
+              "event": "connection.connect_tcp.started"
+            },
+            {
+              "elapsed_ms": 35,
+              "event": "connection.connect_tcp.complete"
+            },
+            {
+              "elapsed_ms": 35,
+              "event": "connection.start_tls.started"
+            },
+            {
+              "elapsed_ms": 64,
+              "event": "connection.start_tls.complete"
+            },
+            {
+              "elapsed_ms": 64,
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "elapsed_ms": 64,
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "elapsed_ms": 64,
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "elapsed_ms": 64,
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "elapsed_ms": 64,
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "elapsed_ms": 224,
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "elapsed_ms": 224,
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "elapsed_ms": 13642,
+              "event": "http11.receive_response_body.complete"
+            }
+          ],
+          "transport_policy": "direct",
+          "usage": {
+            "completion_tokens": 2776,
+            "prompt_tokens": 4152,
+            "total_tokens": 6928
+          }
+        },
+        {
+          "api_configuration": {
+            "identity": "4f003362858407b3c4f55d13",
+            "key_fingerprint": "c5f83d792da0",
+            "key_present": true,
+            "model": "deepseek-flash",
+            "origin": "https://api.deepseek.com",
+            "source": "explicit_file",
+            "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+            "transport": "direct"
+          },
+          "attempt": 1,
+          "duration_ms": 24498,
+          "finish_reason": "stop",
+          "http_status": 200,
+          "phase": "conflict_review",
+          "request_experience_hashes": [],
+          "request_experience_ids": [],
+          "requested_model": "deepseek-flash",
+          "response_id": "67d74468-2dcc-4272-b8fa-742814ed0c02",
+          "returned_model": "deepseek-flash",
+          "success": true,
+          "transport_events": [
+            {
+              "elapsed_ms": 0,
+              "event": "http11.send_request_headers.started"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_headers.complete"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_body.started"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.send_request_body.complete"
+            },
+            {
+              "elapsed_ms": 1,
+              "event": "http11.receive_response_headers.started"
+            },
+            {
+              "elapsed_ms": 177,
+              "event": "http11.receive_response_headers.complete"
+            },
+            {
+              "elapsed_ms": 177,
+              "event": "http11.receive_response_body.started"
+            },
+            {
+              "elapsed_ms": 24498,
+              "event": "http11.receive_response_body.complete"
+            }
+          ],
+          "transport_policy": "direct",
+          "usage": {
+            "completion_tokens": 4460,
+            "prompt_tokens": 4755,
+            "total_tokens": 9215
+          }
+        }
+      ]
+    },
+    "notice": "检测到相同代码目标上的互斥规则；已保存双方原文和独立复核，等待冲突处理。",
+    "updated_at": "2026-11-15T12:47:55.035261+00:00"
+  }
+]

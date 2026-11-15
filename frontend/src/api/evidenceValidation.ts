@@ -14,7 +14,7 @@ function relativePath(value: unknown): boolean {
 function run(value: unknown): TestRunEvidence | null {
   if (value === null) return null
   const data = object(value)
-  check(uuid(data.tool_call_id) && integer(data.sequence, 1) && ['maven', 'pytest'].includes(String(data.runner)))
+  check(uuid(data.tool_call_id) && integer(data.sequence, 1) && ['maven', 'pytest', 'go', 'ctest'].includes(String(data.runner)))
   check(integer(data.tests, 1) && ['passed', 'failures', 'errors', 'skipped'].every(key => integer(data[key])))
   check(Number(data.passed) + Number(data.failures) + Number(data.errors) + Number(data.skipped) === data.tests)
   return data as unknown as TestRunEvidence

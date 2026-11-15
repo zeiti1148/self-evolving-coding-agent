@@ -1,0 +1,366 @@
+{
+  "decision_rounds": 14,
+  "tool_calls": 20,
+  "elapsed_ms": 200279,
+  "retrieved_experience_ids": [],
+  "injection_events": [
+    {
+      "decision": 1,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 2,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 3,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 4,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 5,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 6,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 7,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 8,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 9,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 10,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 11,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 12,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 13,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "decision": 14,
+      "experience_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  ],
+  "experience_extraction": {
+    "status": "succeeded",
+    "stage": "completed",
+    "record_index": 0,
+    "saved_count": 1
+  },
+  "final_verification_attempts": 1,
+  "model_requests": [
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 4009,
+        "completion_tokens": 301,
+        "total_tokens": 4310
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "63dd32be-e594-444e-bdd6-939650ea047d",
+      "duration_ms": 2180
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 5060,
+        "completion_tokens": 136,
+        "total_tokens": 5196
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "3fb9831a-fca5-444a-81df-44f32fb68295",
+      "duration_ms": 870
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 5498,
+        "completion_tokens": 80,
+        "total_tokens": 5578
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "bfc46fa0-6d49-4c4f-ab67-91085f9f2610",
+      "duration_ms": 627
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 6853,
+        "completion_tokens": 1874,
+        "total_tokens": 8727
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "0dbb8972-9607-4da0-9f40-c4b8fc71a1c4",
+      "duration_ms": 8652
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 9225,
+        "completion_tokens": 677,
+        "total_tokens": 9902
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "cdabd62e-d16a-43c3-8d82-358fd17a89ef",
+      "duration_ms": 3552
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 10120,
+        "completion_tokens": 61,
+        "total_tokens": 10181
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "2add57ec-d916-454c-a7de-e7f8474d86b0",
+      "duration_ms": 734
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 11252,
+        "completion_tokens": 1170,
+        "total_tokens": 12422
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "f2e6f125-7c60-4c11-a346-8d337f26442b",
+      "duration_ms": 5014
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 13104,
+        "completion_tokens": 156,
+        "total_tokens": 13260
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "ccaa795e-ea1d-4cb7-a786-054974db0c92",
+      "duration_ms": 1679
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 14548,
+        "completion_tokens": 81,
+        "total_tokens": 14629
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "f4403414-7dce-4905-9938-3ed26bee72b3",
+      "duration_ms": 873
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 16115,
+        "completion_tokens": 93,
+        "total_tokens": 16208
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "62e968fd-e66e-46e8-a62a-4a613588edb5",
+      "duration_ms": 918
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 16308,
+        "completion_tokens": 76,
+        "total_tokens": 16384
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "4830b5dc-ee1b-4230-94dc-d7e12178b717",
+      "duration_ms": 885
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 16830,
+        "completion_tokens": 2042,
+        "total_tokens": 18872
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "e9f8bbd2-9cf2-48f2-9ac4-9afa63c212e4",
+      "duration_ms": 9225
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "tool_calls",
+      "usage": {
+        "prompt_tokens": 18980,
+        "completion_tokens": 62,
+        "total_tokens": 19042
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "eb8f16e1-d66d-4a78-ac8c-02fa8958a432",
+      "duration_ms": 1276
+    },
+    {
+      "phase": "decision",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 19313,
+        "completion_tokens": 216,
+        "total_tokens": 19529
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "7eaeb323-2925-4e89-8007-5b972d16ceab",
+      "duration_ms": 2008
+    },
+    {
+      "phase": "extraction",
+      "attempt": 1,
+      "transport_policy": "direct",
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "http_status": 200,
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 12642,
+        "completion_tokens": 5608,
+        "total_tokens": 18250
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "48773bc7-15b5-4e63-8921-688c164f8c76",
+      "duration_ms": 28549
+    }
+  ],
+  "api_identities": [
+    {
+      "origin": "https://api.deepseek.com",
+      "model": "deepseek-flash",
+      "source": "explicit_file",
+      "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+      "transport": "direct"
+    }
+  ]
+}

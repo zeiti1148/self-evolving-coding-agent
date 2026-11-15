@@ -20,12 +20,16 @@ from .roles import ROLE_LABELS, RoleRunner
 def repairable_test_failure(result, language):
     if result.error_code == ErrorCode.TEST_FAILED:
         return True
-    if result.error_code != ErrorCode.COMMAND_FAILED or result.metadata.get("runner") != ("maven" if language == "java" else "pytest"):
+    if result.error_code != ErrorCode.COMMAND_FAILED or result.metadata.get("runner") != ({"java": "maven", "python": "pytest", "go": "go", "cpp": "ctest"}[language]):
         return False
     # A compiler/collector rejecting application code is repair feedback, not a successful test.
     # Missing executables, dependency downloads, timeouts, empty/skipped tests stay terminal.
     if language == "java":
         return "COMPILATION ERROR" in result.output or "Compilation failure" in result.output
+    if language == 'go':
+        return bool(re.search(r'\.go:\d+:\d+:', result.output))
+    if language == 'cpp':
+        return bool(re.search(r'\.(?:cpp|cc|cxx|c|h|hpp):\d+.*error:', result.output))
     return result.metadata.get("exit_code") == 2 and bool(re.search(
         r"\b(?:SyntaxError|IndentationError|TabError|ImportError)\b", result.output))
 
@@ -99,7 +103,16 @@ class MultiAgentCoordinator:
             if not self.use_experience:
                 return []
             try:
-                entries = self.experiences.retrieve_experiences(language=request.language, repository_id=request.repository_id,
+                if hasattr(self.experiences, 'retrieve_model_references'):
+                    entries = self.experiences.retrieve_model_references(request.task_description + " " + " ".join(observed) + "\n" + "\n".join(
+                        str(fact.get('output',''))[:4000] for fact in facts[-3:] if fact.get('error_code') == 'TEST_FAILED'),
+                        language=request.language, repository_id=request.repository_id,error_types=observed,
+                        capabilities=request.capabilities,compatibility_key=request.experience_contract,
+                        source_revision=request.source_revision,runner_hash=request.runner_hash,limit=5)
+                    with lock:
+                        retrieval_events.append({'experience_ids':[entry['id'] for entry in entries], 'error_types':list(observed)})
+                    return entries
+                entries = self.experiences.retrieve_experiences(query=request.task_description, language=request.language, repository_id=request.repository_id,
                     error_types=observed, capabilities=request.capabilities, limit=5)
                 with lock:
                     retrieval_events.append({"experience_ids": [entry.id for entry in entries], "error_types": list(observed)})

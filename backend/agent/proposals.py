@@ -22,9 +22,10 @@ def apply_proposal(proposal, request, execute_tool, *, snapshot_revision):
                                details={"trace": trace, "restoration_succeeded": True, "stale_proposal": stale})
     if proposal.base_revision != snapshot_revision:
         reject("修改提案的代码快照已过期，请读取最新源文件后重新提交。", stale=True)
-    suffix = ".py" if request.language == "python" else ".java"
+    from backend.languages import SOURCE_SUFFIXES
+    suffixes = SOURCE_SUFFIXES[request.language]
     for change in proposal.changes:
-        if protected({change.path: ""}) or ignored_path(change.path) or PurePosixPath(change.path).suffix != suffix:
+        if protected({change.path: ""}) or ignored_path(change.path) or PurePosixPath(change.path).suffix not in suffixes:
             reject("修改提案只能更改业务源文件，测试和配置受保护。")
         result = invoke("read_file", path=change.path, max_chars=200000)
         if not result.success or result.metadata.get("truncated"):

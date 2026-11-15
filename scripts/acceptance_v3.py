@@ -86,7 +86,7 @@ class RecordingClient:
 def run(live: bool, directory: Path) -> dict:
     directory = directory.resolve()
     directory.mkdir(parents=True, exist_ok=False)
-    settings = replace(Settings.from_env(), workspace_root=directory / "workspaces", database_path=directory / "experiences.db")
+    settings = replace(Settings.from_env(), workspace_root=directory / "workspaces", database_path=directory / "experiences.db", enable_knowledge_models=False)
     report = {"run_id": str(uuid4()), "mode": "live" if live else "scripted", "model": settings.llm_model if live else "ScriptedRoleFactory",
               "created_at": datetime.now(timezone.utc).isoformat(), "tasks": [], "merges": [], "publications": [],
               "checks": {}, "status": "running", "passed": False,
@@ -110,6 +110,12 @@ def run(live: bool, directory: Path) -> dict:
     restricted = target.model_copy(update={"id": "python-booking-restricted", "repository_id": "v3-python-restricted", "capabilities": []})
     settings = replace(settings, project_definitions={**settings.project_definitions, restricted.id: restricted},
                        projects={**settings.projects, restricted.id: restricted.source})
+    fresh_targets={}
+    for language in ('java','python'):
+        registered=settings.project(f'{language}-booking-transfer')
+        fresh=registered.model_copy(update={'id':f'{language}-booking-fresh','repository_id':registered.repository_id+'-fresh'})
+        fresh_targets[fresh.repository_id]=registered.id
+        settings=replace(settings,project_definitions={**settings.project_definitions,fresh.id:fresh},projects={**settings.projects,fresh.id:fresh.source})
     original = {key: inventory(settings.projects[key]) for key in ("java-checkout-complex", "python-checkout-complex", "java-booking-transfer", "python-booking-transfer")}
     requests = []
     active = {"factory": ScriptedRoleFactory()}
@@ -119,6 +125,17 @@ def run(live: bool, directory: Path) -> dict:
 
     app = create_app(settings, llm_factory=factory)
 
+    def maintenance():
+        from backend.experience.jobs import drain
+        deadline=time.monotonic()+60
+        while time.monotonic()<deadline:
+            state=drain(settings.database_path,seconds=2,max_pages=1000)
+            if not state.pending_jobs:
+                assert not state.failed_jobs
+                return
+            time.sleep(.1)
+        raise AssertionError('Maintenance did not finish before acceptance checks')
+
     def http(client, method, url, **kwargs):
         response = getattr(client, method)(url, **kwargs)
         response.raise_for_status()
@@ -126,7 +143,7 @@ def run(live: bool, directory: Path) -> dict:
 
     def submit(client, identifier, *, label, mode="multi", max_steps=24, fault=None, expect="succeeded", save_ok=True):
         active["factory"] = ScriptedRoleFactory(partial_first="checkout" in identifier, fail_role=fault,
-                                                repository_cases={restricted.repository_id: target.id})
+                                                repository_cases={restricted.repository_id: target.id,**fresh_targets})
         start_index, started = len(requests), time.monotonic()
         project = settings.project(identifier)
         created = http(client, "post", "/api/tasks", json={"source_project": identifier, "task_description": project.task_example,
@@ -149,6 +166,7 @@ def run(live: bool, directory: Path) -> dict:
                 "actual_injected_ids": sorted({identifier for entry in injections for identifier in entry["experience_ids"]})}
         report["tasks"].append(task); save()
         records = [http(client, "get", f"/api/experiences/{identifier}") for identifier in result.get("experience_ids", [])]
+        maintenance()
         task["experiences"] = records
         save()
         assert status["status"] == expect, f"{label}: expected {expect}, got {status['status']}"
@@ -203,8 +221,15 @@ def run(live: bool, directory: Path) -> dict:
                 assert set(compatible["experience_ids"]).issubset({node["id"] for node in graph["nodes"]})
                 source["merge"] = {"inputs": compatible["experience_ids"], "result": merged}
                 report["merges"].append(source["merge"])
+                maintenance()
+                project=settings.project(f'{language}-checkout-complex')
+                from backend.projects import source_revision
+                references=app.state.experiences.retrieve_model_references(merged['issues'][0]['error_type'],language=language,
+                    repository_id=project.repository_id,error_types=[merged['issues'][0]['error_type']],capabilities=project.capabilities,
+                    source_revision=source_revision(project.source))
+                assert merged['id'] in {entry['id'] for entry in references}
                 again = submit(client, f"{language}-checkout-complex", label=f"{language}-after-merge")
-                assert merged["id"] in again["actual_injected_ids"]
+                assert again['actual_injected_ids']  # Ranking may select a different complete bundle within the five-rule budget.
                 assert not set(compatible["experience_ids"]) & set(again["actual_injected_ids"])
             incompatible = {"experience_ids": [sources[lang]["merge"]["result"]["id"] for lang in ("java", "python")]}
             assert not http(client, "post", "/api/experiences/merge-preview", json=incompatible)["can_merge"]
@@ -226,8 +251,9 @@ def run(live: bool, directory: Path) -> dict:
                 assert http(client, "post", "/api/experiences/publish-global", json=body)["id"] == published["id"]
                 assert http(client, "get", f"/api/experiences/{source_id}")["scope"] == "project"
                 report["publications"].append(published)
+                maintenance()
             for language in ("java", "python"):
-                after = submit(client, f"{language}-booking-transfer", label=f"{language}-after-publication")
+                after = submit(client, f"{language}-booking-fresh", label=f"{language}-after-publication")
                 global_id = next(row["id"] for row in report["publications"] if row["language"] == language)
                 assert global_id in after["actual_injected_ids"]
                 for role in ("diagnosis", "repair", "review"):

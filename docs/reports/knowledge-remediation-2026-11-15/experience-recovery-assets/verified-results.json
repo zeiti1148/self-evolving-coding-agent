@@ -1,0 +1,482 @@
+{
+  "original_records_before": 8,
+  "original_records_after": 9,
+  "originals_unchanged": true,
+  "original_relations_before": 4,
+  "original_relations_after": 4,
+  "original_relations_unchanged": true,
+  "recovery_checks": [
+    {
+      "card_id": "2c1a6286-d3f6-5e20-b287-fcc0c0ef307c",
+      "rule_id": "2c1a6286-d3f6-5e20-b287-fcc0c0ef307c",
+      "recovery_id": "50f59a88-59ab-4465-b323-2242e7d4eea7",
+      "project": "pytest-10356-auto-evidence",
+      "actor": "system",
+      "state": "succeeded",
+      "tests": [
+        275,
+        275
+      ],
+      "model_requests": 0,
+      "context": {
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "runner_hash": "732c1117a46e265bb32f006526305bc7300b66daed8ca552abb627d5714532c5"
+      },
+      "reference": {
+        "id": "14e95e0b-29b3-4ab1-8a91-085e7333ad19",
+        "rule_id": "2c1a6286-d3f6-5e20-b287-fcc0c0ef307c",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "reuse_status": "active",
+        "task_summary": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+        "error_type": "AssertionError",
+        "root_cause": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+        "solution": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+        "applicability": [
+          "pytest 中通过类装饰器或类属性 pytestmark 定义标记，且测试类多继承自多个带标记的基类。",
+          "对 get_unpacked_marks 返回值做列表相等断言（如 assert all_marks == [xfail(\"c\").mark, xfail(\"a\").mark, xfail(\"b\").mark]）的测试。",
+          "需要 get_unpacked_marks(C, consider_mro=False) 只返回 C 自身标记的调用场景。",
+          "需要按 MRO 合并基类标记，而不是让 MRO 中第一个基类的 pytestmark 覆盖其余基类。",
+          "仅限已核对的来源项目、代码版本与测试配置；其他上下文必须重新验证。"
+        ],
+        "constraints": [
+          "consider_mro=False 必须只返回对象自身存放的标记，不包含任何基类标记。",
+          "get_unpacked_marks 的返回值必须是可直接与 list 比较的具体列表（List[Mark]），不能是生成器。",
+          "normalize_mark_list 对非 Mark、非 MarkDecorator 的值必须继续抛出 TypeError，保持既有错误行为。",
+          "store_mark 追加标记时必须使用 consider_mro=False，禁止把继承来的标记写回对象自身的 pytestmark。",
+          "仅在 obj 为类且 consider_mro 为真时才展开 MRO 合并基类标记，否则只取对象自身的 pytestmark。",
+          "只修改生产源码 src/_pytest/mark/structures.py，保留其他行为不变。",
+          "合并 MRO 标记时必须按 Mark 去重，避免同一标记重复出现。",
+          "结果顺序必须是：被查询类自身的标记在前，随后按 MRO 顺序排列其基类的标记。"
+        ],
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+        "required_capabilities": [],
+        "issues": [
+          {
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 没有 consider_mro 参数，也不遍历 MRO 合并基类标记；getattr(obj, \"pytestmark\", []) 只会取到 MRO 中第一个提供该属性的类，使 class C(A, B) 只剩 A 的标记而丢失 B 的标记。若实现成简单按 MRO 先收集基类标记，则顺序错误，结果首元素为 xfail(\"a\") 而非 C 自身的 xfail(\"c\")。",
+            "solution": "新增关键字参数 consider_mro: bool = True；当 isinstance(obj, type) and consider_mro 时，遍历 obj.__mro__，对每个类调用 get_unpacked_marks(cls, consider_mro=False) 取该类自身标记，用集合去重后按遍历顺序累积，保证被查询类自身标记排在最前、基类标记按 MRO 顺序跟随；consider_mro=False 时只把对象自身 pytestmark（非 list 时包装为单元素列表）规范化后返回。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          }
+        ],
+        "evidence_summary": {
+          "verified_runs": 1,
+          "level": "source_project_tests",
+          "minimum_tests": 275
+        },
+        "source_ids": [
+          "14e95e0b-29b3-4ab1-8a91-085e7333ad19"
+        ],
+        "reuse_boundary": {
+          "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+          "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:17719a9837229b822983fe7d16a40f94581598601a9db354b9a36d1f4b8ee45a",
+          "runner_hash": "732c1117a46e265bb32f006526305bc7300b66daed8ca552abb627d5714532c5",
+          "recovery_id": "50f59a88-59ab-4465-b323-2242e7d4eea7",
+          "mode": "verified_context_only"
+        }
+      },
+      "negative_checks": [
+        {
+          "changed": "repository_id",
+          "value": "unrelated-project",
+          "excluded": true
+        },
+        {
+          "changed": "source_revision",
+          "value": "unverified-version",
+          "excluded": true
+        },
+        {
+          "changed": "compatibility_key",
+          "value": "unverified-contract",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": null,
+          "excluded": true
+        }
+      ]
+    },
+    {
+      "card_id": "111a6273-8c14-5275-be36-45c9e20cbc01",
+      "rule_id": "111a6273-8c14-5275-be36-45c9e20cbc01",
+      "recovery_id": "c117c5e9-adf3-4a82-85a2-641a33d63111",
+      "project": "pytest-10447",
+      "actor": "system",
+      "state": "succeeded",
+      "tests": [
+        277,
+        277
+      ],
+      "model_requests": 0,
+      "context": {
+        "repository_id": "uploaded/709bd261a36d2e9b4146c095bb11f009",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:b0395e04a5cefcb10c9c121027da49c9045ee12b61b824cd05add46c0c5672ea",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:b0395e04a5cefcb10c9c121027da49c9045ee12b61b824cd05add46c0c5672ea",
+        "runner_hash": "29504ef3da69b65cd3739330296be705c4ec46d973a02645d130cac7bee92270"
+      },
+      "reference": {
+        "id": "9977f923-1736-4de7-ac0b-dea4a8e70001",
+        "rule_id": "111a6273-8c14-5275-be36-45c9e20cbc01",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "uploaded/709bd261a36d2e9b4146c095bb11f009",
+        "reuse_status": "active",
+        "task_summary": "get_unpacked_marks 在 consider_mro=True 时按 `obj.__mro__` 的派生类优先顺序收集标记，导致 C(A, B) 的标记顺序为 C、A、B，而 testing/test_mark.py::test_mark_mro 要求基类优先的 B、A、C，因此断言失败。",
+        "error_type": "AssertionError",
+        "root_cause": "get_unpacked_marks 在 consider_mro=True 时按 `obj.__mro__` 的派生类优先顺序收集标记，导致 C(A, B) 的标记顺序为 C、A、B，而 testing/test_mark.py::test_mark_mro 要求基类优先的 B、A、C，因此断言失败。",
+        "solution": "在 get_unpacked_marks 的类分支中遍历 `reversed(obj.__mro__)` 而不是 `obj.__mro__`，使标记按基类到派生类顺序返回；保持 consider_mro=False 分支不变。",
+        "applicability": [
+          "适用于 pytest 内部 `_pytest.mark.structures.get_unpacked_marks` 需要按 MRO 解析类标记的场景。",
+          "适用于测试类存在多继承或继承父类的 usefixtures 标记，且子类 fixture 依赖父类 fixture 先执行的场景。",
+          "需要按基类到派生类顺序读取类标记，以保证父类 usefixtures 先注册并先执行。",
+          "仅限已核对的来源项目、代码版本与测试配置；其他上下文必须重新验证。"
+        ],
+        "constraints": [
+          "只修改生产源码 src/_pytest/mark/structures.py，不得修改测试、依赖或构建配置。",
+          "必须保留 consider_mro=False 时只返回直接应用在当前类上的标记这一行为。",
+          "必须保留 get_unpacked_marks 对非类对象使用 getattr(obj, \"pytestmark\", []) 的行为。",
+          "必须通过全部登记测试并保留正常行为。"
+        ],
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:b0395e04a5cefcb10c9c121027da49c9045ee12b61b824cd05add46c0c5672ea",
+        "required_capabilities": [],
+        "issues": [
+          {
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 在 consider_mro=True 时按 `obj.__mro__` 的派生类优先顺序收集标记，导致 C(A, B) 的标记顺序为 C、A、B，而 testing/test_mark.py::test_mark_mro 要求基类优先的 B、A、C，因此断言失败。",
+            "solution": "在 get_unpacked_marks 的类分支中遍历 `reversed(obj.__mro__)` 而不是 `obj.__mro__`，使标记按基类到派生类顺序返回；保持 consider_mro=False 分支不变。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          }
+        ],
+        "evidence_summary": {
+          "verified_runs": 1,
+          "level": "source_project_tests",
+          "minimum_tests": 277
+        },
+        "source_ids": [
+          "9977f923-1736-4de7-ac0b-dea4a8e70001"
+        ],
+        "reuse_boundary": {
+          "repository_id": "uploaded/709bd261a36d2e9b4146c095bb11f009",
+          "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:b0395e04a5cefcb10c9c121027da49c9045ee12b61b824cd05add46c0c5672ea",
+          "runner_hash": "29504ef3da69b65cd3739330296be705c4ec46d973a02645d130cac7bee92270",
+          "recovery_id": "c117c5e9-adf3-4a82-85a2-641a33d63111",
+          "mode": "verified_context_only"
+        }
+      },
+      "negative_checks": [
+        {
+          "changed": "repository_id",
+          "value": "unrelated-project",
+          "excluded": true
+        },
+        {
+          "changed": "source_revision",
+          "value": "unverified-version",
+          "excluded": true
+        },
+        {
+          "changed": "compatibility_key",
+          "value": "unverified-contract",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": null,
+          "excluded": true
+        }
+      ]
+    },
+    {
+      "card_id": "dd047c2e-5e0f-52a2-b568-6b026737698e",
+      "rule_id": "dd047c2e-5e0f-52a2-b568-6b026737698e",
+      "recovery_id": "26424412-0b5b-4f94-9228-275891c34faa",
+      "project": "pytest · 真实工程修复 · 2026-11-15",
+      "actor": "system",
+      "state": "succeeded",
+      "tests": [
+        302,
+        302
+      ],
+      "model_requests": 0,
+      "context": {
+        "repository_id": "uploaded/c653740a4d1ef9d522e61768e6b0debb",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+        "runner_hash": "04c17ccfe51e2d80e69c4bf0911506149b62e969218c0e1790cd968338e29efc"
+      },
+      "reference": {
+        "id": "b6716e28-3f6f-409a-a462-17f008382321",
+        "rule_id": "dd047c2e-5e0f-52a2-b568-6b026737698e",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "uploaded/c653740a4d1ef9d522e61768e6b0debb",
+        "reuse_status": "active",
+        "task_summary": "`get_unpacked_marks` 只对对象执行一次 `getattr(obj, \"pytestmark\", [])`，无法合并多个基类的本地标记；若在 MRO 聚合中对每个类继续使用 `getattr`，又会重复读取继承值，导致菱形继承中根类标记重复或顺序错误。",
+        "error_type": "AssertionError",
+        "root_cause": "`get_unpacked_marks` 只对对象执行一次 `getattr(obj, \"pytestmark\", [])`，无法合并多个基类的本地标记；若在 MRO 聚合中对每个类继续使用 `getattr`，又会重复读取继承值，导致菱形继承中根类标记重复或顺序错误。",
+        "solution": "对类且 `consider_mro=True` 时遍历 `obj.__mro__`，每个类只读取其 `__dict__` 中本地 `pytestmark`，分别归一化后按 MRO/C3 顺序拼接；本地类标记优先，菱形根类只出现一次；不同基类的同名 marker 不去重。`consider_mro=False` 或非类对象只处理本地标记。",
+        "applicability": [
+          "适用于 pytest 中通过类继承收集 `pytestmark` 的场景，尤其是多基类或菱形继承。",
+          "适用于装饰类/函数时写入 `pytestmark` 且不能污染父类或兄弟类的场景。",
+          "适用于需要区分本地标记与包含 MRO 标记的 API 调用，例如 `consider_mro=False`。",
+          "适用于非类对象仅有本地 `pytestmark` 的兼容场景。",
+          "仅限已核对的来源项目、代码版本与测试配置；其他上下文必须重新验证。"
+        ],
+        "constraints": [
+          "MRO 聚合只对类生效，按 `obj.__mro__` 顺序收集每个类 `__dict__` 中本地定义的 `pytestmark`，当前类优先，避免菱形继承根类重复。",
+          "`consider_mro=False` 或非类对象必须回退到对象本地 `pytestmark` 的归一化，不得尝试访问 `__mro__`。",
+          "`get_unpacked_marks` 必须返回列表而不是生成器，默认考虑 MRO，并支持 `consider_mro=False`。",
+          "`store_mark` 写入时只能使用对象本地已有标记，不能读取继承标记，以免装饰子类时修改父类/兄弟类语义或复制陈旧标记。",
+          "不同父类中同名 marker 不得去重，必须保留所有 marker 对象；仅依靠 MRO 中唯一的类来避免同一类重复贡献。",
+          "仅修改生产源码 `src/_pytest/mark/structures.py`，不修改测试或构建配置。",
+          "保持未涉及的业务行为不变。",
+          "函数装饰顺序及非类对象的本地标记顺序必须保持不变。"
+        ],
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+        "required_capabilities": [],
+        "issues": [
+          {
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "`get_unpacked_marks` 只对对象执行一次 `getattr(obj, \"pytestmark\", [])`，无法合并多个基类的本地标记；若在 MRO 聚合中对每个类继续使用 `getattr`，又会重复读取继承值，导致菱形继承中根类标记重复或顺序错误。",
+            "solution": "对类且 `consider_mro=True` 时遍历 `obj.__mro__`，每个类只读取其 `__dict__` 中本地 `pytestmark`，分别归一化后按 MRO/C3 顺序拼接；本地类标记优先，菱形根类只出现一次；不同基类的同名 marker 不去重。`consider_mro=False` 或非类对象只处理本地标记。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks",
+              "src/_pytest/mark/structures.py#normalize_mark_list"
+            ]
+          }
+        ],
+        "evidence_summary": {
+          "verified_runs": 1,
+          "level": "source_project_tests",
+          "minimum_tests": 302
+        },
+        "source_ids": [
+          "b6716e28-3f6f-409a-a462-17f008382321"
+        ],
+        "reuse_boundary": {
+          "repository_id": "uploaded/c653740a4d1ef9d522e61768e6b0debb",
+          "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:f96e28c9d99d1cb66376c5d1a4ab7e4415d7dae3f491ee789b597140a5938ade",
+          "runner_hash": "04c17ccfe51e2d80e69c4bf0911506149b62e969218c0e1790cd968338e29efc",
+          "recovery_id": "26424412-0b5b-4f94-9228-275891c34faa",
+          "mode": "verified_context_only"
+        }
+      },
+      "negative_checks": [
+        {
+          "changed": "repository_id",
+          "value": "unrelated-project",
+          "excluded": true
+        },
+        {
+          "changed": "source_revision",
+          "value": "unverified-version",
+          "excluded": true
+        },
+        {
+          "changed": "compatibility_key",
+          "value": "unverified-contract",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": null,
+          "excluded": true
+        }
+      ]
+    },
+    {
+      "card_id": "33565bd0-6786-5f7b-9a8b-20550c06d669",
+      "rule_id": "69cca81f-66fd-5ea1-bcd8-d81ed73b990b",
+      "recovery_id": "264b373d-6655-450b-a374-02898bbada81",
+      "project": "GreetingService · 历史经验补证",
+      "actor": "system",
+      "state": "succeeded",
+      "tests": [
+        2,
+        2
+      ],
+      "model_requests": 2,
+      "context": {
+        "repository_id": "uploaded/0e4a3f6dce48303c84021ef8d8de34e7",
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:0e4a3f6dce48303c84021ef8d8de34e7e7d2640bed9981581ce7f0824be7bef6",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:0e4a3f6dce48303c84021ef8d8de34e7e7d2640bed9981581ce7f0824be7bef6",
+        "runner_hash": "d47f4e57f205500f516820f44b6b9b045fb6c7810692ae64611f9263f20cbcf2"
+      },
+      "reference": {
+        "id": "eb25e957-055b-47ad-b8cf-3a21fc8f1d68",
+        "rule_id": "69cca81f-66fd-5ea1-bcd8-d81ed73b990b",
+        "schema_version": 4,
+        "language": "java",
+        "scope": "project",
+        "repository_id": "uploaded/0e4a3f6dce48303c84021ef8d8de34e7",
+        "reuse_status": "active",
+        "task_summary": "greet 方法直接调用 name.trim()，未先判断 name 是否为 null；调用 greet(null) 时解引用 null，触发 NullPointerException。",
+        "error_type": "NullPointerException",
+        "root_cause": "greet 方法直接调用 name.trim()，未先判断 name 是否为 null；调用 greet(null) 时解引用 null，触发 NullPointerException。",
+        "solution": "在调用 trim() 前做条件判断：name == null 时使用 \"guest\" 作为 trimmedName，否则使用 name.trim()，再拼接并返回 \"Hello, \" + trimmedName + \"!\"。",
+        "applicability": [
+          "Java 方法在调用 String.trim() 等实例方法前可能接收到 null 参数时",
+          "Maven 项目需在修改生产代码后运行完整测试验证时",
+          "需要为 null 输入提供固定默认值并保持非 null 输入原有处理逻辑时",
+          "仅限已核对的来源项目、代码版本与测试配置；其他上下文必须重新验证。"
+        ],
+        "constraints": [
+          "name 为 null 时必须返回 Hello, guest!",
+          "仅修改生产代码，不修改验收测试",
+          "保留全部原始测试和业务行为",
+          "先确认原始测试失败，再修改生产代码",
+          "普通字符串仍必须先 trim 再生成问候语",
+          "最后运行完整 Maven 测试"
+        ],
+        "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:0e4a3f6dce48303c84021ef8d8de34e7e7d2640bed9981581ce7f0824be7bef6",
+        "required_capabilities": [],
+        "issues": [
+          {
+            "error_type": "NullPointerException",
+            "files": [
+              "src/main/java/dev/selfevolving/benchmark/GreetingService.java"
+            ],
+            "root_cause": "greet 方法直接调用 name.trim()，未先判断 name 是否为 null；调用 greet(null) 时解引用 null，触发 NullPointerException。",
+            "solution": "在调用 trim() 前做条件判断：name == null 时使用 \"guest\" 作为 trimmedName，否则使用 name.trim()，再拼接并返回 \"Hello, \" + trimmedName + \"!\"。",
+            "symbols": []
+          }
+        ],
+        "evidence_summary": {
+          "verified_runs": 1,
+          "level": "source_project_tests",
+          "minimum_tests": 2
+        },
+        "source_ids": [
+          "eb25e957-055b-47ad-b8cf-3a21fc8f1d68"
+        ],
+        "reuse_boundary": {
+          "repository_id": "uploaded/0e4a3f6dce48303c84021ef8d8de34e7",
+          "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:0e4a3f6dce48303c84021ef8d8de34e7e7d2640bed9981581ce7f0824be7bef6",
+          "runner_hash": "d47f4e57f205500f516820f44b6b9b045fb6c7810692ae64611f9263f20cbcf2",
+          "recovery_id": "264b373d-6655-450b-a374-02898bbada81",
+          "mode": "verified_context_only"
+        }
+      },
+      "negative_checks": [
+        {
+          "changed": "repository_id",
+          "value": "unrelated-project",
+          "excluded": true
+        },
+        {
+          "changed": "source_revision",
+          "value": "unverified-version",
+          "excluded": true
+        },
+        {
+          "changed": "compatibility_key",
+          "value": "unverified-contract",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000",
+          "excluded": true
+        },
+        {
+          "changed": "runner_hash",
+          "value": null,
+          "excluded": true
+        }
+      ]
+    }
+  ],
+  "model_calls": {
+    "repair_and_extraction": 8,
+    "independent_linkage": 2
+  },
+  "api_configuration": {
+    "origin": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "source": "explicit_file",
+    "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+    "key_present": true,
+    "transport": "direct"
+  },
+  "normal_task_id": "8245146c-c149-4a75-9c66-088bddb8c6c6",
+  "test_evidence": {
+    "task_id": "8245146c-c149-4a75-9c66-088bddb8c6c6",
+    "status": "succeeded",
+    "source_project": "upload-dc84bb1f-1518-4591-8d7a-afbecca460be",
+    "project_label": "GreetingService · 历史经验补证",
+    "tests": {
+      "before": {
+        "tool_call_id": "739dd2be-3e5c-468a-a196-06ebaf0830ae",
+        "sequence": 1,
+        "runner": "maven",
+        "tests": 2,
+        "passed": 1,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0
+      },
+      "after": {
+        "tool_call_id": "2546ef38-6ad1-402d-b366-382b7f69dafa",
+        "sequence": 9,
+        "runner": "maven",
+        "tests": 2,
+        "passed": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "final_verified": true,
+      "original_tests_unchanged": true,
+      "comparable": true,
+      "unavailable_reason": null
+    },
+    "failure_cases": [
+      {
+        "test": "dev.selfevolving.benchmark.GreetingServiceTest.greetsNullName",
+        "error_type": "NullPointerException",
+        "message": "访问了缺失的对象或输入。",
+        "source_file": "src/test/java/dev/selfevolving/benchmark/GreetingServiceTest.java",
+        "source_line": 17
+      }
+    ],
+    "references": [],
+    "reference_recording": "recorded",
+    "reference_notice": "仅列出成功模型请求中实际附带的经验；不据此推断模型采用程度或效率提升。"
+  }
+}

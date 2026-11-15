@@ -1,0 +1,3180 @@
+{
+  "tasks": {
+    "created_at": "2026-11-14T14:46:27.599425+00:00",
+    "api_configuration": {
+      "origin": "https://api.deepseek.com",
+      "model": "deepseek-flash",
+      "source": "explicit_file",
+      "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+      "key_present": true,
+      "key_fingerprint": "c5f83d792da0",
+      "identity": "4f003362858407b3c4f55d13",
+      "transport": "direct"
+    },
+    "directory": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034",
+    "task_limit": 2,
+    "completed": true,
+    "tasks": [
+      {
+        "case": {
+          "id": "invoice",
+          "title": "电商发票金额计算",
+          "file": "invoice.py",
+          "task": "修复电商发票 invoice_total。商品单价与优惠券为十进制字符串；先汇总单价乘数量，再减整单优惠券，最低为零，最后按财务四舍五入保留两位小数，中点向上。不能逐行提前舍入。保留 CNY 币种、商品行数与已有非法输入异常。当前部分总额少一分钱，例如单价 2.675 数量 1 应为 2.68。不得修改测试和构建文件。"
+        },
+        "task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+        "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\invoice.db",
+        "before": "\"\"\"Create an invoice total from product line items and an order coupon.\"\"\"\n\n\ndef invoice_total(items, coupon=\"0\"):\n    amount = 0.0\n    for item in items:\n        price = float(item[\"unit_price\"])\n        count = item[\"quantity\"]\n        if price < 0 or not isinstance(count, int) or count < 1:\n            raise ValueError(\"invalid product line\")\n        amount += price * count\n    discount = float(coupon)\n    if discount < 0:\n        raise ValueError(\"invalid coupon\")\n    amount = max(0.0, amount - discount)\n    return {\"total\": format(amount, \".2f\"), \"currency\": \"CNY\", \"lines\": len(items)}\n",
+        "baseline": {
+          "call_id": "4a64ccfb-5c0c-4aef-9969-ffa8b6926d9f",
+          "tool_name": "run_tests",
+          "success": false,
+          "output": "FF.........                                                              [100%]\r\n================================== FAILURES ===================================\r\n__________________________ test_total[items0-0-2.68] __________________________\r\n\r\nitems = [{'quantity': 1, 'unit_price': '2.675'}], coupon = '0'\r\nexpected = '2.68'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '2.67'} == {'currency': ...otal': '2.68'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '2.67'} != {'total': '2.68'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n__________________________ test_total[items1-0-4.02] __________________________\r\n\r\nitems = [{'quantity': 1, 'unit_price': '4.015'}], coupon = '0'\r\nexpected = '4.02'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '4.01'} == {'currency': ...otal': '4.02'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '4.01'} != {'total': '4.02'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\.test-reports\\c07870ea-37f7-4e31-a7e5-c4615f286fa2\\51a49921-3c18-40d8-b149-8f74888f5c0a.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_invoice.py::test_total[items0-0-2.68] - AssertionError: ass...\r\nFAILED tests/test_invoice.py::test_total[items1-0-4.02] - AssertionError: ass...\r\n2 failed, 9 passed in 0.12s\r\n",
+          "error_code": "TEST_FAILED",
+          "error_message": "测试未通过，请查看失败详情。",
+          "metadata": {
+            "exit_code": 1,
+            "duration_ms": 481,
+            "truncated": false,
+            "changed_files": [],
+            "runner": "pytest",
+            "tests": 11,
+            "failures": 2,
+            "errors": 0,
+            "skipped": 0,
+            "error_types": [
+              "AssertionError"
+            ],
+            "test_failures": [
+              {
+                "test": "tests.test_invoice.test_total[items0-0-2.68]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'currency': ...otal': '2.67'} == {'currency': ...otal': '2.68'}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'total': '2.67'} != {'total': '2.68'}\n  Use -v to get more diff\nitems = [{'quantity': 1, 'unit_price': '2.675'}], coupon = '0'\nexpected = '2.68'\n\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\n        ([], \"0\", \"0.00\"),\n    ])\n    def test_total(items, coupon, expected):\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\nE       AssertionError: assert {'currency': ...otal': '2.67'} == {'currency': ...otal': '2.68'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Differing items:\nE         {'total': '2.67'} != {'total': '2.68'}\nE         Use -v to get more diff\n\ntests\\test_invoice.py:16: AssertionError"
+              },
+              {
+                "test": "tests.test_invoice.test_total[items1-0-4.02]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'currency': ...otal': '4.01'} == {'currency': ...otal': '4.02'}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'total': '4.01'} != {'total': '4.02'}\n  Use -v to get more diff\nitems = [{'quantity': 1, 'unit_price': '4.015'}], coupon = '0'\nexpected = '4.02'\n\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\n        ([], \"0\", \"0.00\"),\n    ])\n    def test_total(items, coupon, expected):\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\nE       AssertionError: assert {'currency': ...otal': '4.01'} == {'currency': ...otal': '4.02'}\nE         \nE         Omitting 2 identical items, use -vv to show\nE         Differing items:\nE         {'total': '4.01'} != {'total': '4.02'}\nE         Use -v to get more diff\n\ntests\\test_invoice.py:16: AssertionError"
+              }
+            ]
+          }
+        },
+        "retrieval_enabled": false,
+        "started_at": "2026-11-14T14:46:28.270189+00:00",
+        "result": {
+          "task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+          "status": "succeeded",
+          "summary": "程序独立运行最终验证，11 项测试全部通过，修复成功。",
+          "steps": [
+            {
+              "id": "733dcad9-36bd-4011-88be-cd990c9a378d",
+              "name": "list_files",
+              "arguments": {
+                "recursive": true
+              }
+            },
+            {
+              "id": "8703907d-cebc-4dd8-9d18-061b83c3e4ae",
+              "name": "read_file",
+              "arguments": {
+                "path": "invoice.py"
+              }
+            },
+            {
+              "id": "b93dc973-acb3-4fee-b1f9-47cc4c74fc33",
+              "name": "read_file",
+              "arguments": {
+                "path": "tests/test_invoice.py"
+              }
+            },
+            {
+              "id": "8723b34b-5c46-4dff-bf41-426764df9c86",
+              "name": "write_file",
+              "arguments": {
+                "path": "invoice.py",
+                "content": "\"\"\"Create an invoice total from product line items and an order coupon.\"\"\"\n\nfrom decimal import Decimal, InvalidOperation, ROUND_HALF_UP\n\n\ndef _to_decimal(value, message):\n    try:\n        return Decimal(str(value))\n    except (InvalidOperation, ValueError):\n        raise ValueError(message)\n\n\ndef invoice_total(items, coupon=\"0\"):\n    amount = Decimal(\"0\")\n    for item in items:\n        price = _to_decimal(item[\"unit_price\"], \"invalid product line\")\n        count = item[\"quantity\"]\n        if not price.is_finite() or price < 0 or not isinstance(count, int) or count < 1:\n            raise ValueError(\"invalid product line\")\n        amount += price * count\n    discount = _to_decimal(coupon, \"invalid coupon\")\n    if not discount.is_finite() or discount < 0:\n        raise ValueError(\"invalid coupon\")\n    amount = max(Decimal(\"0\"), amount - discount)\n    total = amount.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n    return {\"total\": format(total, \".2f\"), \"currency\": \"CNY\", \"lines\": len(items)}\n"
+              }
+            },
+            {
+              "id": "50d4e595-a444-4db1-a059-07f157e5fd32",
+              "name": "run_tests",
+              "arguments": {
+                "timeout_seconds": 180
+              }
+            },
+            {
+              "id": "555f7b8c-f7e3-42a8-9490-af291ebee084",
+              "name": "run_tests",
+              "arguments": {
+                "timeout_seconds": 180
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "call_id": "733dcad9-36bd-4011-88be-cd990c9a378d",
+              "tool_name": "list_files",
+              "success": true,
+              "output": "__pycache__/\n__pycache__/invoice.cpython-313.pyc\ninvoice.py\npyproject.toml\ntests/\ntests/__pycache__/\ntests/__pycache__/test_invoice.cpython-313-pytest-8.4.2.pyc\ntests/test_invoice.py",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "8703907d-cebc-4dd8-9d18-061b83c3e4ae",
+              "tool_name": "read_file",
+              "success": true,
+              "output": "\"\"\"Create an invoice total from product line items and an order coupon.\"\"\"\n\n\ndef invoice_total(items, coupon=\"0\"):\n    amount = 0.0\n    for item in items:\n        price = float(item[\"unit_price\"])\n        count = item[\"quantity\"]\n        if price < 0 or not isinstance(count, int) or count < 1:\n            raise ValueError(\"invalid product line\")\n        amount += price * count\n    discount = float(coupon)\n    if discount < 0:\n        raise ValueError(\"invalid coupon\")\n    amount = max(0.0, amount - discount)\n    return {\"total\": format(amount, \".2f\"), \"currency\": \"CNY\", \"lines\": len(items)}\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "b93dc973-acb3-4fee-b1f9-47cc4c74fc33",
+              "tool_name": "read_file",
+              "success": true,
+              "output": "import pytest\nfrom invoice import invoice_total\n\n\n@pytest.mark.parametrize(\"items,coupon,expected\", [\n    ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\n    ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\n    ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\n    ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\n    ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\n    ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\n    ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\n    ([], \"0\", \"0.00\"),\n])\ndef test_total(items, coupon, expected):\n    assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\n\n\n@pytest.mark.parametrize(\"items,coupon\", [\n    ([{\"unit_price\": \"-1\", \"quantity\": 1}], \"0\"),\n    ([{\"unit_price\": \"1\", \"quantity\": 0}], \"0\"),\n    ([{\"unit_price\": \"1\", \"quantity\": 1}], \"-0.1\"),\n])\ndef test_reject_invalid_order(items, coupon):\n    with pytest.raises(ValueError):\n        invoice_total(items, coupon)\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "8723b34b-5c46-4dff-bf41-426764df9c86",
+              "tool_name": "write_file",
+              "success": true,
+              "output": "文件已写入。",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "path": "invoice.py",
+                "changed_files": [
+                  "invoice.py"
+                ],
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "50d4e595-a444-4db1-a059-07f157e5fd32",
+              "tool_name": "run_tests",
+              "success": true,
+              "output": "...........                                                              [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\.test-reports\\c07870ea-37f7-4e31-a7e5-c4615f286fa2\\22b065a3-20ae-4ecc-acff-289f9ec2316b.xml -\r\n11 passed in 0.10s\r\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "exit_code": 0,
+                "duration_ms": 466,
+                "truncated": false,
+                "changed_files": [
+                  "invoice.py"
+                ],
+                "runner": "pytest",
+                "tests": 11,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "error_types": [],
+                "test_failures": [],
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "555f7b8c-f7e3-42a8-9490-af291ebee084",
+              "tool_name": "run_tests",
+              "success": true,
+              "output": "...........                                                              [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\.test-reports\\c07870ea-37f7-4e31-a7e5-c4615f286fa2\\71ede973-58c1-41f4-862e-4310408edcfa.xml -\r\n11 passed in 0.08s\r\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "exit_code": 0,
+                "duration_ms": 439,
+                "truncated": false,
+                "changed_files": [
+                  "invoice.py"
+                ],
+                "runner": "pytest",
+                "tests": 11,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "error_types": [],
+                "test_failures": [],
+                "retrieved_experience_ids": [],
+                "final_verification": true
+              }
+            }
+          ],
+          "repair_succeeded": true,
+          "tests_passed": true,
+          "changed_files": [
+            "invoice.py"
+          ],
+          "experience_saved": true,
+          "experience_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "experience_ids": [
+            "a2042a2f-8a52-4de8-aec7-cdd72903fbfc"
+          ],
+          "experience_save_error": null,
+          "error_message": null
+        },
+        "audit": {
+          "task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+          "experience_enabled": false,
+          "decision_rounds": 5,
+          "tool_calls": 6,
+          "elapsed_ms": 53407,
+          "retrieved_experience_ids": [],
+          "model_requests": [
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "connection.connect_tcp.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "connection.connect_tcp.complete",
+                  "elapsed_ms": 92
+                },
+                {
+                  "event": "connection.start_tls.started",
+                  "elapsed_ms": 92
+                },
+                {
+                  "event": "connection.start_tls.complete",
+                  "elapsed_ms": 117
+                },
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 117
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 118
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 118
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 118
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 118
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 277
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 277
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 980
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 1446,
+                "completion_tokens": 39,
+                "total_tokens": 1485
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "44caeebe-6af3-455f-86ea-f16acd2b811b",
+              "duration_ms": 980
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 157
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 157
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 968
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 1633,
+                "completion_tokens": 71,
+                "total_tokens": 1704
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "f8f496c4-9a74-4d5c-9011-dc33f3076fd6",
+              "duration_ms": 968
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 132
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 132
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 2955
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 2485,
+                "completion_tokens": 566,
+                "total_tokens": 3051
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "7e05ff2f-516d-4e47-ae79-2abcff83f782",
+              "duration_ms": 2955
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 144
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 144
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 812
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 3147,
+                "completion_tokens": 23,
+                "total_tokens": 3170
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "65564633-0e86-4557-802c-d0decccdbe4d",
+              "duration_ms": 812
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 3
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 3
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 3
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 4
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 4
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 169
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 169
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 1326
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "stop",
+              "usage": {
+                "prompt_tokens": 3418,
+                "completion_tokens": 132,
+                "total_tokens": 3550
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "aeb75bd7-123b-4aad-9701-fe950fd441a1",
+              "duration_ms": 1327
+            },
+            {
+              "phase": "extraction",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 153
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 153
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 45182
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "stop",
+              "usage": {
+                "prompt_tokens": 3022,
+                "completion_tokens": 7836,
+                "total_tokens": 10858
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "70b035df-727d-4234-8011-f4dbe74e6a99",
+              "duration_ms": 45183
+            }
+          ],
+          "language": "python",
+          "repository_id": "cross-business/invoice",
+          "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:fd5437cd1d3600a9c12d05bc78f0ea50f1e9800182869053600f079a7189e85d",
+          "observed_error_types": [],
+          "retrieval_events": [],
+          "injection_events": [
+            {
+              "decision": 1,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 2,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 3,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 4,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 5,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            }
+          ],
+          "experience_extraction": {
+            "status": "succeeded",
+            "stage": "completed",
+            "record_index": 0,
+            "saved_count": 1
+          },
+          "final_verification_attempts": 1
+        },
+        "requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "connection.connect_tcp.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "connection.connect_tcp.complete",
+                "elapsed_ms": 92
+              },
+              {
+                "event": "connection.start_tls.started",
+                "elapsed_ms": 92
+              },
+              {
+                "event": "connection.start_tls.complete",
+                "elapsed_ms": 117
+              },
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 117
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 118
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 118
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 118
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 118
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 277
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 277
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 980
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 1446,
+              "completion_tokens": 39,
+              "total_tokens": 1485
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "44caeebe-6af3-455f-86ea-f16acd2b811b",
+            "duration_ms": 980
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 157
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 157
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 968
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 1633,
+              "completion_tokens": 71,
+              "total_tokens": 1704
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "f8f496c4-9a74-4d5c-9011-dc33f3076fd6",
+            "duration_ms": 968
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 132
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 132
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 2955
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 2485,
+              "completion_tokens": 566,
+              "total_tokens": 3051
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "7e05ff2f-516d-4e47-ae79-2abcff83f782",
+            "duration_ms": 2955
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 144
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 144
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 812
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 3147,
+              "completion_tokens": 23,
+              "total_tokens": 3170
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "65564633-0e86-4557-802c-d0decccdbe4d",
+            "duration_ms": 812
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 3
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 3
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 3
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 4
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 4
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 169
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 169
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 1326
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 3418,
+              "completion_tokens": 132,
+              "total_tokens": 3550
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "aeb75bd7-123b-4aad-9701-fe950fd441a1",
+            "duration_ms": 1327
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 153
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 153
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 45182
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 3022,
+              "completion_tokens": 7836,
+              "total_tokens": 10858
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "70b035df-727d-4234-8011-f4dbe74e6a99",
+            "duration_ms": 45183
+          }
+        ],
+        "after": "\"\"\"Create an invoice total from product line items and an order coupon.\"\"\"\n\nfrom decimal import Decimal, InvalidOperation, ROUND_HALF_UP\n\n\ndef _to_decimal(value, message):\n    try:\n        return Decimal(str(value))\n    except (InvalidOperation, ValueError):\n        raise ValueError(message)\n\n\ndef invoice_total(items, coupon=\"0\"):\n    amount = Decimal(\"0\")\n    for item in items:\n        price = _to_decimal(item[\"unit_price\"], \"invalid product line\")\n        count = item[\"quantity\"]\n        if not price.is_finite() or price < 0 or not isinstance(count, int) or count < 1:\n            raise ValueError(\"invalid product line\")\n        amount += price * count\n    discount = _to_decimal(coupon, \"invalid coupon\")\n    if not discount.is_finite() or discount < 0:\n        raise ValueError(\"invalid coupon\")\n    amount = max(Decimal(\"0\"), amount - discount)\n    total = amount.quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)\n    return {\"total\": format(total, \".2f\"), \"currency\": \"CNY\", \"lines\": len(items)}\n",
+        "originals_unchanged": true,
+        "experiences": [
+          {
+            "task_summary": "修复电商发票 invoice_total：改用十进制精确汇总、整单优惠券减免、最低为零和最终财务四舍五入（中点向上），避免总额少一分。",
+            "error_type": "AssertionError",
+            "root_cause": "原实现把十进制字符串单价和优惠券转成 float 累加，并直接用 format(amount, \".2f\") 输出；二进制浮点误差和默认舍入模式使总额可能少一分（如单价 2.675 数量 1 应得 2.68 却得到 2.67），且未按财务要求在最终总额上使用 ROUND_HALF_UP。",
+            "solution": "在 invoice.py 中改用 Decimal 从字符串构造单价和优惠券；逐行计算 Decimal(单价)×数量后汇总，汇总阶段不逐行舍入；减去整单优惠券后用 max(Decimal(\"0\"), ...) 保证非负；最后对最终金额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP) 并格式化为两位小数字符串。保留原有 ValueError 校验、CNY 币种和 lines=len(items)，不改测试和构建文件。",
+            "verification": "程序独立运行 pytest 最终验证，11 项测试全部通过；工具调用编号：555f7b8c-f7e3-42a8-9490-af291ebee084。",
+            "tags": [
+              "python",
+              "金额计算",
+              "Decimal",
+              "ROUND_HALF_UP",
+              "财务舍入",
+              "浮点误差",
+              "电商发票"
+            ],
+            "source_task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+            "schema_version": 4,
+            "language": "python",
+            "scope": "project",
+            "repository_id": "cross-business/invoice",
+            "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:fd5437cd1d3600a9c12d05bc78f0ea50f1e9800182869053600f079a7189e85d",
+            "compatibility_key": "invoice-v1",
+            "constraints": [
+              "商品单价与优惠券是十进制字符串，必须按十进制语义精确处理，不能使用二进制浮点累积。",
+              "必须先汇总所有商品行的单价乘数量，再减去整单优惠券。",
+              "减去优惠券后的总额最低为 0。",
+              "仅在最终总额上按财务四舍五入保留两位小数，中点向上（ROUND_HALF_UP）。",
+              "不能对商品行提前舍入，也不能在汇总前舍入。",
+              "返回结果必须保留 CNY 币种。",
+              "返回结果必须保留商品行数，lines 等于 len(items)。",
+              "必须保留已有非法输入异常：负单价、数量不是 int 或小于 1、负优惠券均应抛出 ValueError。",
+              "total 必须是保留两位小数的字符串，例如 \"2.68\"、\"0.00\"。",
+              "不得修改测试文件。",
+              "不得修改构建文件。",
+              "仅修改 invoice.py。"
+            ],
+            "applicability": [
+              "适用于 Python 中以十进制字符串提供商品单价和优惠券、需要计算发票或订单总额的场景。",
+              "适用于要求先汇总再减免、总额最低为零、最后按财务四舍五入保留两位小数且中点向上的金额计算。",
+              "适用于需要避免逐行提前舍入和二进制浮点误差导致少一分的情况。",
+              "适用于需要保留 CNY 币种、商品行数及原有非法输入 ValueError 行为的接口。"
+            ],
+            "issues": [
+              {
+                "error_type": "AssertionError",
+                "root_cause": "原实现使用 float(item[\"unit_price\"]) 解析并累加十进制字符串，二进制浮点无法精确表示 2.675 等金额，真实值可能略小于十进制中点，导致最终总额少一分。",
+                "solution": "对单价和优惠券使用 Decimal 从字符串构造；逐行计算 Decimal(item[\"unit_price\"]) * item[\"quantity\"] 并累加，汇总阶段不做舍入，避免 float 中间值。保留负单价、非法数量等 ValueError 检查。",
+                "files": [
+                  "invoice.py"
+                ],
+                "symbols": [
+                  "invoice.py#invoice_total"
+                ],
+                "depends_on": []
+              },
+              {
+                "error_type": "AssertionError",
+                "root_cause": "原实现用 format(amount, \".2f\") 输出，未按财务规则对最终金额执行中点向上的 ROUND_HALF_UP；例如 0.335×3=1.005 应得 1.01 而非 1.00，导致总额少一分。",
+                "solution": "先完成所有商品行汇总并减去整单优惠券，将总额下限置为 Decimal(\"0\")；仅对最终 Decimal 总额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)，再格式化为两位小数字符串；不得逐行提前舍入。",
+                "files": [
+                  "invoice.py"
+                ],
+                "symbols": [
+                  "invoice.py#invoice_total"
+                ],
+                "depends_on": [
+                  0
+                ]
+              }
+            ],
+            "evidence": [
+              {
+                "source_task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+                "tool_call_id": "555f7b8c-f7e3-42a8-9490-af291ebee084",
+                "runner": "pytest",
+                "tests": 11,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "merged_from": [],
+            "batch_id": "30ea778e-4959-46d1-822f-d4cc8c5f24d1",
+            "reuse_status": "active",
+            "derived_from": [],
+            "supersedes_id": null,
+            "required_capabilities": [],
+            "id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+            "created_at": "2026-11-14T14:47:21.707159Z"
+          }
+        ]
+      },
+      {
+        "case": {
+          "id": "academic-grades",
+          "title": "教务加权成绩发布",
+          "file": "grades.py",
+          "task": "修复教务 publish_grade。成绩和权重由十进制字符串输入，按权重计算平均分，权重不要求总和为 1。学校规定最终平均分保留一位小数，恰好中点时进一位；使用最终发布分数判定及格线 60 与奖学金线 85。72.25 应发布为 72.3。成绩范围、权重校验、空成绩异常及返回字段保持现有契约。不得修改测试和构建文件。"
+        },
+        "task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+        "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\academic-grades.db",
+        "before": "\"\"\"Publish a student's weighted mark and scholarship eligibility.\"\"\"\n\n\ndef publish_grade(assessments):\n    points = 0.0\n    weight_sum = 0.0\n    for assessment in assessments:\n        score = float(assessment[\"score\"])\n        weight = float(assessment[\"weight\"])\n        if not 0 <= score <= 100 or weight <= 0:\n            raise ValueError(\"invalid assessment\")\n        points += score * weight\n        weight_sum += weight\n    if weight_sum == 0:\n        raise ValueError(\"no assessments\")\n    average = round(points / weight_sum, 1)\n    return {\"mark\": format(average, \".1f\"), \"passed\": average >= 60, \"scholarship\": average >= 85}\n",
+        "baseline": {
+          "call_id": "e8d4fbd8-c7c0-4b9a-bfb4-d3f8909786a1",
+          "tool_name": "run_tests",
+          "success": false,
+          "output": "FFFF...F.....                                                            [100%]\r\n================================== FAILURES ===================================\r\n______________ test_published_mark[assessments0-72.3-True-False] ______________\r\n\r\nassessments = [{'score': '72.25', 'weight': '1'}], expected = '72.3'\r\npassed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '72.2'} != {'mark': '72.3'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments1-85.1-True-True] _______________\r\n\r\nassessments = [{'score': '85.05', 'weight': '1'}], expected = '85.1'\r\npassed = True, scholarship = True\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '85....arship': True} == {'mark': '85....arship': True}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '85.0'} != {'mark': '85.1'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments2-84.9-True-False] ______________\r\n\r\nassessments = [{'score': '84.85', 'weight': '1'}], expected = '84.9'\r\npassed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '84....rship': False} == {'mark': '84....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '84.8'} != {'mark': '84.9'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments3-89.9-True-True] _______________\r\n\r\nassessments = [{'score': '89.85', 'weight': '1'}], expected = '89.9'\r\npassed = True, scholarship = True\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '89....arship': True} == {'mark': '89....arship': True}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '89.8'} != {'mark': '89.9'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments7-72.3-True-False] ______________\r\n\r\nassessments = [{'score': '72.20', 'weight': '0.3'}, {'score': '72.30', 'weight': '0.3'}]\r\nexpected = '72.3', passed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '72.2'} != {'mark': '72.3'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\.test-reports\\20e8cf33-2653-4234-b9c7-cae68f6f70e9\\fe974eba-14fc-40f8-b3bc-1315c963c4ee.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_grades.py::test_published_mark[assessments0-72.3-True-False]\r\nFAILED tests/test_grades.py::test_published_mark[assessments1-85.1-True-True]\r\nFAILED tests/test_grades.py::test_published_mark[assessments2-84.9-True-False]\r\nFAILED tests/test_grades.py::test_published_mark[assessments3-89.9-True-True]\r\nFAILED tests/test_grades.py::test_published_mark[assessments7-72.3-True-False]\r\n5 failed, 8 passed in 0.14s\r\n",
+          "error_code": "TEST_FAILED",
+          "error_message": "测试未通过，请查看失败详情。",
+          "metadata": {
+            "exit_code": 1,
+            "duration_ms": 508,
+            "truncated": false,
+            "changed_files": [],
+            "runner": "pytest",
+            "tests": 13,
+            "failures": 5,
+            "errors": 0,
+            "skipped": 0,
+            "error_types": [
+              "AssertionError"
+            ],
+            "test_failures": [
+              {
+                "test": "tests.test_grades.test_published_mark[assessments0-72.3-True-False]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'mark': '72.2'} != {'mark': '72.3'}\n  Use -v to get more diff\nassessments = [{'score': '72.25', 'weight': '1'}], expected = '72.3'\npassed = True, scholarship = False\n\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\n    ])\n    def test_published_mark(assessments, expected, passed, scholarship):\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\nE       AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\nE         \nE         Omitting 2 identical items, use -vv to show\nE       "
+              },
+              {
+                "test": "tests.test_grades.test_published_mark[assessments1-85.1-True-True]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'mark': '85....arship': True} == {'mark': '85....arship': True}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'mark': '85.0'} != {'mark': '85.1'}\n  Use -v to get more diff\nassessments = [{'score': '85.05', 'weight': '1'}], expected = '85.1'\npassed = True, scholarship = True\n\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\n    ])\n    def test_published_mark(assessments, expected, passed, scholarship):\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\nE       AssertionError: assert {'mark': '85....arship': True} == {'mark': '85....arship': True}\nE         \nE         Omitting 2 identical items, use -vv to show\nE        "
+              },
+              {
+                "test": "tests.test_grades.test_published_mark[assessments2-84.9-True-False]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'mark': '84....rship': False} == {'mark': '84....rship': False}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'mark': '84.8'} != {'mark': '84.9'}\n  Use -v to get more diff\nassessments = [{'score': '84.85', 'weight': '1'}], expected = '84.9'\npassed = True, scholarship = False\n\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\n    ])\n    def test_published_mark(assessments, expected, passed, scholarship):\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\nE       AssertionError: assert {'mark': '84....rship': False} == {'mark': '84....rship': False}\nE         \nE         Omitting 2 identical items, use -vv to show\nE       "
+              },
+              {
+                "test": "tests.test_grades.test_published_mark[assessments3-89.9-True-True]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'mark': '89....arship': True} == {'mark': '89....arship': True}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'mark': '89.8'} != {'mark': '89.9'}\n  Use -v to get more diff\nassessments = [{'score': '89.85', 'weight': '1'}], expected = '89.9'\npassed = True, scholarship = True\n\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\n    ])\n    def test_published_mark(assessments, expected, passed, scholarship):\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\nE       AssertionError: assert {'mark': '89....arship': True} == {'mark': '89....arship': True}\nE         \nE         Omitting 2 identical items, use -vv to show\nE        "
+              },
+              {
+                "test": "tests.test_grades.test_published_mark[assessments7-72.3-True-False]",
+                "error_type": "AssertionError",
+                "message": "AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\n  \n  Omitting 2 identical items, use -vv to show\n  Differing items:\n  {'mark': '72.2'} != {'mark': '72.3'}\n  Use -v to get more diff\nassessments = [{'score': '72.20', 'weight': '0.3'}, {'score': '72.30', 'weight': '0.3'}]\nexpected = '72.3', passed = True, scholarship = False\n\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\n    ])\n    def test_published_mark(assessments, expected, passed, scholarship):\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\nE       AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\nE         \nE         Omitting 2 id"
+              }
+            ]
+          }
+        },
+        "retrieval_enabled": false,
+        "started_at": "2026-11-14T14:47:33.734374+00:00",
+        "result": {
+          "task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+          "status": "succeeded",
+          "summary": "程序独立运行最终验证，13 项测试全部通过，修复成功。",
+          "steps": [
+            {
+              "id": "3fd898b2-2597-48ca-a678-b2394c5309fc",
+              "name": "list_files",
+              "arguments": {
+                "recursive": true,
+                "max_entries": 200
+              }
+            },
+            {
+              "id": "f33cc547-301e-40a9-8767-c43e21bb083c",
+              "name": "read_file",
+              "arguments": {
+                "path": "grades.py"
+              }
+            },
+            {
+              "id": "c6e16fdd-2c5a-4755-9ef7-73db726cabc7",
+              "name": "read_file",
+              "arguments": {
+                "path": "tests/test_grades.py"
+              }
+            },
+            {
+              "id": "b5db508d-e695-4ffe-8a25-e947e390f0c9",
+              "name": "write_file",
+              "arguments": {
+                "path": "grades.py",
+                "content": "\"\"\"Publish a student's weighted mark and scholarship eligibility.\"\"\"\n\nfrom decimal import Decimal, InvalidOperation, ROUND_HALF_UP, localcontext\n\n_ONE_DECIMAL = Decimal(\"0.1\")\n_MIN_SCORE = Decimal(\"0\")\n_MAX_SCORE = Decimal(\"100\")\n\n\ndef _to_decimal(value):\n    \"\"\"Convert a decimal string input to an exact :class:`Decimal`.\"\"\"\n    try:\n        return Decimal(str(value))\n    except (InvalidOperation, ValueError):\n        raise ValueError(\"invalid assessment\")\n\n\ndef publish_grade(assessments):\n    points = Decimal(\"0\")\n    weight_sum = Decimal(\"0\")\n    for assessment in assessments:\n        score = _to_decimal(assessment[\"score\"])\n        weight = _to_decimal(assessment[\"weight\"])\n        if not _MIN_SCORE <= score <= _MAX_SCORE or weight <= 0:\n            raise ValueError(\"invalid assessment\")\n        points += score * weight\n        weight_sum += weight\n    if weight_sum == 0:\n        raise ValueError(\"no assessments\")\n    with localcontext() as ctx:\n        ctx.prec = 60\n        average = (points / weight_sum).quantize(_ONE_DECIMAL, rounding=ROUND_HALF_UP)\n    return {\n        \"mark\": format(average, \".1f\"),\n        \"passed\": average >= 60,\n        \"scholarship\": average >= 85,\n    }\n"
+              }
+            },
+            {
+              "id": "66a9bc8b-53a5-458c-8f76-0038ef4d93a5",
+              "name": "run_tests",
+              "arguments": {
+                "project_path": ".",
+                "timeout_seconds": 120
+              }
+            },
+            {
+              "id": "fc4ebc85-f1b4-4b4c-a73f-890a04b0dad8",
+              "name": "run_tests",
+              "arguments": {
+                "timeout_seconds": 180
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "call_id": "3fd898b2-2597-48ca-a678-b2394c5309fc",
+              "tool_name": "list_files",
+              "success": true,
+              "output": "__pycache__/\n__pycache__/grades.cpython-313.pyc\ngrades.py\npyproject.toml\ntests/\ntests/__pycache__/\ntests/__pycache__/test_grades.cpython-313-pytest-8.4.2.pyc\ntests/test_grades.py",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "f33cc547-301e-40a9-8767-c43e21bb083c",
+              "tool_name": "read_file",
+              "success": true,
+              "output": "\"\"\"Publish a student's weighted mark and scholarship eligibility.\"\"\"\n\n\ndef publish_grade(assessments):\n    points = 0.0\n    weight_sum = 0.0\n    for assessment in assessments:\n        score = float(assessment[\"score\"])\n        weight = float(assessment[\"weight\"])\n        if not 0 <= score <= 100 or weight <= 0:\n            raise ValueError(\"invalid assessment\")\n        points += score * weight\n        weight_sum += weight\n    if weight_sum == 0:\n        raise ValueError(\"no assessments\")\n    average = round(points / weight_sum, 1)\n    return {\"mark\": format(average, \".1f\"), \"passed\": average >= 60, \"scholarship\": average >= 85}\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "c6e16fdd-2c5a-4755-9ef7-73db726cabc7",
+              "tool_name": "read_file",
+              "success": true,
+              "output": "import pytest\nfrom grades import publish_grade\n\n\n@pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\n    ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\n    ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\n    ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\n    ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\n    ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\n    ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\n    ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\n    ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\n    ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\n    ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\n])\ndef test_published_mark(assessments, expected, passed, scholarship):\n    assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\n\n\n@pytest.mark.parametrize(\"assessments\", [[], [{\"score\": \"101\", \"weight\": \"1\"}], [{\"score\": \"50\", \"weight\": \"0\"}]])\ndef test_invalid_assessment(assessments):\n    with pytest.raises(ValueError):\n        publish_grade(assessments)\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "b5db508d-e695-4ffe-8a25-e947e390f0c9",
+              "tool_name": "write_file",
+              "success": true,
+              "output": "文件已写入。",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "path": "grades.py",
+                "changed_files": [
+                  "grades.py"
+                ],
+                "truncated": false,
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "66a9bc8b-53a5-458c-8f76-0038ef4d93a5",
+              "tool_name": "run_tests",
+              "success": true,
+              "output": ".............                                                            [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\.test-reports\\20e8cf33-2653-4234-b9c7-cae68f6f70e9\\2aa9b050-0679-49fd-a340-ff26fdaa9736.xml -\r\n13 passed in 0.10s\r\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "exit_code": 0,
+                "duration_ms": 477,
+                "truncated": false,
+                "changed_files": [
+                  "grades.py"
+                ],
+                "runner": "pytest",
+                "tests": 13,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "error_types": [],
+                "test_failures": [],
+                "retrieved_experience_ids": []
+              }
+            },
+            {
+              "call_id": "fc4ebc85-f1b4-4b4c-a73f-890a04b0dad8",
+              "tool_name": "run_tests",
+              "success": true,
+              "output": ".............                                                            [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\workspaces\\.test-reports\\20e8cf33-2653-4234-b9c7-cae68f6f70e9\\56e21044-ced3-46fe-b31b-e53a47e464c9.xml -\r\n13 passed in 0.08s\r\n",
+              "error_code": null,
+              "error_message": null,
+              "metadata": {
+                "exit_code": 0,
+                "duration_ms": 438,
+                "truncated": false,
+                "changed_files": [
+                  "grades.py"
+                ],
+                "runner": "pytest",
+                "tests": 13,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0,
+                "error_types": [],
+                "test_failures": [],
+                "retrieved_experience_ids": [],
+                "final_verification": true
+              }
+            }
+          ],
+          "repair_succeeded": true,
+          "tests_passed": true,
+          "changed_files": [
+            "grades.py"
+          ],
+          "experience_saved": true,
+          "experience_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "experience_ids": [
+            "248cdcfe-dc1d-4251-bc97-463c1301fdaa"
+          ],
+          "experience_save_error": null,
+          "error_message": null
+        },
+        "audit": {
+          "task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+          "experience_enabled": false,
+          "decision_rounds": 5,
+          "tool_calls": 6,
+          "elapsed_ms": 49227,
+          "retrieved_experience_ids": [],
+          "model_requests": [
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "connection.connect_tcp.started",
+                  "elapsed_ms": 3
+                },
+                {
+                  "event": "connection.connect_tcp.complete",
+                  "elapsed_ms": 68
+                },
+                {
+                  "event": "connection.start_tls.started",
+                  "elapsed_ms": 68
+                },
+                {
+                  "event": "connection.start_tls.complete",
+                  "elapsed_ms": 106
+                },
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 106
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 107
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 107
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 107
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 107
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 229
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 229
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 929
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 1449,
+                "completion_tokens": 65,
+                "total_tokens": 1514
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "9d3452b4-e267-4e0e-92bf-dbef59d05dab",
+              "duration_ms": 929
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 199
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 199
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 909
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 1662,
+                "completion_tokens": 71,
+                "total_tokens": 1733
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "ad6f4a04-6142-4429-a11a-737f2e0117cc",
+              "duration_ms": 909
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 240
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 240
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 7716
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 2569,
+                "completion_tokens": 1463,
+                "total_tokens": 4032
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "bb296ab5-a09d-4dab-9ac2-337767ee5dd1",
+              "duration_ms": 7717
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 311
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 312
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 1110
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "tool_calls",
+              "usage": {
+                "prompt_tokens": 4127,
+                "completion_tokens": 77,
+                "total_tokens": 4204
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "2e4e5c72-442a-4f04-b0e5-bf46e4a0ab0d",
+              "duration_ms": 1110
+            },
+            {
+              "phase": "decision",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 1
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 246
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 246
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 1899
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "stop",
+              "usage": {
+                "prompt_tokens": 4456,
+                "completion_tokens": 245,
+                "total_tokens": 4701
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "11b661e0-f084-4b64-8696-50373cf00272",
+              "duration_ms": 1899
+            },
+            {
+              "phase": "extraction",
+              "attempt": 1,
+              "api_configuration": {
+                "origin": "https://api.deepseek.com",
+                "model": "deepseek-flash",
+                "source": "explicit_file",
+                "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+                "key_present": true,
+                "key_fingerprint": "c5f83d792da0",
+                "identity": "4f003362858407b3c4f55d13",
+                "transport": "direct"
+              },
+              "transport_policy": "direct",
+              "transport_events": [
+                {
+                  "event": "http11.send_request_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_headers.complete",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_body.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.send_request_body.complete",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.receive_response_headers.started",
+                  "elapsed_ms": 0
+                },
+                {
+                  "event": "http11.receive_response_headers.complete",
+                  "elapsed_ms": 164
+                },
+                {
+                  "event": "http11.receive_response_body.started",
+                  "elapsed_ms": 164
+                },
+                {
+                  "event": "http11.receive_response_body.complete",
+                  "elapsed_ms": 35467
+                }
+              ],
+              "requested_model": "deepseek-flash",
+              "success": true,
+              "request_experience_ids": [],
+              "request_experience_hashes": [],
+              "http_status": 200,
+              "finish_reason": "stop",
+              "usage": {
+                "prompt_tokens": 3081,
+                "completion_tokens": 6406,
+                "total_tokens": 9487
+              },
+              "returned_model": "deepseek-flash",
+              "response_id": "12195bae-ceb4-4fd0-b50a-7f4a5e086985",
+              "duration_ms": 35467
+            }
+          ],
+          "language": "python",
+          "repository_id": "cross-business/academic-grades",
+          "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:3487b7698c0fed3241ba947f6f5b5ee6dfc5a70a7633d1f45cfbb6f097ce8bff",
+          "observed_error_types": [],
+          "retrieval_events": [],
+          "injection_events": [
+            {
+              "decision": 1,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 2,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 3,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 4,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            },
+            {
+              "decision": 5,
+              "experience_ids": [],
+              "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+            }
+          ],
+          "experience_extraction": {
+            "status": "succeeded",
+            "stage": "completed",
+            "record_index": 0,
+            "saved_count": 1
+          },
+          "final_verification_attempts": 1
+        },
+        "requests": [
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "connection.connect_tcp.started",
+                "elapsed_ms": 3
+              },
+              {
+                "event": "connection.connect_tcp.complete",
+                "elapsed_ms": 68
+              },
+              {
+                "event": "connection.start_tls.started",
+                "elapsed_ms": 68
+              },
+              {
+                "event": "connection.start_tls.complete",
+                "elapsed_ms": 106
+              },
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 106
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 107
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 107
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 107
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 107
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 229
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 229
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 929
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 1449,
+              "completion_tokens": 65,
+              "total_tokens": 1514
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "9d3452b4-e267-4e0e-92bf-dbef59d05dab",
+            "duration_ms": 929
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 199
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 199
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 909
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 1662,
+              "completion_tokens": 71,
+              "total_tokens": 1733
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "ad6f4a04-6142-4429-a11a-737f2e0117cc",
+            "duration_ms": 909
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 240
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 240
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 7716
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 2569,
+              "completion_tokens": 1463,
+              "total_tokens": 4032
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "bb296ab5-a09d-4dab-9ac2-337767ee5dd1",
+            "duration_ms": 7717
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 311
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 312
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 1110
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "tool_calls",
+            "usage": {
+              "prompt_tokens": 4127,
+              "completion_tokens": 77,
+              "total_tokens": 4204
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "2e4e5c72-442a-4f04-b0e5-bf46e4a0ab0d",
+            "duration_ms": 1110
+          },
+          {
+            "phase": "decision",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 1
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 246
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 246
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 1899
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 4456,
+              "completion_tokens": 245,
+              "total_tokens": 4701
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "11b661e0-f084-4b64-8696-50373cf00272",
+            "duration_ms": 1899
+          },
+          {
+            "phase": "extraction",
+            "attempt": 1,
+            "api_configuration": {
+              "origin": "https://api.deepseek.com",
+              "model": "deepseek-flash",
+              "source": "explicit_file",
+              "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+              "key_present": true,
+              "key_fingerprint": "c5f83d792da0",
+              "identity": "4f003362858407b3c4f55d13",
+              "transport": "direct"
+            },
+            "transport_policy": "direct",
+            "transport_events": [
+              {
+                "event": "http11.send_request_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_headers.complete",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_body.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.send_request_body.complete",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.receive_response_headers.started",
+                "elapsed_ms": 0
+              },
+              {
+                "event": "http11.receive_response_headers.complete",
+                "elapsed_ms": 164
+              },
+              {
+                "event": "http11.receive_response_body.started",
+                "elapsed_ms": 164
+              },
+              {
+                "event": "http11.receive_response_body.complete",
+                "elapsed_ms": 35467
+              }
+            ],
+            "requested_model": "deepseek-flash",
+            "success": true,
+            "request_experience_ids": [],
+            "request_experience_hashes": [],
+            "http_status": 200,
+            "finish_reason": "stop",
+            "usage": {
+              "prompt_tokens": 3081,
+              "completion_tokens": 6406,
+              "total_tokens": 9487
+            },
+            "returned_model": "deepseek-flash",
+            "response_id": "12195bae-ceb4-4fd0-b50a-7f4a5e086985",
+            "duration_ms": 35467
+          }
+        ],
+        "after": "\"\"\"Publish a student's weighted mark and scholarship eligibility.\"\"\"\n\nfrom decimal import Decimal, InvalidOperation, ROUND_HALF_UP, localcontext\n\n_ONE_DECIMAL = Decimal(\"0.1\")\n_MIN_SCORE = Decimal(\"0\")\n_MAX_SCORE = Decimal(\"100\")\n\n\ndef _to_decimal(value):\n    \"\"\"Convert a decimal string input to an exact :class:`Decimal`.\"\"\"\n    try:\n        return Decimal(str(value))\n    except (InvalidOperation, ValueError):\n        raise ValueError(\"invalid assessment\")\n\n\ndef publish_grade(assessments):\n    points = Decimal(\"0\")\n    weight_sum = Decimal(\"0\")\n    for assessment in assessments:\n        score = _to_decimal(assessment[\"score\"])\n        weight = _to_decimal(assessment[\"weight\"])\n        if not _MIN_SCORE <= score <= _MAX_SCORE or weight <= 0:\n            raise ValueError(\"invalid assessment\")\n        points += score * weight\n        weight_sum += weight\n    if weight_sum == 0:\n        raise ValueError(\"no assessments\")\n    with localcontext() as ctx:\n        ctx.prec = 60\n        average = (points / weight_sum).quantize(_ONE_DECIMAL, rounding=ROUND_HALF_UP)\n    return {\n        \"mark\": format(average, \".1f\"),\n        \"passed\": average >= 60,\n        \"scholarship\": average >= 85,\n    }\n",
+        "originals_unchanged": true,
+        "experiences": [
+          {
+            "task_summary": "修复 publish_grade：对十进制字符串成绩按权重计算平均分，按学校规则保留一位小数且中点进一位，并用最终发布分数判定及格线与奖学金线。",
+            "error_type": "AssertionError",
+            "root_cause": "原实现将十进制字符串先转成二进制 float，并使用 Python round 保留一位小数；float 精度误差与银行家舍入会在中点或临界值上产生错误 mark（如 72.25 发布成 72.2 而非 72.3、59.95 发布成 59.9 而非 60.0）。此外，若只修正 mark 的显示舍入，而未用最终发布的一位小数分数判定 passed/scholarship，仍会出现发布分已进位但 60/85 阈值状态未同步的问题。",
+            "solution": "在 grades.py#publish_grade 中直接用 Decimal(assessment[\"score\"]) 和 Decimal(assessment[\"weight\"]) 从原始字符串构造数值，计算加权和与权重和；用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终发布分；再用该最终发布分与 Decimal(\"60\")、Decimal(\"85\") 比较生成 passed 和 scholarship；mark 返回同一最终分的一位小数字符串。保留 0<=score<=100、weight>0、空成绩抛出 ValueError 以及返回字段契约，权重不要求总和为 1，不修改测试和构建文件。",
+            "verification": "程序独立运行 pytest 最终验证，13 项测试全部通过；工具调用编号：fc4ebc85-f1b4-4b4c-a73f-890a04b0dad8。",
+            "tags": [
+              "python",
+              "Decimal",
+              "ROUND_HALF_UP",
+              "四舍五入",
+              "加权平均",
+              "阈值判定",
+              "publish_grade",
+              "成绩发布"
+            ],
+            "source_task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+            "schema_version": 4,
+            "language": "python",
+            "scope": "project",
+            "repository_id": "cross-business/academic-grades",
+            "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:3487b7698c0fed3241ba947f6f5b5ee6dfc5a70a7633d1f45cfbb6f097ce8bff",
+            "compatibility_key": "academic-grades-v1",
+            "constraints": [
+              "成绩由十进制字符串输入，必须按十进制精确计算，不能先转 float 再舍入。",
+              "最终平均分保留一位小数，恰好中点时必须进一位（ROUND_HALF_UP），例如 72.25 发布为 72.3。",
+              "及格线 60 与奖学金线 85 必须使用最终发布的一位小数分数判定。",
+              "权重不要求总和为 1，按加权和除以权重和计算平均分。",
+              "成绩范围保持 0 到 100（含端点），超出范围抛出 ValueError。",
+              "权重必须大于 0，非正权重抛出 ValueError。",
+              "空成绩列表必须抛出 ValueError。",
+              "返回字段保持 mark、passed、scholarship，mark 为一位小数字符串。",
+              "不得修改测试和构建文件。"
+            ],
+            "applicability": [
+              "适用于 Python 中由十进制字符串输入、需要按权重计算并发布一位小数成绩的场景。",
+              "适用于舍入规则为恰好中点进一位而非 Python round 银行家舍入的场景。",
+              "适用于及格、奖学金等阈值必须基于最终发布分数而非未舍入平均值判定的场景。",
+              "适用于权重不要求归一化、但需正确除以权重和的加权平均计算。"
+            ],
+            "issues": [
+              {
+                "error_type": "AssertionError",
+                "root_cause": "原实现用 float 解析十进制字符串并用 Python round 保留一位小数；二进制浮点误差和银行家舍入会使 72.25、85.05、59.95、84.95 等中点或临界值得到错误 mark，触发 test_published_mark 断言失败。",
+                "solution": "改用 decimal.Decimal 从原始字符串构造分数和权重，避免二进制浮点误差；计算加权和与权重和后，用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终一位小数发布分，并将该 Decimal 格式化为 mark。",
+                "files": [
+                  "grades.py"
+                ],
+                "symbols": [
+                  "grades.py#publish_grade"
+                ],
+                "depends_on": []
+              },
+              {
+                "error_type": "AssertionError",
+                "root_cause": "若只修正 mark 的舍入而未把 passed/scholarship 判定绑定到最终发布分，仍可能用未舍入的加权平均值比较 60/85；例如未舍入 59.95 发布为 60.0 却判不及格，未舍入 84.95 发布为 85.0 却判无奖学金。",
+                "solution": "在得到最终发布的一位小数 Decimal 后，再与 Decimal(\"60\") 和 Decimal(\"85\") 比较生成 passed 与 scholarship，确保阈值判定与 mark 使用同一最终发布分数。",
+                "files": [
+                  "grades.py"
+                ],
+                "symbols": [
+                  "grades.py#publish_grade"
+                ],
+                "depends_on": [
+                  0
+                ]
+              }
+            ],
+            "evidence": [
+              {
+                "source_task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+                "tool_call_id": "fc4ebc85-f1b4-4b4c-a73f-890a04b0dad8",
+                "runner": "pytest",
+                "tests": 13,
+                "failures": 0,
+                "errors": 0,
+                "skipped": 0
+              }
+            ],
+            "merged_from": [],
+            "batch_id": "de443a82-8cac-453d-8fdd-b856e7397edb",
+            "reuse_status": "active",
+            "derived_from": [],
+            "supersedes_id": null,
+            "required_capabilities": [],
+            "id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+            "created_at": "2026-11-14T14:48:22.995531Z"
+          }
+        ]
+      }
+    ],
+    "fixture_origin": "New runnable business demonstrations with deliberate defects; not production incidents"
+  },
+  "api_configuration": {
+    "origin": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "source": "explicit_file",
+    "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+    "key_present": true,
+    "key_fingerprint": "c5f83d792da0",
+    "identity": "4f003362858407b3c4f55d13",
+    "transport": "direct"
+  },
+  "merge_requests": [
+    {
+      "phase": "extraction",
+      "attempt": 1,
+      "api_configuration": {
+        "origin": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "source": "explicit_file",
+        "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+        "key_present": true,
+        "key_fingerprint": "c5f83d792da0",
+        "identity": "4f003362858407b3c4f55d13",
+        "transport": "direct"
+      },
+      "transport_policy": "direct",
+      "transport_events": [
+        {
+          "event": "connection.connect_tcp.started",
+          "elapsed_ms": 0
+        },
+        {
+          "event": "connection.connect_tcp.complete",
+          "elapsed_ms": 41
+        },
+        {
+          "event": "connection.start_tls.started",
+          "elapsed_ms": 41
+        },
+        {
+          "event": "connection.start_tls.complete",
+          "elapsed_ms": 63
+        },
+        {
+          "event": "http11.send_request_headers.started",
+          "elapsed_ms": 63
+        },
+        {
+          "event": "http11.send_request_headers.complete",
+          "elapsed_ms": 64
+        },
+        {
+          "event": "http11.send_request_body.started",
+          "elapsed_ms": 64
+        },
+        {
+          "event": "http11.send_request_body.complete",
+          "elapsed_ms": 64
+        },
+        {
+          "event": "http11.receive_response_headers.started",
+          "elapsed_ms": 64
+        },
+        {
+          "event": "http11.receive_response_headers.complete",
+          "elapsed_ms": 173
+        },
+        {
+          "event": "http11.receive_response_body.started",
+          "elapsed_ms": 174
+        },
+        {
+          "event": "http11.receive_response_body.complete",
+          "elapsed_ms": 27347
+        }
+      ],
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "request_experience_hashes": [],
+      "http_status": 200,
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 3218,
+        "completion_tokens": 5372,
+        "total_tokens": 8590
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "8e6e664a-e73b-4c99-b1a3-9dc182cbc57c",
+      "duration_ms": 27347
+    },
+    {
+      "phase": "extraction",
+      "attempt": 1,
+      "api_configuration": {
+        "origin": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "source": "explicit_file",
+        "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+        "key_present": true,
+        "key_fingerprint": "c5f83d792da0",
+        "identity": "4f003362858407b3c4f55d13",
+        "transport": "direct"
+      },
+      "transport_policy": "direct",
+      "transport_events": [
+        {
+          "event": "http11.send_request_headers.started",
+          "elapsed_ms": 0
+        },
+        {
+          "event": "http11.send_request_headers.complete",
+          "elapsed_ms": 1
+        },
+        {
+          "event": "http11.send_request_body.started",
+          "elapsed_ms": 1
+        },
+        {
+          "event": "http11.send_request_body.complete",
+          "elapsed_ms": 1
+        },
+        {
+          "event": "http11.receive_response_headers.started",
+          "elapsed_ms": 1
+        },
+        {
+          "event": "http11.receive_response_headers.complete",
+          "elapsed_ms": 113
+        },
+        {
+          "event": "http11.receive_response_body.started",
+          "elapsed_ms": 114
+        },
+        {
+          "event": "http11.receive_response_body.complete",
+          "elapsed_ms": 31882
+        }
+      ],
+      "requested_model": "deepseek-flash",
+      "success": true,
+      "request_experience_ids": [],
+      "request_experience_hashes": [],
+      "http_status": 200,
+      "finish_reason": "stop",
+      "usage": {
+        "prompt_tokens": 4258,
+        "completion_tokens": 6097,
+        "total_tokens": 10355
+      },
+      "returned_model": "deepseek-flash",
+      "response_id": "72c33f28-b702-47a5-8725-ba151a4178e3",
+      "duration_ms": 31882
+    }
+  ],
+  "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\shared-principles.db",
+  "project_rule_relation": [
+    "different_scope",
+    {
+      "reason": "语言、仓库或兼容域不同"
+    }
+  ],
+  "result": {
+    "id": "4d9406fc-0bd6-5ee1-a78a-0303961c9ea3",
+    "state": "succeeded",
+    "proposal": {
+      "decision": "shared_principle",
+      "title": "十进制字符串计算的 Decimal 汇总与最终 ROUND_HALF_UP 修复原则",
+      "principle": "当修复目标是 Python 中以十进制字符串表示的数值（金额、分数等）计算时，共享的因果修复原则是：不要先用 float 解析或累加，也不要逐项或提前舍入；应使用 Decimal 从原始字符串构造参与计算的数值，保持汇总阶段未舍入，最后仅在业务指定的最终精度上使用 ROUND_HALF_UP 量化并输出。各业务必须自行提供自己的最终精度、阈值、币种、计算顺序、异常校验和返回契约，不能把某一业务的具体参数套用到另一业务。",
+      "applicability": [
+        "适用于 Python 中十进制字符串输入、因 float 或默认舍入导致最终结果少一位或一分等偏差的修复。",
+        "适用于业务明确要求最终结果中点向上（ROUND_HALF_UP）且允许在汇总后一次性量化的场景。",
+        "适用于各业务可以各自保留精度、阈值、币种和校验规则，但共享 Decimal 构造与最终量化思路的场景。"
+      ],
+      "boundaries": [
+        "该原则只约束数值构造、汇总与最终舍入方式，不统一各业务的具体精度、阈值、币种、返回字段或异常类型。",
+        "成绩业务：发布精度为 0.1；及格线 60、奖学金线 85 必须基于最终发布的一位小数分数；权重不要求和为 1，按加权和除以权重和；分数范围 0 到 100、权重大于 0、空成绩抛 ValueError。",
+        "发票业务：发布精度为 0.01，币种 CNY；必须先汇总所有商品行再减整单优惠券，总额最低为 0；负单价、非法数量、负优惠券抛 ValueError。",
+        "若业务要求逐行舍入、其他舍入模式、不同阈值或不同计算顺序，则不能套用该共同原则。",
+        "不得把成绩业务的一位小数、60/85 阈值用于发票，也不得把发票的两位小数、CNY 或优惠券顺序用于成绩。"
+      ],
+      "bindings": [
+        {
+          "source_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "supports": [
+            {
+              "issue_index": 0,
+              "field": "root_cause",
+              "quote": "原实现用 float 解析十进制字符串并用 Python round 保留一位小数；二进制浮点误差和银行家舍入会使 72.25、85.05、59.95、84.95 等中点或临界值得到错误 mark，触发 test_published_mark 断言失败。"
+            },
+            {
+              "issue_index": 0,
+              "field": "solution",
+              "quote": "改用 decimal.Decimal 从原始字符串构造分数和权重，避免二进制浮点误差；计算加权和与权重和后，用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终一位小数发布分，并将该 Decimal 格式化为 mark。"
+            },
+            {
+              "issue_index": 1,
+              "field": "solution",
+              "quote": "在得到最终发布的一位小数 Decimal 后，再与 Decimal(\"60\") 和 Decimal(\"85\") 比较生成 passed 与 scholarship，确保阈值判定与 mark 使用同一最终发布分数。"
+            }
+          ],
+          "business_parameters": {
+            "发布精度": "0.1",
+            "舍入模式": "ROUND_HALF_UP",
+            "及格阈值": "60",
+            "奖学金阈值": "85",
+            "权重规则": "权重不要求总和为 1，按加权和除以权重和",
+            "输入校验": "分数 0 到 100、权重大于 0、空成绩列表抛 ValueError",
+            "返回字段": "mark、passed、scholarship；mark 为一位小数字符串"
+          }
+        },
+        {
+          "source_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "supports": [
+            {
+              "issue_index": 0,
+              "field": "root_cause",
+              "quote": "原实现使用 float(item[\"unit_price\"]) 解析并累加十进制字符串，二进制浮点无法精确表示 2.675 等金额，真实值可能略小于十进制中点，导致最终总额少一分。"
+            },
+            {
+              "issue_index": 0,
+              "field": "solution",
+              "quote": "对单价和优惠券使用 Decimal 从字符串构造；逐行计算 Decimal(item[\"unit_price\"]) * item[\"quantity\"] 并累加，汇总阶段不做舍入，避免 float 中间值。保留负单价、非法数量等 ValueError 检查。"
+            },
+            {
+              "issue_index": 1,
+              "field": "solution",
+              "quote": "先完成所有商品行汇总并减去整单优惠券，将总额下限置为 Decimal(\"0\")；仅对最终 Decimal 总额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)，再格式化为两位小数字符串；不得逐行提前舍入。"
+            }
+          ],
+          "business_parameters": {
+            "发布精度": "0.01",
+            "舍入模式": "ROUND_HALF_UP",
+            "币种": "CNY",
+            "最低总额": "0",
+            "计算顺序": "先汇总所有商品行，再减去整单优惠券，仅对最终总额舍入",
+            "输入校验": "负单价、数量不是 int 或小于 1、负优惠券均抛 ValueError",
+            "返回字段": "total 为保留两位小数的字符串，lines 等于 len(items)"
+          }
+        }
+      ],
+      "reason": "两个来源的 issue 均独立描述同一类根因：先用 float 解析十进制字符串或使用默认格式化舍入，导致二进制误差或中点舍入错误；对应 solution 均改用 Decimal 从原始字符串构造、汇总阶段不舍入，并在最终结果按业务精度执行 ROUND_HALF_UP。差异仅在最终精度（0.1 与 0.01）、业务阈值、币种、校验和返回契约，这些已分别保留在绑定中，因此可归纳为有边界的 shared_principle。"
+    },
+    "review": {
+      "approved": true,
+      "checks": [
+        {
+          "source_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "supported": true,
+          "business_conditions_preserved": true,
+          "reason": "该来源明确支持共享原则：用 Decimal 从原始十进制字符串构造分数和权重，避免 float；汇总后仅对最终发布分按 0.1 执行 ROUND_HALF_UP 量化，并用最终发布分比较 60/85。权重归一化方式、分数与权重校验、返回字段等业务条件均被保留。"
+        },
+        {
+          "source_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "supported": true,
+          "business_conditions_preserved": true,
+          "reason": "该来源明确支持共享原则：用 Decimal 从字符串构造单价和优惠券，禁止 float 累加与逐行提前舍入；先汇总商品行再减整单优惠券并将总额下限置 0，仅对最终总额按 0.01 执行 ROUND_HALF_UP 量化。CNY、lines、异常校验等业务条件均被保留。"
+        }
+      ],
+      "unsafe_generalizations": [],
+      "reason": "两个来源均支持该有条件共同原则：以 Decimal 从原始十进制字符串构造、汇总阶段不提前舍入、仅在业务指定最终精度执行 ROUND_HALF_UP。候选已明确将最终精度、阈值、币种、计算顺序、异常校验和返回契约留给各业务，并保留成绩阈值基于最终发布分、发票先汇总后减券及最低为零等源特有约束；未发现被原则覆盖或矛盾的安全泛化。"
+    },
+    "principle": {
+      "id": "4d9406fc-0bd6-5ee1-a78a-0303961c9ea3",
+      "namespace": "cross-business-demo",
+      "kind": "shared_principle",
+      "title": "十进制字符串计算的 Decimal 汇总与最终 ROUND_HALF_UP 修复原则",
+      "principle": "当修复目标是 Python 中以十进制字符串表示的数值（金额、分数等）计算时，共享的因果修复原则是：不要先用 float 解析或累加，也不要逐项或提前舍入；应使用 Decimal 从原始字符串构造参与计算的数值，保持汇总阶段未舍入，最后仅在业务指定的最终精度上使用 ROUND_HALF_UP 量化并输出。各业务必须自行提供自己的最终精度、阈值、币种、计算顺序、异常校验和返回契约，不能把某一业务的具体参数套用到另一业务。",
+      "applicability": [
+        "适用于 Python 中十进制字符串输入、因 float 或默认舍入导致最终结果少一位或一分等偏差的修复。",
+        "适用于业务明确要求最终结果中点向上（ROUND_HALF_UP）且允许在汇总后一次性量化的场景。",
+        "适用于各业务可以各自保留精度、阈值、币种和校验规则，但共享 Decimal 构造与最终量化思路的场景。"
+      ],
+      "boundaries": [
+        "该原则只约束数值构造、汇总与最终舍入方式，不统一各业务的具体精度、阈值、币种、返回字段或异常类型。",
+        "成绩业务：发布精度为 0.1；及格线 60、奖学金线 85 必须基于最终发布的一位小数分数；权重不要求和为 1，按加权和除以权重和；分数范围 0 到 100、权重大于 0、空成绩抛 ValueError。",
+        "发票业务：发布精度为 0.01，币种 CNY；必须先汇总所有商品行再减整单优惠券，总额最低为 0；负单价、非法数量、负优惠券抛 ValueError。",
+        "若业务要求逐行舍入、其他舍入模式、不同阈值或不同计算顺序，则不能套用该共同原则。",
+        "不得把成绩业务的一位小数、60/85 阈值用于发票，也不得把发票的两位小数、CNY 或优惠券顺序用于成绩。"
+      ],
+      "source_ids": [
+        "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+        "a2042a2f-8a52-4de8-aec7-cdd72903fbfc"
+      ],
+      "bindings": [
+        {
+          "source_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "supports": [
+            {
+              "issue_index": 0,
+              "field": "root_cause",
+              "quote": "原实现用 float 解析十进制字符串并用 Python round 保留一位小数；二进制浮点误差和银行家舍入会使 72.25、85.05、59.95、84.95 等中点或临界值得到错误 mark，触发 test_published_mark 断言失败。"
+            },
+            {
+              "issue_index": 0,
+              "field": "solution",
+              "quote": "改用 decimal.Decimal 从原始字符串构造分数和权重，避免二进制浮点误差；计算加权和与权重和后，用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终一位小数发布分，并将该 Decimal 格式化为 mark。"
+            },
+            {
+              "issue_index": 1,
+              "field": "solution",
+              "quote": "在得到最终发布的一位小数 Decimal 后，再与 Decimal(\"60\") 和 Decimal(\"85\") 比较生成 passed 与 scholarship，确保阈值判定与 mark 使用同一最终发布分数。"
+            }
+          ],
+          "business_parameters": {
+            "发布精度": "0.1",
+            "舍入模式": "ROUND_HALF_UP",
+            "及格阈值": "60",
+            "奖学金阈值": "85",
+            "权重规则": "权重不要求总和为 1，按加权和除以权重和",
+            "输入校验": "分数 0 到 100、权重大于 0、空成绩列表抛 ValueError",
+            "返回字段": "mark、passed、scholarship；mark 为一位小数字符串"
+          }
+        },
+        {
+          "source_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "supports": [
+            {
+              "issue_index": 0,
+              "field": "root_cause",
+              "quote": "原实现使用 float(item[\"unit_price\"]) 解析并累加十进制字符串，二进制浮点无法精确表示 2.675 等金额，真实值可能略小于十进制中点，导致最终总额少一分。"
+            },
+            {
+              "issue_index": 0,
+              "field": "solution",
+              "quote": "对单价和优惠券使用 Decimal 从字符串构造；逐行计算 Decimal(item[\"unit_price\"]) * item[\"quantity\"] 并累加，汇总阶段不做舍入，避免 float 中间值。保留负单价、非法数量等 ValueError 检查。"
+            },
+            {
+              "issue_index": 1,
+              "field": "solution",
+              "quote": "先完成所有商品行汇总并减去整单优惠券，将总额下限置为 Decimal(\"0\")；仅对最终 Decimal 总额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)，再格式化为两位小数字符串；不得逐行提前舍入。"
+            }
+          ],
+          "business_parameters": {
+            "发布精度": "0.01",
+            "舍入模式": "ROUND_HALF_UP",
+            "币种": "CNY",
+            "最低总额": "0",
+            "计算顺序": "先汇总所有商品行，再减去整单优惠券，仅对最终总额舍入",
+            "输入校验": "负单价、数量不是 int 或小于 1、负优惠券均抛 ValueError",
+            "返回字段": "total 为保留两位小数的字符串，lines 等于 len(items)"
+          }
+        }
+      ],
+      "instances": [
+        {
+          "experience_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "source_task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+          "repository_id": "cross-business/academic-grades",
+          "compatibility_key": "academic-grades-v1",
+          "applicability": [
+            "适用于 Python 中由十进制字符串输入、需要按权重计算并发布一位小数成绩的场景。",
+            "适用于舍入规则为恰好中点进一位而非 Python round 银行家舍入的场景。",
+            "适用于及格、奖学金等阈值必须基于最终发布分数而非未舍入平均值判定的场景。",
+            "适用于权重不要求归一化、但需正确除以权重和的加权平均计算。"
+          ],
+          "constraints": [
+            "成绩由十进制字符串输入，必须按十进制精确计算，不能先转 float 再舍入。",
+            "最终平均分保留一位小数，恰好中点时必须进一位（ROUND_HALF_UP），例如 72.25 发布为 72.3。",
+            "及格线 60 与奖学金线 85 必须使用最终发布的一位小数分数判定。",
+            "权重不要求总和为 1，按加权和除以权重和计算平均分。",
+            "成绩范围保持 0 到 100（含端点），超出范围抛出 ValueError。",
+            "权重必须大于 0，非正权重抛出 ValueError。",
+            "空成绩列表必须抛出 ValueError。",
+            "返回字段保持 mark、passed、scholarship，mark 为一位小数字符串。",
+            "不得修改测试和构建文件。"
+          ],
+          "issues": [
+            {
+              "error_type": "AssertionError",
+              "root_cause": "原实现用 float 解析十进制字符串并用 Python round 保留一位小数；二进制浮点误差和银行家舍入会使 72.25、85.05、59.95、84.95 等中点或临界值得到错误 mark，触发 test_published_mark 断言失败。",
+              "solution": "改用 decimal.Decimal 从原始字符串构造分数和权重，避免二进制浮点误差；计算加权和与权重和后，用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终一位小数发布分，并将该 Decimal 格式化为 mark。",
+              "files": [
+                "grades.py"
+              ],
+              "symbols": [
+                "grades.py#publish_grade"
+              ],
+              "depends_on": []
+            },
+            {
+              "error_type": "AssertionError",
+              "root_cause": "若只修正 mark 的舍入而未把 passed/scholarship 判定绑定到最终发布分，仍可能用未舍入的加权平均值比较 60/85；例如未舍入 59.95 发布为 60.0 却判不及格，未舍入 84.95 发布为 85.0 却判无奖学金。",
+              "solution": "在得到最终发布的一位小数 Decimal 后，再与 Decimal(\"60\") 和 Decimal(\"85\") 比较生成 passed 与 scholarship，确保阈值判定与 mark 使用同一最终发布分数。",
+              "files": [
+                "grades.py"
+              ],
+              "symbols": [
+                "grades.py#publish_grade"
+              ],
+              "depends_on": [
+                0
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+              "tool_call_id": "fc4ebc85-f1b4-4b4c-a73f-890a04b0dad8",
+              "runner": "pytest",
+              "tests": 13,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        {
+          "experience_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "source_task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+          "repository_id": "cross-business/invoice",
+          "compatibility_key": "invoice-v1",
+          "applicability": [
+            "适用于 Python 中以十进制字符串提供商品单价和优惠券、需要计算发票或订单总额的场景。",
+            "适用于要求先汇总再减免、总额最低为零、最后按财务四舍五入保留两位小数且中点向上的金额计算。",
+            "适用于需要避免逐行提前舍入和二进制浮点误差导致少一分的情况。",
+            "适用于需要保留 CNY 币种、商品行数及原有非法输入 ValueError 行为的接口。"
+          ],
+          "constraints": [
+            "商品单价与优惠券是十进制字符串，必须按十进制语义精确处理，不能使用二进制浮点累积。",
+            "必须先汇总所有商品行的单价乘数量，再减去整单优惠券。",
+            "减去优惠券后的总额最低为 0。",
+            "仅在最终总额上按财务四舍五入保留两位小数，中点向上（ROUND_HALF_UP）。",
+            "不能对商品行提前舍入，也不能在汇总前舍入。",
+            "返回结果必须保留 CNY 币种。",
+            "返回结果必须保留商品行数，lines 等于 len(items)。",
+            "必须保留已有非法输入异常：负单价、数量不是 int 或小于 1、负优惠券均应抛出 ValueError。",
+            "total 必须是保留两位小数的字符串，例如 \"2.68\"、\"0.00\"。",
+            "不得修改测试文件。",
+            "不得修改构建文件。",
+            "仅修改 invoice.py。"
+          ],
+          "issues": [
+            {
+              "error_type": "AssertionError",
+              "root_cause": "原实现使用 float(item[\"unit_price\"]) 解析并累加十进制字符串，二进制浮点无法精确表示 2.675 等金额，真实值可能略小于十进制中点，导致最终总额少一分。",
+              "solution": "对单价和优惠券使用 Decimal 从字符串构造；逐行计算 Decimal(item[\"unit_price\"]) * item[\"quantity\"] 并累加，汇总阶段不做舍入，避免 float 中间值。保留负单价、非法数量等 ValueError 检查。",
+              "files": [
+                "invoice.py"
+              ],
+              "symbols": [
+                "invoice.py#invoice_total"
+              ],
+              "depends_on": []
+            },
+            {
+              "error_type": "AssertionError",
+              "root_cause": "原实现用 format(amount, \".2f\") 输出，未按财务规则对最终金额执行中点向上的 ROUND_HALF_UP；例如 0.335×3=1.005 应得 1.01 而非 1.00，导致总额少一分。",
+              "solution": "先完成所有商品行汇总并减去整单优惠券，将总额下限置为 Decimal(\"0\")；仅对最终 Decimal 总额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)，再格式化为两位小数字符串；不得逐行提前舍入。",
+              "files": [
+                "invoice.py"
+              ],
+              "symbols": [
+                "invoice.py#invoice_total"
+              ],
+              "depends_on": [
+                0
+              ]
+            }
+          ],
+          "evidence": [
+            {
+              "source_task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+              "tool_call_id": "555f7b8c-f7e3-42a8-9490-af291ebee084",
+              "runner": "pytest",
+              "tests": 11,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0
+            }
+          ]
+        }
+      ],
+      "evidence_summary": {
+        "verified_runs": 2,
+        "tests_per_run": [
+          13,
+          11
+        ]
+      },
+      "review": {
+        "approved": true,
+        "checks": [
+          {
+            "source_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+            "supported": true,
+            "business_conditions_preserved": true,
+            "reason": "该来源明确支持共享原则：用 Decimal 从原始十进制字符串构造分数和权重，避免 float；汇总后仅对最终发布分按 0.1 执行 ROUND_HALF_UP 量化，并用最终发布分比较 60/85。权重归一化方式、分数与权重校验、返回字段等业务条件均被保留。"
+          },
+          {
+            "source_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+            "supported": true,
+            "business_conditions_preserved": true,
+            "reason": "该来源明确支持共享原则：用 Decimal 从字符串构造单价和优惠券，禁止 float 累加与逐行提前舍入；先汇总商品行再减整单优惠券并将总额下限置 0，仅对最终总额按 0.01 执行 ROUND_HALF_UP 量化。CNY、lines、异常校验等业务条件均被保留。"
+          }
+        ],
+        "unsafe_generalizations": [],
+        "reason": "两个来源均支持该有条件共同原则：以 Decimal 从原始十进制字符串构造、汇总阶段不提前舍入、仅在业务指定最终精度执行 ROUND_HALF_UP。候选已明确将最终精度、阈值、币种、计算顺序、异常校验和返回契约留给各业务，并保留成绩阈值基于最终发布分、发票先汇总后减券及最低为零等源特有约束；未发现被原则覆盖或矛盾的安全泛化。"
+      },
+      "scope": "explicit_namespace",
+      "new_target_requires_verification": true
+    }
+  },
+  "completed": true,
+  "reused_existing_merge": true,
+  "principles": [
+    {
+      "applicability": [
+        "适用于 Python 中十进制字符串输入、因 float 或默认舍入导致最终结果少一位或一分等偏差的修复。",
+        "适用于业务明确要求最终结果中点向上（ROUND_HALF_UP）且允许在汇总后一次性量化的场景。",
+        "适用于各业务可以各自保留精度、阈值、币种和校验规则，但共享 Decimal 构造与最终量化思路的场景。"
+      ],
+      "bindings": [
+        {
+          "business_parameters": {
+            "及格阈值": "60",
+            "发布精度": "0.1",
+            "奖学金阈值": "85",
+            "权重规则": "权重不要求总和为 1，按加权和除以权重和",
+            "舍入模式": "ROUND_HALF_UP",
+            "输入校验": "分数 0 到 100、权重大于 0、空成绩列表抛 ValueError",
+            "返回字段": "mark、passed、scholarship；mark 为一位小数字符串"
+          },
+          "source_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "supports": [
+            {
+              "field": "root_cause",
+              "issue_index": 0,
+              "quote": "原实现用 float 解析十进制字符串并用 Python round 保留一位小数；二进制浮点误差和银行家舍入会使 72.25、85.05、59.95、84.95 等中点或临界值得到错误 mark，触发 test_published_mark 断言失败。"
+            },
+            {
+              "field": "solution",
+              "issue_index": 0,
+              "quote": "改用 decimal.Decimal 从原始字符串构造分数和权重，避免二进制浮点误差；计算加权和与权重和后，用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终一位小数发布分，并将该 Decimal 格式化为 mark。"
+            },
+            {
+              "field": "solution",
+              "issue_index": 1,
+              "quote": "在得到最终发布的一位小数 Decimal 后，再与 Decimal(\"60\") 和 Decimal(\"85\") 比较生成 passed 与 scholarship，确保阈值判定与 mark 使用同一最终发布分数。"
+            }
+          ]
+        },
+        {
+          "business_parameters": {
+            "发布精度": "0.01",
+            "币种": "CNY",
+            "最低总额": "0",
+            "舍入模式": "ROUND_HALF_UP",
+            "计算顺序": "先汇总所有商品行，再减去整单优惠券，仅对最终总额舍入",
+            "输入校验": "负单价、数量不是 int 或小于 1、负优惠券均抛 ValueError",
+            "返回字段": "total 为保留两位小数的字符串，lines 等于 len(items)"
+          },
+          "source_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "supports": [
+            {
+              "field": "root_cause",
+              "issue_index": 0,
+              "quote": "原实现使用 float(item[\"unit_price\"]) 解析并累加十进制字符串，二进制浮点无法精确表示 2.675 等金额，真实值可能略小于十进制中点，导致最终总额少一分。"
+            },
+            {
+              "field": "solution",
+              "issue_index": 0,
+              "quote": "对单价和优惠券使用 Decimal 从字符串构造；逐行计算 Decimal(item[\"unit_price\"]) * item[\"quantity\"] 并累加，汇总阶段不做舍入，避免 float 中间值。保留负单价、非法数量等 ValueError 检查。"
+            },
+            {
+              "field": "solution",
+              "issue_index": 1,
+              "quote": "先完成所有商品行汇总并减去整单优惠券，将总额下限置为 Decimal(\"0\")；仅对最终 Decimal 总额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)，再格式化为两位小数字符串；不得逐行提前舍入。"
+            }
+          ]
+        }
+      ],
+      "boundaries": [
+        "该原则只约束数值构造、汇总与最终舍入方式，不统一各业务的具体精度、阈值、币种、返回字段或异常类型。",
+        "成绩业务：发布精度为 0.1；及格线 60、奖学金线 85 必须基于最终发布的一位小数分数；权重不要求和为 1，按加权和除以权重和；分数范围 0 到 100、权重大于 0、空成绩抛 ValueError。",
+        "发票业务：发布精度为 0.01，币种 CNY；必须先汇总所有商品行再减整单优惠券，总额最低为 0；负单价、非法数量、负优惠券抛 ValueError。",
+        "若业务要求逐行舍入、其他舍入模式、不同阈值或不同计算顺序，则不能套用该共同原则。",
+        "不得把成绩业务的一位小数、60/85 阈值用于发票，也不得把发票的两位小数、CNY 或优惠券顺序用于成绩。"
+      ],
+      "evidence_summary": {
+        "tests_per_run": [
+          13,
+          11
+        ],
+        "verified_runs": 2
+      },
+      "id": "4d9406fc-0bd6-5ee1-a78a-0303961c9ea3",
+      "instances": [
+        {
+          "applicability": [
+            "适用于 Python 中由十进制字符串输入、需要按权重计算并发布一位小数成绩的场景。",
+            "适用于舍入规则为恰好中点进一位而非 Python round 银行家舍入的场景。",
+            "适用于及格、奖学金等阈值必须基于最终发布分数而非未舍入平均值判定的场景。",
+            "适用于权重不要求归一化、但需正确除以权重和的加权平均计算。"
+          ],
+          "compatibility_key": "academic-grades-v1",
+          "constraints": [
+            "成绩由十进制字符串输入，必须按十进制精确计算，不能先转 float 再舍入。",
+            "最终平均分保留一位小数，恰好中点时必须进一位（ROUND_HALF_UP），例如 72.25 发布为 72.3。",
+            "及格线 60 与奖学金线 85 必须使用最终发布的一位小数分数判定。",
+            "权重不要求总和为 1，按加权和除以权重和计算平均分。",
+            "成绩范围保持 0 到 100（含端点），超出范围抛出 ValueError。",
+            "权重必须大于 0，非正权重抛出 ValueError。",
+            "空成绩列表必须抛出 ValueError。",
+            "返回字段保持 mark、passed、scholarship，mark 为一位小数字符串。",
+            "不得修改测试和构建文件。"
+          ],
+          "evidence": [
+            {
+              "errors": 0,
+              "failures": 0,
+              "runner": "pytest",
+              "skipped": 0,
+              "source_task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9",
+              "tests": 13,
+              "tool_call_id": "fc4ebc85-f1b4-4b4c-a73f-890a04b0dad8"
+            }
+          ],
+          "experience_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+          "issues": [
+            {
+              "depends_on": [],
+              "error_type": "AssertionError",
+              "files": [
+                "grades.py"
+              ],
+              "root_cause": "原实现用 float 解析十进制字符串并用 Python round 保留一位小数；二进制浮点误差和银行家舍入会使 72.25、85.05、59.95、84.95 等中点或临界值得到错误 mark，触发 test_published_mark 断言失败。",
+              "solution": "改用 decimal.Decimal 从原始字符串构造分数和权重，避免二进制浮点误差；计算加权和与权重和后，用 quantize(Decimal(\"0.1\"), rounding=ROUND_HALF_UP) 得到最终一位小数发布分，并将该 Decimal 格式化为 mark。",
+              "symbols": [
+                "grades.py#publish_grade"
+              ]
+            },
+            {
+              "depends_on": [
+                0
+              ],
+              "error_type": "AssertionError",
+              "files": [
+                "grades.py"
+              ],
+              "root_cause": "若只修正 mark 的舍入而未把 passed/scholarship 判定绑定到最终发布分，仍可能用未舍入的加权平均值比较 60/85；例如未舍入 59.95 发布为 60.0 却判不及格，未舍入 84.95 发布为 85.0 却判无奖学金。",
+              "solution": "在得到最终发布的一位小数 Decimal 后，再与 Decimal(\"60\") 和 Decimal(\"85\") 比较生成 passed 与 scholarship，确保阈值判定与 mark 使用同一最终发布分数。",
+              "symbols": [
+                "grades.py#publish_grade"
+              ]
+            }
+          ],
+          "repository_id": "cross-business/academic-grades",
+          "source_task_id": "20e8cf33-2653-4234-b9c7-cae68f6f70e9"
+        },
+        {
+          "applicability": [
+            "适用于 Python 中以十进制字符串提供商品单价和优惠券、需要计算发票或订单总额的场景。",
+            "适用于要求先汇总再减免、总额最低为零、最后按财务四舍五入保留两位小数且中点向上的金额计算。",
+            "适用于需要避免逐行提前舍入和二进制浮点误差导致少一分的情况。",
+            "适用于需要保留 CNY 币种、商品行数及原有非法输入 ValueError 行为的接口。"
+          ],
+          "compatibility_key": "invoice-v1",
+          "constraints": [
+            "商品单价与优惠券是十进制字符串，必须按十进制语义精确处理，不能使用二进制浮点累积。",
+            "必须先汇总所有商品行的单价乘数量，再减去整单优惠券。",
+            "减去优惠券后的总额最低为 0。",
+            "仅在最终总额上按财务四舍五入保留两位小数，中点向上（ROUND_HALF_UP）。",
+            "不能对商品行提前舍入，也不能在汇总前舍入。",
+            "返回结果必须保留 CNY 币种。",
+            "返回结果必须保留商品行数，lines 等于 len(items)。",
+            "必须保留已有非法输入异常：负单价、数量不是 int 或小于 1、负优惠券均应抛出 ValueError。",
+            "total 必须是保留两位小数的字符串，例如 \"2.68\"、\"0.00\"。",
+            "不得修改测试文件。",
+            "不得修改构建文件。",
+            "仅修改 invoice.py。"
+          ],
+          "evidence": [
+            {
+              "errors": 0,
+              "failures": 0,
+              "runner": "pytest",
+              "skipped": 0,
+              "source_task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2",
+              "tests": 11,
+              "tool_call_id": "555f7b8c-f7e3-42a8-9490-af291ebee084"
+            }
+          ],
+          "experience_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+          "issues": [
+            {
+              "depends_on": [],
+              "error_type": "AssertionError",
+              "files": [
+                "invoice.py"
+              ],
+              "root_cause": "原实现使用 float(item[\"unit_price\"]) 解析并累加十进制字符串，二进制浮点无法精确表示 2.675 等金额，真实值可能略小于十进制中点，导致最终总额少一分。",
+              "solution": "对单价和优惠券使用 Decimal 从字符串构造；逐行计算 Decimal(item[\"unit_price\"]) * item[\"quantity\"] 并累加，汇总阶段不做舍入，避免 float 中间值。保留负单价、非法数量等 ValueError 检查。",
+              "symbols": [
+                "invoice.py#invoice_total"
+              ]
+            },
+            {
+              "depends_on": [
+                0
+              ],
+              "error_type": "AssertionError",
+              "files": [
+                "invoice.py"
+              ],
+              "root_cause": "原实现用 format(amount, \".2f\") 输出，未按财务规则对最终金额执行中点向上的 ROUND_HALF_UP；例如 0.335×3=1.005 应得 1.01 而非 1.00，导致总额少一分。",
+              "solution": "先完成所有商品行汇总并减去整单优惠券，将总额下限置为 Decimal(\"0\")；仅对最终 Decimal 总额执行 quantize(Decimal(\"0.01\"), rounding=ROUND_HALF_UP)，再格式化为两位小数字符串；不得逐行提前舍入。",
+              "symbols": [
+                "invoice.py#invoice_total"
+              ]
+            }
+          ],
+          "repository_id": "cross-business/invoice",
+          "source_task_id": "c07870ea-37f7-4e31-a7e5-c4615f286fa2"
+        }
+      ],
+      "kind": "shared_principle",
+      "namespace": "cross-business-demo",
+      "new_target_requires_verification": true,
+      "principle": "当修复目标是 Python 中以十进制字符串表示的数值（金额、分数等）计算时，共享的因果修复原则是：不要先用 float 解析或累加，也不要逐项或提前舍入；应使用 Decimal 从原始字符串构造参与计算的数值，保持汇总阶段未舍入，最后仅在业务指定的最终精度上使用 ROUND_HALF_UP 量化并输出。各业务必须自行提供自己的最终精度、阈值、币种、计算顺序、异常校验和返回契约，不能把某一业务的具体参数套用到另一业务。",
+      "review": {
+        "approved": true,
+        "checks": [
+          {
+            "business_conditions_preserved": true,
+            "reason": "该来源明确支持共享原则：用 Decimal 从原始十进制字符串构造分数和权重，避免 float；汇总后仅对最终发布分按 0.1 执行 ROUND_HALF_UP 量化，并用最终发布分比较 60/85。权重归一化方式、分数与权重校验、返回字段等业务条件均被保留。",
+            "source_id": "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+            "supported": true
+          },
+          {
+            "business_conditions_preserved": true,
+            "reason": "该来源明确支持共享原则：用 Decimal 从字符串构造单价和优惠券，禁止 float 累加与逐行提前舍入；先汇总商品行再减整单优惠券并将总额下限置 0，仅对最终总额按 0.01 执行 ROUND_HALF_UP 量化。CNY、lines、异常校验等业务条件均被保留。",
+            "source_id": "a2042a2f-8a52-4de8-aec7-cdd72903fbfc",
+            "supported": true
+          }
+        ],
+        "reason": "两个来源均支持该有条件共同原则：以 Decimal 从原始十进制字符串构造、汇总阶段不提前舍入、仅在业务指定最终精度执行 ROUND_HALF_UP。候选已明确将最终精度、阈值、币种、计算顺序、异常校验和返回契约留给各业务，并保留成绩阈值基于最终发布分、发票先汇总后减券及最低为零等源特有约束；未发现被原则覆盖或矛盾的安全泛化。",
+        "unsafe_generalizations": []
+      },
+      "scope": "explicit_namespace",
+      "source_ids": [
+        "248cdcfe-dc1d-4251-bc97-463c1301fdaa",
+        "a2042a2f-8a52-4de8-aec7-cdd72903fbfc"
+      ],
+      "title": "十进制字符串计算的 Decimal 汇总与最终 ROUND_HALF_UP 修复原则"
+    }
+  ],
+  "verification": [
+    {
+      "case": "invoice",
+      "verification": {
+        "variant": "correct",
+        "exit_code": 0,
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\invoice-correct",
+        "stdout": ".............                                                            [100%]\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\invoice-correct\\test-results.xml -\r\n13 passed in 0.24s\r\n"
+      },
+      "swapped_precision": {
+        "variant": "wrong-business-precision",
+        "exit_code": 1,
+        "tests": 13,
+        "failures": 8,
+        "errors": 0,
+        "skipped": 0,
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\invoice-wrong-business-precision",
+        "stdout": "FFFFFFFF.....                                                            [100%]\r\n================================== FAILURES ===================================\r\n__________________________ test_independent_midpoint __________________________\r\n\r\n    def test_independent_midpoint():\r\n>    assert invoice_total([{\"unit_price\":\"1.005\",\"quantity\":1}])[\"total\"]==\"1.01\"\r\nE    AssertionError: assert '1.00' == '1.01'\r\nE      \r\nE      - 1.01\r\nE      ?    ^\r\nE      + 1.00\r\nE      ?    ^\r\n\r\ntests\\test_independent.py:3: AssertionError\r\n___________________________ test_do_not_round_lines ___________________________\r\n\r\n    def test_do_not_round_lines():\r\n>    assert invoice_total([{\"unit_price\":\"0.125\",\"quantity\":2}])[\"total\"]==\"0.25\"\r\nE    AssertionError: assert '0.30' == '0.25'\r\nE      \r\nE      - 0.25\r\nE      + 0.30\r\n\r\ntests\\test_independent.py:5: AssertionError\r\n__________________________ test_total[items0-0-2.68] __________________________\r\n\r\nitems = [{'quantity': 1, 'unit_price': '2.675'}], coupon = '0'\r\nexpected = '2.68'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '2.70'} == {'currency': ...otal': '2.68'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '2.70'} != {'total': '2.68'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n__________________________ test_total[items1-0-4.02] __________________________\r\n\r\nitems = [{'quantity': 1, 'unit_price': '4.015'}], coupon = '0'\r\nexpected = '4.02'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '4.00'} == {'currency': ...otal': '4.02'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '4.00'} != {'total': '4.02'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n__________________________ test_total[items2-0-1.01] __________________________\r\n\r\nitems = [{'quantity': 3, 'unit_price': '0.335'}], coupon = '0'\r\nexpected = '1.01'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '1.00'} == {'currency': ...otal': '1.01'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '1.00'} != {'total': '1.01'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n________________________ test_total[items3-0.010-2.68] ________________________\r\n\r\nitems = [{'quantity': 1, 'unit_price': '2.685'}], coupon = '0.010'\r\nexpected = '2.68'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '2.70'} == {'currency': ...otal': '2.68'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '2.70'} != {'total': '2.68'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n__________________________ test_total[items4-0-4.25] __________________________\r\n\r\nitems = [{'quantity': 2, 'unit_price': '2.125'}], coupon = '0'\r\nexpected = '4.25'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...otal': '4.30'} == {'currency': ...otal': '4.25'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '4.30'} != {'total': '4.25'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n________________________ test_total[items5-1.50-27.49] ________________________\r\n\r\nitems = [{'quantity': 2, 'unit_price': '12.50'}, {'quantity': 1, 'unit_price': '3.99'}]\r\ncoupon = '1.50', expected = '27.49'\r\n\r\n    @pytest.mark.parametrize(\"items,coupon,expected\", [\r\n        ([{\"unit_price\": \"2.675\", \"quantity\": 1}], \"0\", \"2.68\"),\r\n        ([{\"unit_price\": \"4.015\", \"quantity\": 1}], \"0\", \"4.02\"),\r\n        ([{\"unit_price\": \"0.335\", \"quantity\": 3}], \"0\", \"1.01\"),\r\n        ([{\"unit_price\": \"2.685\", \"quantity\": 1}], \"0.010\", \"2.68\"),\r\n        ([{\"unit_price\": \"2.125\", \"quantity\": 2}], \"0\", \"4.25\"),\r\n        ([{\"unit_price\": \"12.50\", \"quantity\": 2}, {\"unit_price\": \"3.99\", \"quantity\": 1}], \"1.50\", \"27.49\"),\r\n        ([{\"unit_price\": \"1.00\", \"quantity\": 1}], \"5.00\", \"0.00\"),\r\n        ([], \"0\", \"0.00\"),\r\n    ])\r\n    def test_total(items, coupon, expected):\r\n>       assert invoice_total(items, coupon) == {\"total\": expected, \"currency\": \"CNY\", \"lines\": len(items)}\r\nE       AssertionError: assert {'currency': ...tal': '27.50'} == {'currency': ...tal': '27.49'}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'total': '27.50'} != {'total': '27.49'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_invoice.py:16: AssertionError\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\invoice-wrong-business-precision\\test-results.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_independent.py::test_independent_midpoint - AssertionError:...\r\nFAILED tests/test_independent.py::test_do_not_round_lines - AssertionError: a...\r\nFAILED tests/test_invoice.py::test_total[items0-0-2.68] - AssertionError: ass...\r\nFAILED tests/test_invoice.py::test_total[items1-0-4.02] - AssertionError: ass...\r\nFAILED tests/test_invoice.py::test_total[items2-0-1.01] - AssertionError: ass...\r\nFAILED tests/test_invoice.py::test_total[items3-0.010-2.68] - AssertionError:...\r\nFAILED tests/test_invoice.py::test_total[items4-0-4.25] - AssertionError: ass...\r\nFAILED tests/test_invoice.py::test_total[items5-1.50-27.49] - AssertionError:...\r\n8 failed, 5 passed in 0.29s\r\n"
+      },
+      "input": [
+        [
+          {
+            "unit_price": "2.675",
+            "quantity": 1
+          }
+        ]
+      ],
+      "observed": {
+        "before": {
+          "total": "2.67",
+          "currency": "CNY",
+          "lines": 1
+        },
+        "after": {
+          "total": "2.68",
+          "currency": "CNY",
+          "lines": 1
+        },
+        "wrong_precision": {
+          "total": "2.70",
+          "currency": "CNY",
+          "lines": 1
+        }
+      }
+    },
+    {
+      "case": "academic-grades",
+      "verification": {
+        "variant": "correct",
+        "exit_code": 0,
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\academic-grades-correct",
+        "stdout": "...............                                                          [100%]\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\academic-grades-correct\\test-results.xml -\r\n15 passed in 0.21s\r\n"
+      },
+      "swapped_precision": {
+        "variant": "wrong-business-precision",
+        "exit_code": 1,
+        "tests": 15,
+        "failures": 9,
+        "errors": 0,
+        "skipped": 0,
+        "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\academic-grades-wrong-business-precision",
+        "stdout": "FFFFFF.F.....FF                                                          [100%]\r\n================================== FAILURES ===================================\r\n______________ test_published_mark[assessments0-72.3-True-False] ______________\r\n\r\nassessments = [{'score': '72.25', 'weight': '1'}], expected = '72.3'\r\npassed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '72.2'} != {'mark': '72.3'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments1-85.1-True-True] _______________\r\n\r\nassessments = [{'score': '85.05', 'weight': '1'}], expected = '85.1'\r\npassed = True, scholarship = True\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '85....arship': True} == {'mark': '85....arship': True}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '85.0'} != {'mark': '85.1'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments2-84.9-True-False] ______________\r\n\r\nassessments = [{'score': '84.85', 'weight': '1'}], expected = '84.9'\r\npassed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '84....rship': False} == {'mark': '84....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '84.8'} != {'mark': '84.9'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments3-89.9-True-True] _______________\r\n\r\nassessments = [{'score': '89.85', 'weight': '1'}], expected = '89.9'\r\npassed = True, scholarship = True\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '89....arship': True} == {'mark': '89....arship': True}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '89.8'} != {'mark': '89.9'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments4-60.0-True-False] ______________\r\n\r\nassessments = [{'score': '59.95', 'weight': '1'}], expected = '60.0'\r\npassed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '60....rship': False} == {'mark': '60....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'passed': False} != {'passed': True}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments5-85.0-True-True] _______________\r\n\r\nassessments = [{'score': '84.95', 'weight': '1'}], expected = '85.0'\r\npassed = True, scholarship = True\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '85....rship': False} == {'mark': '85....arship': True}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'scholarship': False} != {'scholarship': True}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n______________ test_published_mark[assessments7-72.3-True-False] ______________\r\n\r\nassessments = [{'score': '72.20', 'weight': '0.3'}, {'score': '72.30', 'weight': '0.3'}]\r\nexpected = '72.3', passed = True, scholarship = False\r\n\r\n    @pytest.mark.parametrize(\"assessments,expected,passed,scholarship\", [\r\n        ([{\"score\": \"72.25\", \"weight\": \"1\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"85.05\", \"weight\": \"1\"}], \"85.1\", True, True),\r\n        ([{\"score\": \"84.85\", \"weight\": \"1\"}], \"84.9\", True, False),\r\n        ([{\"score\": \"89.85\", \"weight\": \"1\"}], \"89.9\", True, True),\r\n        ([{\"score\": \"59.95\", \"weight\": \"1\"}], \"60.0\", True, False),\r\n        ([{\"score\": \"84.95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"59.94\", \"weight\": \"1\"}], \"59.9\", False, False),\r\n        ([{\"score\": \"72.20\", \"weight\": \"0.3\"}, {\"score\": \"72.30\", \"weight\": \"0.3\"}], \"72.3\", True, False),\r\n        ([{\"score\": \"80\", \"weight\": \"2\"}, {\"score\": \"95\", \"weight\": \"1\"}], \"85.0\", True, True),\r\n        ([{\"score\": \"0\", \"weight\": \"1\"}], \"0.0\", False, False),\r\n    ])\r\n    def test_published_mark(assessments, expected, passed, scholarship):\r\n>       assert publish_grade(assessments) == {\"mark\": expected, \"passed\": passed, \"scholarship\": scholarship}\r\nE       AssertionError: assert {'mark': '72....rship': False} == {'mark': '72....rship': False}\r\nE         \r\nE         Omitting 2 identical items, use -vv to show\r\nE         Differing items:\r\nE         {'mark': '72.2'} != {'mark': '72.3'}\r\nE         Use -v to get more diff\r\n\r\ntests\\test_grades.py:18: AssertionError\r\n__________________________ test_independent_midpoint __________________________\r\n\r\n    def test_independent_midpoint():\r\n>    assert publish_grade([{\"score\":\"63.25\",\"weight\":\"1\"}])[\"mark\"]==\"63.3\"\r\nE    AssertionError: assert '63.2' == '63.3'\r\nE      \r\nE      - 63.3\r\nE      ?    ^\r\nE      + 63.2\r\nE      ?    ^\r\n\r\ntests\\test_independent.py:3: AssertionError\r\n________________________ test_do_not_round_assessments ________________________\r\n\r\n    def test_do_not_round_assessments():\r\n>    assert publish_grade([{\"score\":\"72.24\",\"weight\":\"1\"},{\"score\":\"72.26\",\"weight\":\"1\"}])[\"mark\"]==\"72.3\"\r\nE    AssertionError: assert '72.2' == '72.3'\r\nE      \r\nE      - 72.3\r\nE      ?    ^\r\nE      + 72.2\r\nE      ?    ^\r\n\r\ntests\\test_independent.py:5: AssertionError\r\n- generated xml file: D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\verification-1794668010373534300\\academic-grades-wrong-business-precision\\test-results.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_grades.py::test_published_mark[assessments0-72.3-True-False]\r\nFAILED tests/test_grades.py::test_published_mark[assessments1-85.1-True-True]\r\nFAILED tests/test_grades.py::test_published_mark[assessments2-84.9-True-False]\r\nFAILED tests/test_grades.py::test_published_mark[assessments3-89.9-True-True]\r\nFAILED tests/test_grades.py::test_published_mark[assessments4-60.0-True-False]\r\nFAILED tests/test_grades.py::test_published_mark[assessments5-85.0-True-True]\r\nFAILED tests/test_grades.py::test_published_mark[assessments7-72.3-True-False]\r\nFAILED tests/test_independent.py::test_independent_midpoint - AssertionError:...\r\nFAILED tests/test_independent.py::test_do_not_round_assessments - AssertionEr...\r\n9 failed, 6 passed in 0.28s\r\n"
+      },
+      "input": [
+        [
+          {
+            "score": "72.25",
+            "weight": "1"
+          }
+        ]
+      ],
+      "observed": {
+        "before": {
+          "mark": "72.2",
+          "passed": true,
+          "scholarship": false
+        },
+        "after": {
+          "mark": "72.3",
+          "passed": true,
+          "scholarship": false
+        },
+        "wrong_precision": {
+          "mark": "72.2",
+          "passed": true,
+          "scholarship": false
+        }
+      }
+    }
+  ],
+  "source_database_sha256": {
+    "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\invoice.db": "c8b2148ee1c30bffcc5450d1840a6fd91f939b122bf274ee65d987b90f5c3919",
+    "D:\\中级实训\\self-evolving-coding-agent\\.cache\\cross-business-merge\\20261114T144627Z-252034\\academic-grades.db": "e87ec70c94bc888244c2efdb022e8e2e00e43ed1087658a7e334487cbd133101"
+  },
+  "raw_records_unchanged": true,
+  "idempotent": true,
+  "namespace_isolated": true,
+  "limitation": "New, deliberately faulty business fixtures with actual independent model repair and extraction. Shared principles use model proposal/review, not a proof of universal behavioral equivalence. No automatic publication or injection into other projects; target contracts and tests remain necessary."
+}

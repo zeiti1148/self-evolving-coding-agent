@@ -56,7 +56,7 @@ frontend/dist/
 data/
 
 # Agent runtime workspaces (default task root)
-runtime/workspaces/
+runtime/
 .agent-workspaces/
 
 # Logs, caches, and temporary files

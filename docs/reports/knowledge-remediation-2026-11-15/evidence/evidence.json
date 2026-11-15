@@ -1,0 +1,92 @@
+{
+  "pytest": {
+    "state": "succeeded",
+    "started_at": "2026-11-15T06:09:49.985607Z",
+    "finished_at": "2026-11-15T06:14:01.861086Z",
+    "repair_succeeded": true,
+    "experience_saved": true,
+    "experience_ids": [
+      "b6716e28-3f6f-409a-a462-17f008382321"
+    ],
+    "api_identities": [
+      {
+        "origin": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "source": "explicit_file",
+        "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env"
+      }
+    ],
+    "api_requests": 21,
+    "api_successes": 21,
+    "recovery_attempts": 0,
+    "original_repair_requests": 21,
+    "requested_models": [
+      "deepseek-flash"
+    ],
+    "returned_models": [
+      "deepseek-flash"
+    ],
+    "request_phases": {
+      "decision": 20,
+      "extraction": 1
+    },
+    "token_usage": {
+      "prompt_tokens": 699998,
+      "completion_tokens": 18771,
+      "total_tokens": 718769
+    },
+    "elapsed_ms": 233124,
+    "decision_rounds": 20,
+    "retrieved_experience_ids": [],
+    "changed_archive_files": [
+      "src\\_pytest\\mark\\structures.py"
+    ],
+    "missing_archive_files": []
+  },
+  "sphinx": {
+    "state": "stopped",
+    "started_at": "2026-11-15T06:09:50.019259Z",
+    "finished_at": "2026-11-15T06:18:40.600724Z",
+    "repair_succeeded": true,
+    "experience_saved": true,
+    "experience_ids": [
+      "414bf457-a740-4d05-9760-772bd04e7616"
+    ],
+    "api_identities": [
+      {
+        "origin": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "source": "explicit_file",
+        "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env"
+      }
+    ],
+    "api_requests": 72,
+    "api_successes": 71,
+    "recovery_attempts": 2,
+    "original_repair_requests": 70,
+    "requested_models": [
+      "deepseek-flash"
+    ],
+    "returned_models": [
+      "",
+      "deepseek-flash"
+    ],
+    "request_phases": {
+      "decision": 70,
+      "extraction": 2
+    },
+    "token_usage": {
+      "prompt_tokens": 6678845,
+      "completion_tokens": 60143,
+      "total_tokens": 6738988
+    },
+    "elapsed_ms": 511297,
+    "decision_rounds": 70,
+    "retrieved_experience_ids": [],
+    "changed_archive_files": [
+      "sphinx\\ext\\autodoc\\__init__.py",
+      "sphinx\\ext\\autodoc\\importer.py"
+    ],
+    "missing_archive_files": []
+  }
+}

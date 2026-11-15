@@ -1,0 +1,1090 @@
+{
+  "created_at": "2026-11-14T13:49:22.297471+00:00",
+  "completed": true,
+  "kind": "real_test_execution_with_fixed_previously_extracted_rule",
+  "original_trial": "training-python-independent",
+  "original_experience_id": "12a8d375-8c61-4415-bb79-70cb57472ffa",
+  "original_task_id": "66d5330d-c8be-4a42-90e6-65fc3e5fd6ce",
+  "selected_issue_index": 0,
+  "original_model": "deepseek-flash",
+  "new_model_requests": 0,
+  "note": "使用此前真实模型修复的完整源码；每次独立重跑原始测试。经验正文固定复用原提炼结果中的第 1 条判空规则，不重新调用模型。",
+  "source_project": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-live-experiment\\fixtures\\training-python-independent",
+  "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\experiences.db",
+  "code_before": "def label(value):\n    return value.strip()\n\ndef quantity(value):\n    return int(value)\n",
+  "code_after": "def label(value):\n    if value is None:\n        return 'guest'\n    text = value.strip()\n    if not text:\n        return 'guest'\n    return text\n\n\ndef quantity(value):\n    if value is None:\n        return 0\n    if isinstance(value, bool):\n        return 0\n    if isinstance(value, int):\n        return value if value >= 0 else 0\n    if not isinstance(value, str):\n        return 0\n    text = value.strip()\n    if not text:\n        return 0\n    try:\n        number = int(text)\n    except ValueError:\n        return 0\n    if number < 0:\n        return 0\n    return number\n",
+  "rule": {
+    "error_type": "AttributeError",
+    "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+    "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+    "files": [
+      "rules.py"
+    ],
+    "symbols": [
+      "rules.py#label"
+    ],
+    "depends_on": []
+  },
+  "constraints": [
+    "label(None)、label('')、label(' ') 必须返回 'guest'。",
+    "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。",
+    "不得修改测试文件和构建文件。",
+    "label 与 quantity 的修复规则互不依赖。"
+  ],
+  "runs": [
+    {
+      "index": 1,
+      "task_id": "0f269e41-e5c8-4439-a7b4-eaefed7b8614",
+      "experience_id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+      "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\0f269e41-e5c8-4439-a7b4-eaefed7b8614",
+      "baseline_call": {
+        "id": "394fc971-e20b-448d-8464-2869ef0c2dc4",
+        "name": "run_tests",
+        "arguments": {}
+      },
+      "baseline": {
+        "call_id": "394fc971-e20b-448d-8464-2869ef0c2dc4",
+        "tool_name": "run_tests",
+        "success": false,
+        "output": "FFF.FFFFF..                                                              [100%]\r\n================================== FAILURES ===================================\r\n_________________________________ test_case_0 _________________________________\r\n\r\n    def test_case_0():\r\n>       assert rules.label(None) == 'guest'\r\n               ^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:5: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def label(value):\r\n>       return value.strip()\r\n               ^^^^^^^^^^^\r\nE       AttributeError: 'NoneType' object has no attribute 'strip'\r\n\r\nrules.py:2: AttributeError\r\n_________________________________ test_case_1 _________________________________\r\n\r\n    def test_case_1():\r\n>       assert rules.label('') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:7: AssertionError\r\n_________________________________ test_case_2 _________________________________\r\n\r\n    def test_case_2():\r\n>       assert rules.label(' ') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:9: AssertionError\r\n_________________________________ test_case_4 _________________________________\r\n\r\n    def test_case_4():\r\n>       assert rules.quantity(None) == 0\r\n               ^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:13: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\r\n\r\nrules.py:5: TypeError\r\n_________________________________ test_case_5 _________________________________\r\n\r\n    def test_case_5():\r\n>       assert rules.quantity('') == 0\r\n               ^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:15: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ''\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ''\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_6 _________________________________\r\n\r\n    def test_case_6():\r\n>       assert rules.quantity(' ') == 0\r\n               ^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:17: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ' '\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ' '\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_7 _________________________________\r\n\r\n    def test_case_7():\r\n>       assert rules.quantity('bad') == 0\r\n               ^^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:19: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = 'bad'\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: 'bad'\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_8 _________________________________\r\n\r\n    def test_case_8():\r\n>       assert rules.quantity('-2') == 0\r\nE       AssertionError: assert -2 == 0\r\nE        +  where -2 = <function quantity at 0x0000014711C88680>('-2')\r\nE        +    where <function quantity at 0x0000014711C88680> = rules.quantity\r\n\r\ntests\\test_rules.py:21: AssertionError\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\.test-reports\\0f269e41-e5c8-4439-a7b4-eaefed7b8614\\59ac1711-4faa-40c6-b505-02d38b40c7a2.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_rules.py::test_case_0 - AttributeError: 'NoneType' object h...\r\nFAILED tests/test_rules.py::test_case_1 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_2 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_4 - TypeError: int() argument must be a...\r\nFAILED tests/test_rules.py::test_case_5 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_6 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_7 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_8 - AssertionError: assert -2 == 0\r\n8 failed, 3 passed in 0.13s\r\n",
+        "error_code": "TEST_FAILED",
+        "error_message": "测试未通过，请查看失败详情。",
+        "metadata": {
+          "exit_code": 1,
+          "duration_ms": 478,
+          "truncated": false,
+          "changed_files": [],
+          "runner": "pytest",
+          "tests": 11,
+          "failures": 8,
+          "errors": 0,
+          "skipped": 0,
+          "error_types": [
+            "AssertionError",
+            "AttributeError",
+            "TypeError",
+            "ValueError"
+          ],
+          "test_failures": [
+            {
+              "test": "tests.test_rules.test_case_0",
+              "error_type": "AttributeError",
+              "message": "AttributeError: 'NoneType' object has no attribute 'strip'\ndef test_case_0():\n>       assert rules.label(None) == 'guest'\n               ^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:5: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = None\n\n    def label(value):\n>       return value.strip()\n               ^^^^^^^^^^^\nE       AttributeError: 'NoneType' object has no attribute 'strip'\n\nrules.py:2: AttributeError"
+            },
+            {
+              "test": "tests.test_rules.test_case_1",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert '' == 'guest'\n  \n  - guest\ndef test_case_1():\n>       assert rules.label('') == 'guest'\nE       AssertionError: assert '' == 'guest'\nE         \nE         - guest\n\ntests\\test_rules.py:7: AssertionError"
+            },
+            {
+              "test": "tests.test_rules.test_case_2",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert '' == 'guest'\n  \n  - guest\ndef test_case_2():\n>       assert rules.label(' ') == 'guest'\nE       AssertionError: assert '' == 'guest'\nE         \nE         - guest\n\ntests\\test_rules.py:9: AssertionError"
+            },
+            {
+              "test": "tests.test_rules.test_case_4",
+              "error_type": "TypeError",
+              "message": "TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\ndef test_case_4():\n>       assert rules.quantity(None) == 0\n               ^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:13: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = None\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\n\nrules.py:5: TypeError"
+            },
+            {
+              "test": "tests.test_rules.test_case_5",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: ''\ndef test_case_5():\n>       assert rules.quantity('') == 0\n               ^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = ''\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: ''\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_6",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: ' '\ndef test_case_6():\n>       assert rules.quantity(' ') == 0\n               ^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:17: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = ' '\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: ' '\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_7",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: 'bad'\ndef test_case_7():\n>       assert rules.quantity('bad') == 0\n               ^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:19: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = 'bad'\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: 'bad'\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_8",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert -2 == 0\n +  where -2 = <function quantity at 0x0000014711C88680>('-2')\n +    where <function quantity at 0x0000014711C88680> = rules.quantity\ndef test_case_8():\n>       assert rules.quantity('-2') == 0\nE       AssertionError: assert -2 == 0\nE        +  where -2 = <function quantity at 0x0000014711C88680>('-2')\nE        +    where <function quantity at 0x0000014711C88680> = rules.quantity\n\ntests\\test_rules.py:21: AssertionError"
+            }
+          ]
+        }
+      },
+      "test_call": {
+        "id": "f7f8f206-073e-4bd3-a905-52bf49f2ca7c",
+        "name": "run_tests",
+        "arguments": {}
+      },
+      "verification": {
+        "call_id": "f7f8f206-073e-4bd3-a905-52bf49f2ca7c",
+        "tool_name": "run_tests",
+        "success": true,
+        "output": "...........                                                              [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\.test-reports\\0f269e41-e5c8-4439-a7b4-eaefed7b8614\\8c751671-e293-4e0e-b501-d709e4c6258c.xml -\r\n11 passed in 0.08s\r\n",
+        "error_code": null,
+        "error_message": null,
+        "metadata": {
+          "exit_code": 0,
+          "duration_ms": 448,
+          "truncated": false,
+          "changed_files": [
+            "rules.py"
+          ],
+          "runner": "pytest",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "error_types": [],
+          "test_failures": []
+        }
+      },
+      "experience": {
+        "task_summary": "独立复现 1：label(None) 判空后返回 guest。",
+        "error_type": null,
+        "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+        "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+        "verification": "本次独立 pytest 运行：11 项通过，调用编号 f7f8f206-073e-4bd3-a905-52bf49f2ca7c。",
+        "tags": [
+          "python",
+          "字符串清洗",
+          "空值处理",
+          "空白归一化",
+          "默认值",
+          "label"
+        ],
+        "source_task_id": "0f269e41-e5c8-4439-a7b4-eaefed7b8614",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "knowledge-python",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:893e3d71bee467559a9292ccc552658e252a3fc5d0d81774e27906f6d7765c4c",
+        "compatibility_key": "stable-v2",
+        "constraints": [
+          "label(None)、label('')、label(' ') 必须返回 'guest'。",
+          "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。",
+          "不得修改测试文件和构建文件。",
+          "label 与 quantity 的修复规则互不依赖。"
+        ],
+        "applicability": [
+          "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+        ],
+        "issues": [
+          {
+            "error_type": "AttributeError",
+            "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+            "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#label"
+            ],
+            "depends_on": []
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "0f269e41-e5c8-4439-a7b4-eaefed7b8614",
+            "tool_call_id": "f7f8f206-073e-4bd3-a905-52bf49f2ca7c",
+            "runner": "pytest",
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": "6d2b63be-a684-48b6-9f85-a3220f934c00",
+        "reuse_status": "active",
+        "derived_from": [],
+        "supersedes_id": null,
+        "required_capabilities": [],
+        "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+        "created_at": "2026-11-14T13:49:23.404653Z"
+      }
+    },
+    {
+      "index": 2,
+      "task_id": "95c48241-40c6-4d61-af4e-54e4af0211e6",
+      "experience_id": "f8b4443a-b2d5-4203-95d4-a0440d2eea28",
+      "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\95c48241-40c6-4d61-af4e-54e4af0211e6",
+      "baseline_call": {
+        "id": "8a50f613-ac9c-4262-a026-c0a050355569",
+        "name": "run_tests",
+        "arguments": {}
+      },
+      "baseline": {
+        "call_id": "8a50f613-ac9c-4262-a026-c0a050355569",
+        "tool_name": "run_tests",
+        "success": false,
+        "output": "FFF.FFFFF..                                                              [100%]\r\n================================== FAILURES ===================================\r\n_________________________________ test_case_0 _________________________________\r\n\r\n    def test_case_0():\r\n>       assert rules.label(None) == 'guest'\r\n               ^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:5: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def label(value):\r\n>       return value.strip()\r\n               ^^^^^^^^^^^\r\nE       AttributeError: 'NoneType' object has no attribute 'strip'\r\n\r\nrules.py:2: AttributeError\r\n_________________________________ test_case_1 _________________________________\r\n\r\n    def test_case_1():\r\n>       assert rules.label('') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:7: AssertionError\r\n_________________________________ test_case_2 _________________________________\r\n\r\n    def test_case_2():\r\n>       assert rules.label(' ') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:9: AssertionError\r\n_________________________________ test_case_4 _________________________________\r\n\r\n    def test_case_4():\r\n>       assert rules.quantity(None) == 0\r\n               ^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:13: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\r\n\r\nrules.py:5: TypeError\r\n_________________________________ test_case_5 _________________________________\r\n\r\n    def test_case_5():\r\n>       assert rules.quantity('') == 0\r\n               ^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:15: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ''\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ''\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_6 _________________________________\r\n\r\n    def test_case_6():\r\n>       assert rules.quantity(' ') == 0\r\n               ^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:17: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ' '\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ' '\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_7 _________________________________\r\n\r\n    def test_case_7():\r\n>       assert rules.quantity('bad') == 0\r\n               ^^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:19: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = 'bad'\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: 'bad'\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_8 _________________________________\r\n\r\n    def test_case_8():\r\n>       assert rules.quantity('-2') == 0\r\nE       AssertionError: assert -2 == 0\r\nE        +  where -2 = <function quantity at 0x000002C05B70C680>('-2')\r\nE        +    where <function quantity at 0x000002C05B70C680> = rules.quantity\r\n\r\ntests\\test_rules.py:21: AssertionError\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\.test-reports\\95c48241-40c6-4d61-af4e-54e4af0211e6\\21ceae00-8c3d-49f5-acd3-285cf1f56cb3.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_rules.py::test_case_0 - AttributeError: 'NoneType' object h...\r\nFAILED tests/test_rules.py::test_case_1 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_2 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_4 - TypeError: int() argument must be a...\r\nFAILED tests/test_rules.py::test_case_5 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_6 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_7 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_8 - AssertionError: assert -2 == 0\r\n8 failed, 3 passed in 0.12s\r\n",
+        "error_code": "TEST_FAILED",
+        "error_message": "测试未通过，请查看失败详情。",
+        "metadata": {
+          "exit_code": 1,
+          "duration_ms": 524,
+          "truncated": false,
+          "changed_files": [],
+          "runner": "pytest",
+          "tests": 11,
+          "failures": 8,
+          "errors": 0,
+          "skipped": 0,
+          "error_types": [
+            "AssertionError",
+            "AttributeError",
+            "TypeError",
+            "ValueError"
+          ],
+          "test_failures": [
+            {
+              "test": "tests.test_rules.test_case_0",
+              "error_type": "AttributeError",
+              "message": "AttributeError: 'NoneType' object has no attribute 'strip'\ndef test_case_0():\n>       assert rules.label(None) == 'guest'\n               ^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:5: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = None\n\n    def label(value):\n>       return value.strip()\n               ^^^^^^^^^^^\nE       AttributeError: 'NoneType' object has no attribute 'strip'\n\nrules.py:2: AttributeError"
+            },
+            {
+              "test": "tests.test_rules.test_case_1",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert '' == 'guest'\n  \n  - guest\ndef test_case_1():\n>       assert rules.label('') == 'guest'\nE       AssertionError: assert '' == 'guest'\nE         \nE         - guest\n\ntests\\test_rules.py:7: AssertionError"
+            },
+            {
+              "test": "tests.test_rules.test_case_2",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert '' == 'guest'\n  \n  - guest\ndef test_case_2():\n>       assert rules.label(' ') == 'guest'\nE       AssertionError: assert '' == 'guest'\nE         \nE         - guest\n\ntests\\test_rules.py:9: AssertionError"
+            },
+            {
+              "test": "tests.test_rules.test_case_4",
+              "error_type": "TypeError",
+              "message": "TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\ndef test_case_4():\n>       assert rules.quantity(None) == 0\n               ^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:13: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = None\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\n\nrules.py:5: TypeError"
+            },
+            {
+              "test": "tests.test_rules.test_case_5",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: ''\ndef test_case_5():\n>       assert rules.quantity('') == 0\n               ^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = ''\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: ''\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_6",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: ' '\ndef test_case_6():\n>       assert rules.quantity(' ') == 0\n               ^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:17: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = ' '\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: ' '\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_7",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: 'bad'\ndef test_case_7():\n>       assert rules.quantity('bad') == 0\n               ^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:19: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = 'bad'\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: 'bad'\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_8",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert -2 == 0\n +  where -2 = <function quantity at 0x000002C05B70C680>('-2')\n +    where <function quantity at 0x000002C05B70C680> = rules.quantity\ndef test_case_8():\n>       assert rules.quantity('-2') == 0\nE       AssertionError: assert -2 == 0\nE        +  where -2 = <function quantity at 0x000002C05B70C680>('-2')\nE        +    where <function quantity at 0x000002C05B70C680> = rules.quantity\n\ntests\\test_rules.py:21: AssertionError"
+            }
+          ]
+        }
+      },
+      "test_call": {
+        "id": "9144473f-bd33-4eb5-8d53-4692ff04728a",
+        "name": "run_tests",
+        "arguments": {}
+      },
+      "verification": {
+        "call_id": "9144473f-bd33-4eb5-8d53-4692ff04728a",
+        "tool_name": "run_tests",
+        "success": true,
+        "output": "...........                                                              [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\.test-reports\\95c48241-40c6-4d61-af4e-54e4af0211e6\\87d74d2c-3400-49ae-be71-5857b1bdc8ed.xml -\r\n11 passed in 0.08s\r\n",
+        "error_code": null,
+        "error_message": null,
+        "metadata": {
+          "exit_code": 0,
+          "duration_ms": 479,
+          "truncated": false,
+          "changed_files": [
+            "rules.py"
+          ],
+          "runner": "pytest",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "error_types": [],
+          "test_failures": []
+        }
+      },
+      "experience": {
+        "task_summary": "独立复现 2：label(None) 判空后返回 guest。",
+        "error_type": null,
+        "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+        "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+        "verification": "本次独立 pytest 运行：11 项通过，调用编号 9144473f-bd33-4eb5-8d53-4692ff04728a。",
+        "tags": [
+          "python",
+          "字符串清洗",
+          "空值处理",
+          "空白归一化",
+          "默认值",
+          "label"
+        ],
+        "source_task_id": "95c48241-40c6-4d61-af4e-54e4af0211e6",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "knowledge-python",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:893e3d71bee467559a9292ccc552658e252a3fc5d0d81774e27906f6d7765c4c",
+        "compatibility_key": "stable-v2",
+        "constraints": [
+          "label(None)、label('')、label(' ') 必须返回 'guest'。",
+          "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。",
+          "不得修改测试文件和构建文件。",
+          "label 与 quantity 的修复规则互不依赖。"
+        ],
+        "applicability": [
+          "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+        ],
+        "issues": [
+          {
+            "error_type": "AttributeError",
+            "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+            "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#label"
+            ],
+            "depends_on": []
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "95c48241-40c6-4d61-af4e-54e4af0211e6",
+            "tool_call_id": "9144473f-bd33-4eb5-8d53-4692ff04728a",
+            "runner": "pytest",
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": "2f83d954-67b2-4255-8279-4d86e64b6bd9",
+        "reuse_status": "active",
+        "derived_from": [],
+        "supersedes_id": null,
+        "required_capabilities": [],
+        "id": "f8b4443a-b2d5-4203-95d4-a0440d2eea28",
+        "created_at": "2026-11-14T13:49:24.607605Z"
+      }
+    },
+    {
+      "index": 3,
+      "task_id": "20ba8f99-d025-4c11-bbd8-9211879b296d",
+      "experience_id": "00ec4871-dc22-4377-b036-d4a0ca0bd25e",
+      "workspace": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\20ba8f99-d025-4c11-bbd8-9211879b296d",
+      "baseline_call": {
+        "id": "9a3ba665-69df-4a7f-9bae-544302fd1d74",
+        "name": "run_tests",
+        "arguments": {}
+      },
+      "baseline": {
+        "call_id": "9a3ba665-69df-4a7f-9bae-544302fd1d74",
+        "tool_name": "run_tests",
+        "success": false,
+        "output": "FFF.FFFFF..                                                              [100%]\r\n================================== FAILURES ===================================\r\n_________________________________ test_case_0 _________________________________\r\n\r\n    def test_case_0():\r\n>       assert rules.label(None) == 'guest'\r\n               ^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:5: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def label(value):\r\n>       return value.strip()\r\n               ^^^^^^^^^^^\r\nE       AttributeError: 'NoneType' object has no attribute 'strip'\r\n\r\nrules.py:2: AttributeError\r\n_________________________________ test_case_1 _________________________________\r\n\r\n    def test_case_1():\r\n>       assert rules.label('') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:7: AssertionError\r\n_________________________________ test_case_2 _________________________________\r\n\r\n    def test_case_2():\r\n>       assert rules.label(' ') == 'guest'\r\nE       AssertionError: assert '' == 'guest'\r\nE         \r\nE         - guest\r\n\r\ntests\\test_rules.py:9: AssertionError\r\n_________________________________ test_case_4 _________________________________\r\n\r\n    def test_case_4():\r\n>       assert rules.quantity(None) == 0\r\n               ^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:13: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = None\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\r\n\r\nrules.py:5: TypeError\r\n_________________________________ test_case_5 _________________________________\r\n\r\n    def test_case_5():\r\n>       assert rules.quantity('') == 0\r\n               ^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:15: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ''\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ''\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_6 _________________________________\r\n\r\n    def test_case_6():\r\n>       assert rules.quantity(' ') == 0\r\n               ^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:17: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = ' '\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: ' '\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_7 _________________________________\r\n\r\n    def test_case_7():\r\n>       assert rules.quantity('bad') == 0\r\n               ^^^^^^^^^^^^^^^^^^^^^\r\n\r\ntests\\test_rules.py:19: \r\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\r\n\r\nvalue = 'bad'\r\n\r\n    def quantity(value):\r\n>       return int(value)\r\n               ^^^^^^^^^^\r\nE       ValueError: invalid literal for int() with base 10: 'bad'\r\n\r\nrules.py:5: ValueError\r\n_________________________________ test_case_8 _________________________________\r\n\r\n    def test_case_8():\r\n>       assert rules.quantity('-2') == 0\r\nE       AssertionError: assert -2 == 0\r\nE        +  where -2 = <function quantity at 0x000002621C6D8680>('-2')\r\nE        +    where <function quantity at 0x000002621C6D8680> = rules.quantity\r\n\r\ntests\\test_rules.py:21: AssertionError\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\.test-reports\\20ba8f99-d025-4c11-bbd8-9211879b296d\\acd02dd8-4b77-456c-828c-4eb96431660b.xml -\r\n=========================== short test summary info ===========================\r\nFAILED tests/test_rules.py::test_case_0 - AttributeError: 'NoneType' object h...\r\nFAILED tests/test_rules.py::test_case_1 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_2 - AssertionError: assert '' == 'guest'\r\nFAILED tests/test_rules.py::test_case_4 - TypeError: int() argument must be a...\r\nFAILED tests/test_rules.py::test_case_5 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_6 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_7 - ValueError: invalid literal for int...\r\nFAILED tests/test_rules.py::test_case_8 - AssertionError: assert -2 == 0\r\n8 failed, 3 passed in 0.12s\r\n",
+        "error_code": "TEST_FAILED",
+        "error_message": "测试未通过，请查看失败详情。",
+        "metadata": {
+          "exit_code": 1,
+          "duration_ms": 457,
+          "truncated": false,
+          "changed_files": [],
+          "runner": "pytest",
+          "tests": 11,
+          "failures": 8,
+          "errors": 0,
+          "skipped": 0,
+          "error_types": [
+            "AssertionError",
+            "AttributeError",
+            "TypeError",
+            "ValueError"
+          ],
+          "test_failures": [
+            {
+              "test": "tests.test_rules.test_case_0",
+              "error_type": "AttributeError",
+              "message": "AttributeError: 'NoneType' object has no attribute 'strip'\ndef test_case_0():\n>       assert rules.label(None) == 'guest'\n               ^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:5: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = None\n\n    def label(value):\n>       return value.strip()\n               ^^^^^^^^^^^\nE       AttributeError: 'NoneType' object has no attribute 'strip'\n\nrules.py:2: AttributeError"
+            },
+            {
+              "test": "tests.test_rules.test_case_1",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert '' == 'guest'\n  \n  - guest\ndef test_case_1():\n>       assert rules.label('') == 'guest'\nE       AssertionError: assert '' == 'guest'\nE         \nE         - guest\n\ntests\\test_rules.py:7: AssertionError"
+            },
+            {
+              "test": "tests.test_rules.test_case_2",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert '' == 'guest'\n  \n  - guest\ndef test_case_2():\n>       assert rules.label(' ') == 'guest'\nE       AssertionError: assert '' == 'guest'\nE         \nE         - guest\n\ntests\\test_rules.py:9: AssertionError"
+            },
+            {
+              "test": "tests.test_rules.test_case_4",
+              "error_type": "TypeError",
+              "message": "TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\ndef test_case_4():\n>       assert rules.quantity(None) == 0\n               ^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:13: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = None\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\n\nrules.py:5: TypeError"
+            },
+            {
+              "test": "tests.test_rules.test_case_5",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: ''\ndef test_case_5():\n>       assert rules.quantity('') == 0\n               ^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:15: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = ''\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: ''\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_6",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: ' '\ndef test_case_6():\n>       assert rules.quantity(' ') == 0\n               ^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:17: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = ' '\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: ' '\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_7",
+              "error_type": "ValueError",
+              "message": "ValueError: invalid literal for int() with base 10: 'bad'\ndef test_case_7():\n>       assert rules.quantity('bad') == 0\n               ^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_rules.py:19: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nvalue = 'bad'\n\n    def quantity(value):\n>       return int(value)\n               ^^^^^^^^^^\nE       ValueError: invalid literal for int() with base 10: 'bad'\n\nrules.py:5: ValueError"
+            },
+            {
+              "test": "tests.test_rules.test_case_8",
+              "error_type": "AssertionError",
+              "message": "AssertionError: assert -2 == 0\n +  where -2 = <function quantity at 0x000002621C6D8680>('-2')\n +    where <function quantity at 0x000002621C6D8680> = rules.quantity\ndef test_case_8():\n>       assert rules.quantity('-2') == 0\nE       AssertionError: assert -2 == 0\nE        +  where -2 = <function quantity at 0x000002621C6D8680>('-2')\nE        +    where <function quantity at 0x000002621C6D8680> = rules.quantity\n\ntests\\test_rules.py:21: AssertionError"
+            }
+          ]
+        }
+      },
+      "test_call": {
+        "id": "7033e276-ce76-4e78-a65c-3a2f310e72f5",
+        "name": "run_tests",
+        "arguments": {}
+      },
+      "verification": {
+        "call_id": "7033e276-ce76-4e78-a65c-3a2f310e72f5",
+        "tool_name": "run_tests",
+        "success": true,
+        "output": "...........                                                              [100%]\r\n- generated xml file: D:\\�м�ʵѵ\\self-evolving-coding-agent\\.cache\\knowledge-real-merge-demo\\20261114T134922Z-3fc756\\workspaces\\.test-reports\\20ba8f99-d025-4c11-bbd8-9211879b296d\\367f7690-a3c2-42f0-b7e4-53602c948014.xml -\r\n11 passed in 0.08s\r\n",
+        "error_code": null,
+        "error_message": null,
+        "metadata": {
+          "exit_code": 0,
+          "duration_ms": 428,
+          "truncated": false,
+          "changed_files": [
+            "rules.py"
+          ],
+          "runner": "pytest",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "error_types": [],
+          "test_failures": []
+        }
+      },
+      "experience": {
+        "task_summary": "独立复现 3：label(None) 判空后返回 guest。",
+        "error_type": null,
+        "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+        "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+        "verification": "本次独立 pytest 运行：11 项通过，调用编号 7033e276-ce76-4e78-a65c-3a2f310e72f5。",
+        "tags": [
+          "python",
+          "字符串清洗",
+          "空值处理",
+          "空白归一化",
+          "默认值",
+          "label"
+        ],
+        "source_task_id": "20ba8f99-d025-4c11-bbd8-9211879b296d",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "knowledge-python",
+        "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:893e3d71bee467559a9292ccc552658e252a3fc5d0d81774e27906f6d7765c4c",
+        "compatibility_key": "stable-v2",
+        "constraints": [
+          "label(None)、label('')、label(' ') 必须返回 'guest'。",
+          "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。",
+          "不得修改测试文件和构建文件。",
+          "label 与 quantity 的修复规则互不依赖。"
+        ],
+        "applicability": [
+          "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+        ],
+        "issues": [
+          {
+            "error_type": "AttributeError",
+            "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+            "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+            "files": [
+              "rules.py"
+            ],
+            "symbols": [
+              "rules.py#label"
+            ],
+            "depends_on": []
+          }
+        ],
+        "evidence": [
+          {
+            "source_task_id": "20ba8f99-d025-4c11-bbd8-9211879b296d",
+            "tool_call_id": "7033e276-ce76-4e78-a65c-3a2f310e72f5",
+            "runner": "pytest",
+            "tests": 11,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0
+          }
+        ],
+        "merged_from": [],
+        "batch_id": "0c2e42db-8bb4-4a78-af43-43dfe55d816f",
+        "reuse_status": "active",
+        "derived_from": [],
+        "supersedes_id": null,
+        "required_capabilities": [],
+        "id": "00ec4871-dc22-4377-b036-d4a0ca0bd25e",
+        "created_at": "2026-11-14T13:49:25.612432Z"
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "stage": "empty",
+      "counts": {
+        "experiences": 0,
+        "knowledge_rules": 0,
+        "knowledge_evidence": 0,
+        "knowledge_sources": 0,
+        "knowledge_decisions": 0
+      },
+      "rules": [],
+      "jobs": [],
+      "references": []
+    },
+    {
+      "stage": "saved_1",
+      "counts": {
+        "experiences": 1,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 1,
+        "knowledge_sources": 1,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "pending",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "pending",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": []
+    },
+    {
+      "stage": "ready_1",
+      "counts": {
+        "experiences": 1,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 1,
+        "knowledge_sources": 1,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "ready",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": [
+        {
+          "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+          "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "error_type": "AttributeError",
+          "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+          "applicability": [
+            "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "label(None)、label('')、label(' ') 必须返回 'guest'。",
+            "不得修改测试文件和构建文件。",
+            "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+              "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+              "symbols": [
+                "rules.py#label"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 1,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "0144dd63-333b-42df-9ac6-fb2c8af9722b"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "saved_2",
+      "counts": {
+        "experiences": 2,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 2,
+        "knowledge_sources": 2,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "ready",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": [
+        {
+          "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+          "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "error_type": "AttributeError",
+          "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+          "applicability": [
+            "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "label(None)、label('')、label(' ') 必须返回 'guest'。",
+            "不得修改测试文件和构建文件。",
+            "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+              "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+              "symbols": [
+                "rules.py#label"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 2,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+            "f8b4443a-b2d5-4203-95d4-a0440d2eea28"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "ready_2",
+      "counts": {
+        "experiences": 2,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 2,
+        "knowledge_sources": 2,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "ready",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": [
+        {
+          "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+          "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "error_type": "AttributeError",
+          "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+          "applicability": [
+            "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "label(None)、label('')、label(' ') 必须返回 'guest'。",
+            "不得修改测试文件和构建文件。",
+            "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+              "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+              "symbols": [
+                "rules.py#label"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 2,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+            "f8b4443a-b2d5-4203-95d4-a0440d2eea28"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "saved_3",
+      "counts": {
+        "experiences": 3,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 3,
+        "knowledge_sources": 3,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "ready",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": [
+        {
+          "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+          "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "error_type": "AttributeError",
+          "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+          "applicability": [
+            "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "label(None)、label('')、label(' ') 必须返回 'guest'。",
+            "不得修改测试文件和构建文件。",
+            "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+              "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+              "symbols": [
+                "rules.py#label"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 3,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+            "f8b4443a-b2d5-4203-95d4-a0440d2eea28",
+            "00ec4871-dc22-4377-b036-d4a0ca0bd25e"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "ready_3",
+      "counts": {
+        "experiences": 3,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 3,
+        "knowledge_sources": 3,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "ready",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": [
+        {
+          "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+          "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "error_type": "AttributeError",
+          "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+          "applicability": [
+            "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "label(None)、label('')、label(' ') 必须返回 'guest'。",
+            "不得修改测试文件和构建文件。",
+            "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+              "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+              "symbols": [
+                "rules.py#label"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 3,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+            "f8b4443a-b2d5-4203-95d4-a0440d2eea28",
+            "00ec4871-dc22-4377-b036-d4a0ca0bd25e"
+          ]
+        }
+      ]
+    },
+    {
+      "stage": "same_save_retried",
+      "counts": {
+        "experiences": 3,
+        "knowledge_rules": 1,
+        "knowledge_evidence": 3,
+        "knowledge_sources": 3,
+        "knowledge_decisions": 0
+      },
+      "rules": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "ready",
+          "fingerprint": "7471a616c59b31453f57e3c2698dc31d7e8f71c6836d5e76b298bc0b727af5de"
+        }
+      ],
+      "jobs": [
+        {
+          "id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "state": "succeeded",
+          "attempts": 0,
+          "examined": 0
+        }
+      ],
+      "references": [
+        {
+          "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+          "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+          "schema_version": 4,
+          "language": "python",
+          "scope": "project",
+          "repository_id": "knowledge-python",
+          "reuse_status": "active",
+          "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "error_type": "AttributeError",
+          "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+          "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+          "applicability": [
+            "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+          ],
+          "constraints": [
+            "label 与 quantity 的修复规则互不依赖。",
+            "label(None)、label('')、label(' ') 必须返回 'guest'。",
+            "不得修改测试文件和构建文件。",
+            "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+          ],
+          "compatibility_key": "stable-v2",
+          "required_capabilities": [],
+          "issues": [
+            {
+              "error_type": "AttributeError",
+              "files": [
+                "rules.py"
+              ],
+              "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+              "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+              "symbols": [
+                "rules.py#label"
+              ]
+            }
+          ],
+          "evidence_summary": {
+            "verified_runs": 3,
+            "level": "source_project_tests",
+            "minimum_tests": 11
+          },
+          "source_ids": [
+            "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+            "f8b4443a-b2d5-4203-95d4-a0440d2eea28",
+            "00ec4871-dc22-4377-b036-d4a0ca0bd25e"
+          ]
+        }
+      ]
+    }
+  ],
+  "original_project_unchanged": true,
+  "original_records_unchanged": true,
+  "manual_merge_calls": 0,
+  "manual_review_decisions": 0,
+  "final_reference": {
+    "id": "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+    "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+    "schema_version": 4,
+    "language": "python",
+    "scope": "project",
+    "repository_id": "knowledge-python",
+    "reuse_status": "active",
+    "task_summary": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+    "error_type": "AttributeError",
+    "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+    "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+    "applicability": [
+      "适用于 Python 中需要将 None、空串或纯空白文本归一化为默认值的字符串字段；也适用于有效文本需去除首尾空白但保留大小写的场景。"
+    ],
+    "constraints": [
+      "label 与 quantity 的修复规则互不依赖。",
+      "label(None)、label('')、label(' ') 必须返回 'guest'。",
+      "不得修改测试文件和构建文件。",
+      "有效文本必须先去除首尾空白并返回，且保留原有大小写；例如 label(' Ada ') 返回 'Ada'。"
+    ],
+    "compatibility_key": "stable-v2",
+    "required_capabilities": [],
+    "issues": [
+      {
+        "error_type": "AttributeError",
+        "files": [
+          "rules.py"
+        ],
+        "root_cause": "label 直接调用 value.strip()，未先判断 None；当输入为 None 时，NoneType 没有 strip 方法并抛出 AttributeError。",
+        "solution": "在调用 strip 前增加 None 判断：if value is None: return 'guest'；再对非 None 文本执行去除首尾空白。",
+        "symbols": [
+          "rules.py#label"
+        ]
+      }
+    ],
+    "evidence_summary": {
+      "verified_runs": 3,
+      "level": "source_project_tests",
+      "minimum_tests": 11
+    },
+    "source_ids": [
+      "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+      "f8b4443a-b2d5-4203-95d4-a0440d2eea28",
+      "00ec4871-dc22-4377-b036-d4a0ca0bd25e"
+    ]
+  },
+  "provenance": {
+    "rule_id": "3b61101c-3aaa-58b7-963d-513e1f77faa5",
+    "source_ids": [
+      "00ec4871-dc22-4377-b036-d4a0ca0bd25e",
+      "0144dd63-333b-42df-9ac6-fb2c8af9722b",
+      "f8b4443a-b2d5-4203-95d4-a0440d2eea28"
+    ],
+    "evidence_count": 3,
+    "next_offset": null
+  },
+  "label_before": "def label(value):\n    return value.strip()",
+  "label_after": "def label(value):\n    if value is None:\n        return 'guest'\n    text = value.strip()\n    if not text:\n        return 'guest'\n    return text"
+}

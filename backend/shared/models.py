@@ -89,7 +89,7 @@ class ToolName(str, Enum):
 
 class TestSourceInfo(SharedModel):
     path: Annotated[str, StringConstraints(strip_whitespace=False, min_length=1, max_length=1_000)]
-    language: Literal["java", "python"]
+    language: Literal["java", "python", "go", "cpp"]
     sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
@@ -166,12 +166,14 @@ class ToolResult(SharedModel):
 
 
 class RepairIssue(SharedModel):
-    """One repair rule; array order in an experience expresses repair order."""
+    """One repair rule. Only explicit depends_on ordinals express dependencies."""
 
     error_type: str = Field(min_length=1, max_length=200)
     root_cause: str = Field(min_length=1, max_length=5_000)
     solution: str = Field(min_length=1, max_length=10_000)
     files: list[Annotated[str, StringConstraints(strip_whitespace=False, min_length=1, max_length=1_000)]] = Field(default_factory=list, max_length=50)
+    symbols: list[Annotated[str, StringConstraints(min_length=1, max_length=1_200)]] = Field(default_factory=list, max_length=50)
+    depends_on: list[Annotated[int, Field(strict=True, ge=0, lt=50)]] = Field(default_factory=list, max_length=50)
 
     @field_validator("files")
     @classmethod
@@ -196,7 +198,7 @@ class VerificationEvidence(SharedModel):
 
     source_task_id: str
     tool_call_id: str
-    runner: Literal["maven", "pytest"]
+    runner: Literal["maven", "pytest", "go", "ctest"]
     tests: int = Field(strict=True, gt=0, le=10_000_000)
     failures: int = Field(default=0, strict=True, ge=0, le=0)
     errors: int = Field(default=0, strict=True, ge=0, le=0)
@@ -214,11 +216,13 @@ class ExperienceCreate(SharedModel):
     verification: str = Field(min_length=1, max_length=5_000)
     tags: list[str] = Field(default_factory=list, max_length=20)
     source_task_id: str | None = None
-    schema_version: Literal[1, 2, 3] = 2
-    language: Literal["java", "python"] = "java"
+    schema_version: Literal[1, 2, 3, 4] = 2
+    language: Literal["java", "python", "go", "cpp"] = "java"
     scope: Literal["global", "project"] = "global"
     repository_id: str | None = Field(default=None, min_length=1, max_length=200)
     source_revision: str | None = Field(default=None, min_length=1, max_length=200)
+    compatibility_key: str | None = Field(default=None, min_length=1, max_length=200)
+    constraints: list[Annotated[str, StringConstraints(min_length=1, max_length=1_000)]] = Field(default_factory=list, max_length=20)
     applicability: list[Annotated[str, StringConstraints(min_length=1, max_length=1_000)]] = Field(default_factory=list, max_length=20)
     issues: list[RepairIssue] = Field(default_factory=list, max_length=50)
     evidence: list[VerificationEvidence] = Field(default_factory=list, max_length=100)
@@ -235,7 +239,7 @@ class ExperienceCreate(SharedModel):
         if isinstance(data, dict) and "reuse_status" not in data:
             data = dict(data)
             data["reuse_status"] = ("active" if data.get("scope") == "project" else
-                                    "candidate" if data.get("schema_version") == 3 else "legacy_unreviewed")
+                                    "candidate" if data.get("schema_version") in {3, 4} else "legacy_unreviewed")
         return data
 
     _validate_optional_ids = field_validator("batch_id", "supersedes_id")(
@@ -262,11 +266,19 @@ class ExperienceCreate(SharedModel):
             raise ValueError("project experience requires repository_id")
         if self.scope == "global" and self.repository_id is not None:
             raise ValueError("global experience must not carry repository_id")
-        runner = "maven" if self.language == "java" else "pytest"
+        runner = {"java": "maven", "python": "pytest", "go": "go", "cpp": "ctest"}[self.language]
         if any(item.runner != runner for item in self.evidence):
             raise ValueError("verification runner must match experience language")
-        if self.schema_version == 3 and self.reuse_status == "active" and not self.evidence:
+        if self.schema_version >= 3 and self.reuse_status == "active" and not self.evidence:
             raise ValueError("active V3 experience requires verified evidence")
+        for ordinal, issue in enumerate(self.issues):
+            if ordinal in issue.depends_on or any(i >= len(self.issues) for i in issue.depends_on):
+                raise ValueError("rule dependencies must refer to other issues in this experience")
+        from graphlib import CycleError, TopologicalSorter
+        try:
+            tuple(TopologicalSorter({i: issue.depends_on for i, issue in enumerate(self.issues)}).static_order())
+        except CycleError:
+            raise ValueError("explicit rule dependencies must be acyclic") from None
         return self
 
 
@@ -365,7 +377,7 @@ class PromotionDraft(SharedModel):
     root_cause: str = Field(min_length=1, max_length=5000)
     solution: str = Field(min_length=1, max_length=10000)
     tags: list[str] = Field(default_factory=list, max_length=20)
-    language: Literal["java", "python"]
+    language: Literal["java", "python", "go", "cpp"]
     applicability: list[Annotated[str, StringConstraints(min_length=1, max_length=1000)]] = Field(min_length=1, max_length=20)
     issues: list[RepairIssue] = Field(min_length=1, max_length=50)
     required_capabilities: list[Annotated[str, StringConstraints(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=30)
@@ -374,11 +386,85 @@ class PromotionDraft(SharedModel):
     _normalize_conditions = field_validator("applicability", "required_capabilities")(_normalize_conditions)
 
 
+class MergeConflictDetail(SharedModel):
+    code: Literal["scope_mismatch", "applicability_mismatch", "status_mismatch", "capability_mismatch",
+                  "rule_overlap", "evidence_mismatch", "order_cycle", "content_limit", "source_unavailable",
+                  "unknown_relation", "version_mismatch", "semantic_equivalent"]
+    message: str
+    source_ids: list[str]
+    field: str
+    suggestion: str
+
+
 class MergePreview(SharedModel):
     can_merge: bool
     conflicts: list[str]
     source_ids: list[str]
     preview: ExperienceCreate | None
+    conflict_details: list[MergeConflictDetail] = Field(default_factory=list)
+
+
+class ConsolidationReport(SharedModel):
+    examined: int = Field(strict=True, ge=0)
+    merged_ids: list[str] = Field(default_factory=list)
+    conflict_ids: list[str] = Field(default_factory=list)
+    deferred_groups: int = Field(default=0, strict=True, ge=0)
+    next_cursor: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    job_id: str | None = None
+    pending_jobs: int = Field(default=0, ge=0)
+    failed_jobs: int = Field(default=0, ge=0)
+    unknown_pairs: int = Field(default=0, ge=0)
+
+
+class ConflictResolution(SharedModel):
+    version: int = Field(strict=True, ge=1)
+    resolution: Literal["prefer_source", "keep_separate", "confirm_equivalent", "confirm_compatible"]
+    preferred_source_id: str | None = None
+    note: str = Field(min_length=1, max_length=2000)
+
+    _validate_preferred = field_validator("preferred_source_id")(
+        lambda value: _canonical_uuid(value) if value is not None else value)
+
+    @model_validator(mode="after")
+    def validate_choice(self):
+        if (self.resolution == "prefer_source") != (self.preferred_source_id is not None):
+            raise ValueError("prefer_source requires exactly one preferred source")
+        return self
+
+
+class AutomaticConflictResolution(SharedModel):
+    state: Literal['verifying', 'resolved', 'needs_confirmation']
+    actor: Literal['system']
+    policy: str
+    stage: str
+    reason: str
+    targets: list[str]
+    runs: list[dict[str, Any]]
+    resolution: Literal['prefer_source', 'keep_separate'] | None = None
+    preferred_source_id: str | None = None
+    started_at: str
+    updated_at: str
+    evidence_hash: str | None = None
+
+
+class ExperienceConflict(SharedModel):
+    id: str
+    sources: list[Experience] = Field(min_length=2, max_length=2)
+    details: list[MergeConflictDetail] = Field(min_length=1)
+    status: Literal["pending", "resolved", "obsolete"]
+    version: int = Field(strict=True, ge=1)
+    created_at: datetime
+    resolved_at: datetime | None = None
+    resolution: Literal["prefer_source", "keep_separate", "confirm_equivalent", "confirm_compatible"] | None = None
+    preferred_source_id: str | None = None
+    note: str | None = None
+    rule_ids: list[str] = Field(default_factory=list, max_length=2)
+    relation: Literal["conflict", "unknown", "equivalent", "compatible"] = "conflict"
+    automatic_resolution: AutomaticConflictResolution | None = None
+
+    _validate_id = field_validator("id")(_canonical_uuid)
+    _validate_dates = field_validator("created_at", "resolved_at")(
+        lambda value: _require_aware_datetime(value) if value is not None else value)
 
 
 class PromotionPreview(SharedModel):
@@ -401,8 +487,10 @@ class AgentRequest(SharedModel):
     task_description: str = Field(min_length=1, max_length=MAX_TEXT_LENGTH)
     workspace: Path
     max_steps: int = Field(default=20, ge=1, le=MAX_STEPS)
-    language: Literal["java", "python"] = "java"
+    language: Literal["java", "python", "go", "cpp"] = "java"
     repository_id: str | None = Field(default=None, min_length=1, max_length=200)
+    experience_contract: str | None = Field(default=None, max_length=200)
+    runner_hash: str | None = Field(default=None, pattern=r'^[0-9a-f]{64}$')
     source_revision: str | None = Field(default=None, min_length=1, max_length=200)
     execution_mode: Literal["single", "multi"] = "single"
     capabilities: list[Annotated[str, StringConstraints(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=30)
@@ -488,7 +576,13 @@ class AgentResult(SharedModel):
             raise ValueError(
                 "successful repairs must report whether experience saving succeeded"
             )
-        if not succeeded and self.experience_saved is not None:
+        verified_stop = (self.status is TaskStatus.STOPPED and self.repair_succeeded
+                         and self.tests_passed is True and bool(self.steps) and bool(self.tool_results)
+                         and self.steps[-1].name == ToolName.RUN_TESTS.value
+                         and self.tool_results[-1].call_id == self.steps[-1].id
+                         and self.tool_results[-1].success
+                         and self.tool_results[-1].metadata.get("final_verification") is True)
+        if not (succeeded or verified_stop) and self.experience_saved is not None:
             raise ValueError(
                 "experience saving must not be attempted for unsuccessful repairs"
             )
@@ -574,6 +668,10 @@ class TaskCreateRequest(SharedModel):
     source_project: str = Field(min_length=1, max_length=1_000)
     max_steps: int = Field(default=20, ge=1, le=MAX_STEPS)
     execution_mode: Literal["single", "multi"] = "single"
+    knowledge_recovery_id: str | None = None
+
+    _validate_recovery_id = field_validator('knowledge_recovery_id')(
+        lambda value: _canonical_uuid(value) if value is not None else value)
 
 
 class TaskCreateResponse(SharedModel):

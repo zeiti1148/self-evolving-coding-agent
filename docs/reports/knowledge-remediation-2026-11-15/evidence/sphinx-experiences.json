@@ -1,0 +1,95 @@
+[
+  {
+    "task_summary": "修复 Sphinx autodoc 在启用 inherited-members 时无法为继承实例属性（self.attr #: doc）收集和输出基类文档的问题；同时保证 MRO 优先级、共同祖先去重、反向基类顺序、本地覆盖，以及显式 :inherited-members: <base> 截止类语义。",
+    "error_type": "AssertionError",
+    "root_cause": "get_class_members 仅用当前文档类模块 analyzer.attr_docs 中 namespace 等于当前类 objpath 的条目补充实例属性；Documenter.filter_members 也只按当前 (namespace, membername) 查 attr_docs。父类（尤其跨模块父类）中的 self.attr #: 注释因此不会被发现或识别。扩展为遍历基类时还必须按 MRO 先序合并：本地声明优先，左侧基类优先，共同祖先只输出一次，反向基类时以新的首个父类为准；不能让更深或右侧父类覆盖同名成员。另有已文档化属性分支直接 keep=True，绕过了 :inherited-members: 截止类过滤，导致显式指定 Root 时 Root 的声明仍被输出。",
+    "solution": "在 get_class_members 中按 getmro(subject) 从当前类到基类顺序，使用各 cls.__module__ 的 ModuleAnalyzer 查询 (cls.__qualname__, attrname) 的注释；对不存在成员添加 ClassAttribute(..., INSTANCEATTR, docstring)，对已存在成员仅在其 docstring 为空且尚无更靠前 MRO 类提供的文档时补充。Documenter.filter_members 同步识别基类 namespace 的 attr_docs，并把 ObjectMember.docstring 保留到成员文档。对已文档化属性分支也调用 is_filtered_inherited_member：当 want_all 且 members 为 ALL 时，命中截止类或更上层则 keep=False；保留截止类以下（更派生）的 Middle/Leaf 声明。",
+    "verification": "程序独立运行 pytest 最终验证，148 项测试全部通过；工具调用编号：84266cab-ac58-4195-9562-cf4183d3d4e5。",
+    "tags": [
+      "python",
+      "Sphinx",
+      "autodoc",
+      "inherited-members",
+      "实例属性",
+      "MRO",
+      "文档注释",
+      "跨模块继承",
+      "截止类"
+    ],
+    "source_task_id": "01403326-4f55-4098-887a-9136838899a1",
+    "schema_version": 4,
+    "language": "python",
+    "scope": "project",
+    "repository_id": "uploaded/4bacceb1dadf21def7d393e463d2d2a8",
+    "source_revision": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:657f4172e6c42adf67a99898e0514a6dd9bc6cf46e543606c003f547269cfafb",
+    "compatibility_key": "git:d724266393588a1e93ec70f37b9351ef05288c12;tree:657f4172e6c42adf67a99898e0514a6dd9bc6cf46e543606c003f547269cfafb",
+    "constraints": [
+      "测试与构建配置不可修改。",
+      "只修改生产源码，保持未涉及的业务行为不变。",
+      "必须在 :inherited-members: 启用时包含继承实例属性；未启用时仍只包含直接定义成员。",
+      "显式 :inherited-members: <base> 表示截止类：排除该基类及更上层基类的声明。",
+      "同一成员名在 MRO 中先出现者优先：当前类/本地声明优先于基类，左侧基类优先于右侧基类。",
+      "共同祖先的成员只能输出一次。",
+      "反向列出基类时，以新的第一个父类为准。",
+      "不得让更深或右侧父类的同名属性文档覆盖已有更靠前成员。",
+      "只有当前成员缺少 docstring 且尚未由更靠前 MRO 类提供文档时，才合并基类文档。",
+      "filter_members 必须同时识别基类 namespace 的 attr_docs。",
+      "已文档化属性的截止类过滤仅在 want_all 为真且 members 为 ALL 时执行。"
+    ],
+    "applicability": [
+      "适用于 Sphinx autodoc 中 inherited-members 与实例属性（__init__ 中的 self.attr #: 注释）结合的场景。",
+      "适用于继承层次跨模块、菱形继承、同名属性覆盖、反向基类顺序以及显式继承截止类的场景。",
+      "需要沿用现有 ModuleAnalyzer.attr_docs 与 ClassAttribute/ObjectMember 机制。"
+    ],
+    "issues": [
+      {
+        "error_type": "AssertionError",
+        "root_cause": "get_class_members 只用当前类模块 analyzer 中 namespace == '.'.join(objpath) 的 attr_docs 补充实例属性，未按 MRO 查看父类/父模块的 (qualname, attrname) 键；因此 test_inherited_instance_variable 缺少 Bar.attr1，跨模块继承页面缺少 ROOT/LEFT/RIGHT/LEAF 等基类声明。简单改为遍历父类若不做先序合并，还会导致菱形继承重复、共享祖先重复、同名属性被右侧或更深父类覆盖。",
+        "solution": "按 MRO 从当前类到基类遍历：对每个 cls 使用 ModuleAnalyzer.for_module(cls.__module__)，读取 attr_docs[(cls.__qualname__, name)]。若 name 尚不存在，添加 INSTANCEATTR/ClassAttribute 并带上 docstring；若已存在，仅当尚未有更靠前 MRO 类提供 docstring 时补充，绝不覆盖已有文档，也不重复添加。ClassDocumenter.get_object_members 将 m.docstring 写入 ObjectMember，filter_members 同时检查基类 namespace 的 attr_docs 以保留文档属性。",
+        "files": [
+          "sphinx/ext/autodoc/importer.py",
+          "sphinx/ext/autodoc/__init__.py"
+        ],
+        "symbols": [
+          "sphinx/ext/autodoc/__init__.py#ClassDocumenter.get_object_members",
+          "sphinx/ext/autodoc/__init__.py#Documenter.filter_members",
+          "sphinx/ext/autodoc/importer.py#get_class_members"
+        ],
+        "depends_on": []
+      },
+      {
+        "error_type": "AssertionError",
+        "root_cause": "Documenter.filter_members 在 (namespace, membername) 命中 attr_docs 的已文档化属性分支直接 keep=True，没有执行 is_filtered_inherited_member；因此 :inherited-members: Root 时 Root.__init__ 中的实例属性仍被输出到 Leaf，test_explicit_cutoff_hides_root_declarations 失败。",
+        "solution": "在已文档化属性分支中同样执行继承截止检查：当 want_all 且 members 为 ALL 时，若 is_filtered_inherited_member(membername) 为真则 keep=False；否则 keep=True 并保持 isattr=True。is_filtered_inherited_member 应按 MRO 判断成员来自指定截止类或更上层，保留截止类以下（更派生）的 Middle/Leaf 声明。",
+        "files": [
+          "sphinx/ext/autodoc/__init__.py"
+        ],
+        "symbols": [
+          "sphinx/ext/autodoc/__init__.py#Documenter.filter_members"
+        ],
+        "depends_on": [
+          0
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "source_task_id": "01403326-4f55-4098-887a-9136838899a1",
+        "tool_call_id": "84266cab-ac58-4195-9562-cf4183d3d4e5",
+        "runner": "pytest",
+        "tests": 148,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "merged_from": [],
+    "batch_id": "4115984a-a427-44f1-a6e5-7498198c3590",
+    "reuse_status": "active",
+    "derived_from": [],
+    "supersedes_id": null,
+    "required_capabilities": [],
+    "id": "414bf457-a740-4d05-9760-772bd04e7616",
+    "created_at": "2026-11-15T06:30:26.419524Z"
+  }
+]

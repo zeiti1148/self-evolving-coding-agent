@@ -34,6 +34,13 @@ export function mockWorkflows(state: MockState, persist: () => void, now: () => 
     return { can_merge: !conflicts.length, conflicts, source_ids: ids, preview: conflicts.length ? null : preview }
   }
   return {
+    // The browser demo has no local model or durable worker; report that honestly.
+    async listMaintenanceJobs(signal) { abort(signal); return [] },
+    async getExperienceMaintenance(id, signal) {
+      abort(signal); find(id)
+      return { experience_id: id, effective_status: 'paused', current_rule_ids: [], rules: [] }
+    },
+    async getReviewHistory(id, signal) { abort(signal); find(id); return [] },
     async getExperience(id, signal) { abort(signal); return clone(find(id)) },
     async getProvenance(id, signal) {
       abort(signal)

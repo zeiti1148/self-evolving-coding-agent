@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import hashlib
 import sqlite3
+import re
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from uuid import UUID, uuid4
@@ -23,9 +24,29 @@ COLUMNS = (
 )
 ORDER = " ORDER BY created_at DESC, id DESC"
 SUPERSEDED = "SELECT source_id FROM experience_merge_sources UNION SELECT previous_id FROM experience_publication_revisions"
+RETIRED = "SELECT experience_id FROM experience_retirements"
+QUARANTINED = ("SELECT left_id FROM experience_conflicts WHERE status='pending' UNION "
+               "SELECT right_id FROM experience_conflicts WHERE status='pending'")
+from .knowledge import BLOCKED
+UNCHECKED = "SELECT s.experience_id FROM knowledge_sources s JOIN experiences e ON e.id=s.experience_id WHERE json_extract(e.details, '$.schema_version')>=3 AND json_extract(e.details, '$.reuse_status')='active' GROUP BY s.experience_id HAVING sum(s.rule_id NOT IN (" + BLOCKED + "))=0"
+UNAVAILABLE = f"{SUPERSEDED} UNION {RETIRED} UNION {QUARANTINED} UNION {UNCHECKED}"
+
+
+def unavailable_source_query(connection) -> str:
+    """Same exclusion policy for immutable snapshots made before schema upgrades."""
+    tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    queries = [query for table, query in (
+        ("experience_merge_sources", "SELECT source_id FROM experience_merge_sources"),
+        ("experience_publication_revisions", "SELECT previous_id FROM experience_publication_revisions"),
+        ("experience_retirements", RETIRED), ("experience_conflicts", QUARANTINED),
+        ("knowledge_sources", UNCHECKED),
+    ) if table in tables]
+    return " UNION ".join(queries) or "SELECT id FROM experiences WHERE 0"
+
+
 DETAIL_FIELDS = frozenset({"schema_version", "language", "scope", "repository_id", "source_revision",
                            "applicability", "issues", "evidence", "merged_from", "batch_id", "reuse_status",
-                           "derived_from", "supersedes_id", "required_capabilities"})
+                           "derived_from", "supersedes_id", "required_capabilities", "compatibility_key", "constraints"})
 
 
 def validation_error(message: str) -> ApplicationError:
@@ -99,7 +120,7 @@ def _normalized(value: str) -> str:
 
 
 def _validate_filters(language=None, repository_id=None, scope=None):
-    if language is not None and (not isinstance(language, str) or language not in {"java", "python"}):
+    if language is not None and (not isinstance(language, str) or language not in {"java", "python", "go", "cpp"}):
         raise validation_error("语言必须为 java 或 python。")
     if scope is not None and (not isinstance(scope, str) or scope not in {"global", "project"}):
         raise validation_error("经验范围必须为通用（global）或仓库专属（project）。")
@@ -120,6 +141,12 @@ def _insert(connection: sqlite3.Connection, saved: Experience) -> None:
          saved.verification, json.dumps(saved.tags, ensure_ascii=False), saved.source_task_id,
          saved.created_at.isoformat(timespec="microseconds"), json.dumps(details, ensure_ascii=False)),
     )
+    from .consolidation import index_experience
+    index_experience(connection, saved)
+    from .knowledge import ingest
+    ingest(connection, saved)
+    from .automation import enqueue
+    enqueue(connection, saved)
 
 
 def _new_experience(data: ExperienceCreate) -> Experience:
@@ -134,13 +161,13 @@ def _source_issues(entry: Experience) -> list[RepairIssue]:
 def _file_keys(issue: RepairIssue) -> frozenset[str]:
     # Models normalize newly saved and decoded records. Canonicalize again here
     # so conflict identity cannot depend on a path spelling in an older record.
-    return frozenset(PurePosixPath(path).as_posix().casefold() for path in issue.files)
+    return frozenset(PurePosixPath(path).as_posix() for path in issue.files)
 
 
 def _issue_key(issue: RepairIssue) -> tuple:
     # Prose may contain case-sensitive identifiers and significant string whitespace.
-    return (_normalized(issue.error_type), issue.root_cause, issue.solution,
-            tuple(sorted(_file_keys(issue))))
+    return (issue.error_type, issue.root_cause, issue.solution,
+            tuple(sorted(_file_keys(issue))), tuple(sorted(issue.symbols)))
 
 
 def _unique_text(values):
@@ -171,88 +198,16 @@ def _preview(connection: sqlite3.Connection, ids: list[str]) -> dict:
             conflicts.append(f"未找到经验：{source_id}")
             continue
         sources.append(decode_row(row))
-        if connection.execute(f"SELECT 1 WHERE ? IN ({SUPERSEDED})", (source_id,)).fetchone():
-            conflicts.append(f"经验已被合并或替代：{source_id}")
+        from .knowledge import source_requires_review
+        if connection.execute(f"SELECT 1 WHERE ? IN ({UNAVAILABLE})", (source_id,)).fetchone() or source_requires_review(connection,source_id):
+            conflicts.append(f"经验已被合并、替代或因冲突暂停复用：{source_id}")
     if conflicts:
-        return {"can_merge": False, "conflicts": conflicts, "source_ids": ids, "preview": None}
-    # Stable source chronology preserves each record's declared repair order.
-    sources.sort(key=lambda source: (source.created_at, source.id))
-    first = sources[0]
-    for source in sources[1:]:
-        if (source.language, source.scope, source.repository_id) != (first.language, first.scope, first.repository_id):
-            conflicts.append("待合并经验必须具有相同的语言、使用范围和所属仓库。")
-        if set(source.applicability) != set(first.applicability):
-            conflicts.append("适用条件不同，请分别保留这些经验。")
-        if source.reuse_status != first.reuse_status:
-            conflicts.append("复用状态不同，不能通过合并代替发布或审阅。")
-        if set(source.required_capabilities) != set(first.required_capabilities):
-            conflicts.append("目标所需能力不同，请分别保留这些经验。")
-    issues = []
-    evidence = []
-    evidence_seen = set()
-    issue_orders = []
-    for source in sources:
-        prior_source_issues = list(issues)
-        issue_orders.append(list(dict.fromkeys(_issue_key(issue) for issue in _source_issues(source))))
-        for issue in _source_issues(source):
-            duplicate = any(_issue_key(issue) == _issue_key(previous) for previous in issues)
-            for previous in prior_source_issues:
-                same_error = _normalized(issue.error_type) == _normalized(previous.error_type)
-                overlap = not issue.files or not previous.files or bool(
-                    _file_keys(issue) & _file_keys(previous))
-                same_rule = (issue.root_cause, issue.solution) == (previous.root_cause, previous.solution)
-                if same_error and overlap and not same_rule:
-                    conflicts.append(f"针对 {issue.error_type} 的修复规则存在重叠冲突，请检查来源记录。")
-            if not duplicate:
-                issues.append(issue)
-        for item in source.evidence:
-            key = (item.source_task_id, item.tool_call_id)
-            if key in evidence_seen:
-                previous = next(e for e in evidence if (e.source_task_id, e.tool_call_id) == key)
-                if previous != item:
-                    conflicts.append("同一次验证调用的测试证据不一致。")
-            else:
-                evidence_seen.add(key)
-                evidence.append(item)
-    # Preserve each source's repair ordering. Opposite dependency orders cannot
-    # be represented by one plan and must be reviewed rather than overwritten.
-    pending = {_issue_key(issue): issue for issue in issues}
-    predecessors = {key: set() for key in pending}
-    for order in issue_orders:
-        for before, after in zip(order, order[1:]):
-            predecessors[after].add(before)
-    ordered = []
-    while pending:
-        ready = next((key for key in pending if not predecessors[key] & pending.keys()), None)
-        if ready is None:
-            conflicts.append("来源经验要求的修复顺序存在冲突。")
-            break
-        ordered.append(pending.pop(ready))
-    if not pending:
-        issues = ordered
-    if conflicts:
-        return {"can_merge": False, "conflicts": list(dict.fromkeys(conflicts)), "source_ids": ids, "preview": None}
-    error_types = _unique_text(issue.error_type for issue in issues)
-    revisions = {source.source_revision for source in sources}
-    try:
-        preview = ExperienceCreate(
-            schema_version=3,
-            reuse_status=first.reuse_status if all(source.evidence for source in sources) else "legacy_unreviewed",
-            required_capabilities=first.required_capabilities,
-            task_summary="合并经验：" + " / ".join(_unique_text(source.task_summary for source in sources)),
-            error_type=error_types[0] if len(error_types) == 1 else None,
-            root_cause="\n".join(f"{i + 1}. {issue.root_cause}" for i, issue in enumerate(issues)),
-            solution="\n".join(f"{i + 1}. {issue.solution}" for i, issue in enumerate(issues)),
-            verification="\n".join(_unique_text(source.verification for source in sources)),
-            tags=_unique_text(tag for source in sources for tag in source.tags),
-            language=first.language, scope=first.scope, repository_id=first.repository_id,
-            source_revision=next(iter(revisions)) if len(revisions) == 1 else None,
-            applicability=first.applicability, issues=issues, evidence=evidence, merged_from=ids,
-        )
-    except ValidationError:
-        return {"can_merge": False, "conflicts": ["合并后内容超出记录限制，请减少合并的经验数量。"],
-                "source_ids": ids, "preview": None}
-    return {"can_merge": True, "conflicts": [], "source_ids": ids, "preview": preview}
+        from .merging import detail
+        return {"can_merge": False, "conflicts": conflicts, "source_ids": ids, "preview": None,
+                "conflict_details": [detail("source_unavailable", message, ids, "source_ids",
+                    "刷新列表，检查来源图或处理待审阅冲突。") for message in conflicts]}
+    from .merging import build_preview
+    return build_preview(sources, ids)
 
 
 class ExperienceStore:
@@ -283,6 +238,61 @@ class ExperienceStore:
         from .batches import save_batch
         return save_batch(self.database_path, items, source_task_id=source_task_id)
 
+    def initialize(self):
+        from .database import initialize
+        initialize(self.database_path)
+
+    def consolidate_experiences(self, *, language: str, repository_id: str, cursor: str | None = None):
+        from .jobs import drain
+        _validate_filters(language, repository_id)
+        if language is None or repository_id is None:
+            raise validation_error("自动整理需要指定语言和仓库。")
+        if cursor is not None and (not isinstance(cursor, str) or not re.fullmatch(r"[0-9a-f]{64}", cursor)):
+            raise validation_error("自动整理游标无效。")
+        return drain(self.database_path, language=language, repository_id=repository_id)
+
+    def list_conflicts(self, *, language=None, repository_id=None, status="pending", limit=20, offset=0):
+        from .conflicts import list_conflicts
+        _validate_filters(language, repository_id)
+        validate_integer(limit, "limit", 1)
+        validate_integer(offset, "offset", 0)
+        if limit > 100 or not isinstance(status, str) or status not in {"pending", "resolved", "obsolete"}:
+            raise validation_error("冲突状态无效或分页数量超过 100。")
+        from .reviews import list_reviews
+        count = offset + limit
+        current = list_reviews(self.database_path, language, repository_id, status, count, 0)
+        legacy = list_conflicts(self.database_path, language, repository_id, status, count, 0)
+        return sorted([*current, *legacy], key=lambda item: (item.created_at, item.id), reverse=True)[offset:count]
+
+    def resolve_conflict(self, conflict_id, resolution):
+        from .conflicts import resolve_conflict
+        from .reviews import resolve
+        with connect(self.database_path) as connection:
+            current = connection.execute('SELECT 1 FROM knowledge_relations WHERE id=?', (_uuid(conflict_id),)).fetchone()
+        return (resolve if current else resolve_conflict)(self.database_path, _uuid(conflict_id), resolution)
+
+    def retrieve_model_references(self, query='', **context):
+        from .retrieval import retrieve
+        self.initialize()
+        return retrieve(self.database_path, query, **context)
+
+    def reopen_conflict(self, identifier, version, note):
+        from .reviews import reopen
+        from .conflicts import reopen_legacy
+        with connect(self.database_path) as connection:
+            current = connection.execute('SELECT 1 FROM knowledge_relations WHERE id=?', (_uuid(identifier),)).fetchone()
+        return (reopen if current else reopen_legacy)(self.database_path, _uuid(identifier), version, note)
+
+    def review_history(self, identifier):
+        from .reviews import history
+        from .conflicts import legacy_history
+        return history(self.database_path, _uuid(identifier)) or legacy_history(self.database_path, _uuid(identifier))
+
+    def experience_maintenance(self, identifier):
+        from .knowledge import source_status
+        return source_status(self.database_path, _uuid(identifier))
+
+
     def preview_promotion(self, source_id: str):
         from .promotion import preview_promotion
         return preview_promotion(self.database_path, source_id)
@@ -310,7 +320,7 @@ class ExperienceStore:
             source_task_id = _uuid(source_task_id)
         with connect(self.database_path) as connection:
             if any(value is not None for value in (language, repository_id, scope, reuse_status, source_task_id)) or active_only:
-                where = f" WHERE id NOT IN ({SUPERSEDED})" if active_only else ""
+                where = f" WHERE id NOT IN ({UNAVAILABLE})" if active_only else ""
                 items = []
                 matched = 0
                 for row in connection.execute(f"SELECT {COLUMNS} FROM experiences{where}{ORDER}"):
@@ -363,7 +373,7 @@ class ExperienceStore:
         context = RetrievalContext(language, repository_id, frozenset(capabilities or []))
         with connect(self.database_path) as connection:
             entries = (decode_row(row) for row in connection.execute(
-                f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({SUPERSEDED}){ORDER}"))
+                f"SELECT {COLUMNS} FROM experiences WHERE id NOT IN ({UNAVAILABLE}){ORDER}"))
             return rank_references(entries, context, query=query, error_types=error_types, limit=limit)
 
     def preview_merge(self, experience_ids: list[str]) -> dict:
@@ -419,7 +429,7 @@ class ExperienceStore:
         except UnicodeEncodeError:
             raise validation_error("搜索文本包含无效字符。") from None
 
-        conditions: list[str] = ["id NOT IN (SELECT source_id FROM experience_merge_sources)"]
+        conditions: list[str] = [f"id NOT IN ({UNAVAILABLE})"]
         parameters: list[str | int] = []
         if query.strip():
             conditions.append(

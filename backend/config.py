@@ -7,8 +7,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from backend.projects import ProjectDefinition, load_catalog
+from backend.llm_configuration import IDENTITY_FIELDS, SOURCE_FIELDS, resolve_profile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,10 +22,13 @@ class Settings:
     llm_base_url: str = ""
     llm_api_key: str = field(default="", repr=False)
     llm_model: str = ""
+    llm_config_source: str = "explicit_settings"
+    llm_config_file: str | None = None
     llm_trust_env: bool = False
     llm_timeout: float = 60.0
     task_timeout: float = 600.0
     use_experience: bool = True
+    enable_knowledge_models: bool = False
     python_executable: Path = field(default_factory=lambda: Path(sys.executable))
     project_definitions: dict[str, ProjectDefinition] = field(default_factory=dict)
     projects: dict[str, Path] = field(default_factory=lambda: {
@@ -62,8 +66,13 @@ class Settings:
                                  task_example=greeting if identifier == "java-null-greeting" else "修复项目中的异常并通过全部原始测试，保持正常行为。")
 
     @classmethod
-    def from_env(cls) -> Settings:
-        load_dotenv(ROOT / ".env", override=False)
+    def from_env(cls, *, llm_env_file: Path | None = None) -> Settings:
+        profile, profile_source, profile_file = resolve_profile(ROOT, llm_env_file)
+        # Keep existing non-credential environment overrides. Model credentials
+        # remain scoped to a single profile and never pollute the parent process.
+        for name, value in dotenv_values(ROOT / ".env").items():
+            if value is not None and name not in IDENTITY_FIELDS | SOURCE_FIELDS:
+                os.environ.setdefault(name, value)
         from backend.experience.database import configured_database_path
 
         def path(name: str, default: Path) -> Path:
@@ -94,13 +103,16 @@ class Settings:
             workspace_root=path("WORKSPACE_ROOT", ROOT / "runtime/workspaces"),
             database_path=configured_database_path(),
             maven_home=path("MAVEN_HOME", ROOT / ".cache/maven/apache-maven-3.9.11"),
-            llm_base_url=os.environ.get("LLM_API_BASE_URL", "").rstrip("/"),
-            llm_api_key=os.environ.get("LLM_API_KEY", ""),
-            llm_model=os.environ.get("LLM_MODEL", ""),
+            llm_base_url=profile["LLM_API_BASE_URL"].rstrip("/"),
+            llm_api_key=profile["LLM_API_KEY"],
+            llm_model=profile["LLM_MODEL"],
+            llm_config_source=profile_source,
+            llm_config_file=profile_file,
             llm_trust_env=trust_env == "true",
             llm_timeout=float(os.environ.get("LLM_TIMEOUT_SECONDS", "60")),
             task_timeout=float(os.environ.get("TASK_TIMEOUT_SECONDS", "600")),
             use_experience=experience == "true",
+            enable_knowledge_models=os.environ.get("KNOWLEDGE_MODELS_ENABLED", "true").lower() == "true",
             python_executable=path("PYTHON_EXECUTABLE", Path(sys.executable)),
             project_definitions=definitions,
             projects=projects,

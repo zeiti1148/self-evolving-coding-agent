@@ -98,10 +98,11 @@ def test_final_verification_tristate(setup, code, expected):
 def test_budget_exhaustion_keeps_stopped_even_with_passing_final_tests(setup):
     request, store, execute = setup
     request.max_steps = 1
-    llm = SequenceLLM([tool_message()])
+    llm = SequenceLLM([tool_message(), extraction()])
     result = Agent(llm, execute, store).run(request)
     assert result.status == "stopped" and result.tests_passed is True and result.repair_succeeded
-    assert len(result.steps) == 2 and len(llm.requests) == 1 and result.experience_saved is None
+    assert len(result.steps) == 2 and len(llm.requests) == 2 and result.experience_saved is True
+    assert store.list_experiences()[0].source_task_id == request.task_id
 
 
 @pytest.mark.parametrize("extract", ["not JSON", "{}", json.dumps({**EXPERIENCE, "root_cause": ""})])
@@ -123,7 +124,13 @@ def test_storage_failure_preserves_success(setup, monkeypatch):
 
 def test_retrieved_experience_reaches_model_and_trace(setup):
     request, store, execute = setup
-    saved = store.save_experience(ExperienceCreate(**EXPERIENCE, scope="project", repository_id=request.repository_id))
+    task = str(uuid4())
+    saved = store.save_experience(ExperienceCreate(**EXPERIENCE, scope="project", repository_id=request.repository_id,
+        schema_version=3, applicability=['Greeting input'],
+        issues=[dict(error_type='NullPointerException', root_cause=EXPERIENCE['root_cause'], solution=EXPERIENCE['solution'], files=['src/Main.java'])],
+        evidence=[dict(source_task_id=task,tool_call_id=str(uuid4()),runner='maven',tests=2)]))
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     llm = SequenceLLM([{"role": "assistant", "content": "Done"}, extraction()])
     result = Agent(llm, execute, store).run(request)
     assert saved.id in llm.requests[0][1]["content"]
@@ -318,5 +325,7 @@ def test_extracted_error_description_becomes_retrievable_class(setup, raw, expec
                          {"role": "assistant", "content": json.dumps(payload)}])
     result = Agent(model, execute, store).run(request)
     assert result.experience_saved is True
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     matches = store.search_experiences("", tags=["java"], error_type=expected)
     assert [entry.id for entry in matches] == [result.experience_id]

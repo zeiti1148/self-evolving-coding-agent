@@ -22,6 +22,10 @@ def entry(**updates):
                 solution="Guard missing input", verification="Original test evidence", tags=["python"],
                 language="python", scope="project", repository_id="repo-a")
     data.update(updates)
+    task=str(uuid4())
+    data.update(schema_version=3,source_revision='git:example',applicability=['Registered input contract'],
+        issues=[dict(error_type=data['error_type'],root_cause=data['root_cause'],solution=data['solution'],files=[data['error_type']+'.py'])],
+        evidence=[dict(source_task_id=task,tool_call_id=str(uuid4()),runner='pytest',tests=3)])
     return ExperienceCreate(**data)
 
 
@@ -30,6 +34,8 @@ def test_final_test_discovers_second_issue_retrieves_and_resumes(tmp_path):
     first = store.save_experience(entry())
     second = store.save_experience(entry(error_type="ValueError", solution="Validate numeric input"))
     other = store.save_experience(entry(repository_id="repo-b"))
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     request = AgentRequest(task_id=str(uuid4()), workspace=tmp_path, task_description="Fix AttributeError",
                            language="python", repository_id="repo-a", source_revision="git:example", max_steps=3)
     extraction = entry().model_dump()

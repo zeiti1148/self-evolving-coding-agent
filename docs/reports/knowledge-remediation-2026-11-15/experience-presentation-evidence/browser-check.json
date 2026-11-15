@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "desktop": "1440x1080",
+  "mobile": "390x844",
+  "cards": 12,
+  "original_row_heights": [
+    112,
+    113,
+    113,
+    113,
+    112
+  ],
+  "originals_on_page": 5,
+  "conflict_cells": 4,
+  "retained_test_runs": 6,
+  "keyboard_disclosure": true,
+  "full_original_reachable": true,
+  "light_dark_checked": true,
+  "api_writes": [],
+  "api_http_errors": [],
+  "console_errors": []
+}

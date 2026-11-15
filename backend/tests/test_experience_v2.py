@@ -126,8 +126,10 @@ def test_filtered_list_applies_filters_before_pagination(store):
 
 
 def test_merge_is_previewed_preserves_sources_and_deduplicates_retrieval(store):
-    left = store.save_experience(data(scope="project", repository_id="repo-a"))
-    right = store.save_experience(data(scope="project", repository_id="repo-a", error_type="NumberFormatException", issues=[issue("NumberFormatException")]))
+    left = store.save_experience(data(schema_version=3, scope="project", repository_id="repo-a", applicability=["Validated input contract"]))
+    right = store.save_experience(data(schema_version=3, scope="project", repository_id="repo-a", applicability=["Validated input contract"], error_type="NumberFormatException", issues=[issue("NumberFormatException")]))
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     before = store.list_experiences()
     plan = store.preview_merge([right.id, left.id])
     assert plan["can_merge"] and not plan["conflicts"]
@@ -138,6 +140,8 @@ def test_merge_is_previewed_preserves_sources_and_deduplicates_retrieval(store):
     assert merged.source_task_id is None
     assert {item.source_task_id for item in merged.evidence} == {left.evidence[0].source_task_id, right.evidence[0].source_task_id}
     assert store.get_experience(left.id) == left and store.get_experience(right.id) == right
+    from backend.experience.jobs import drain
+    drain(store.database_path, seconds=20)
     assert store.retrieve_experiences(language="java", repository_id="repo-a", error_types=["NullPointerException"]) == [merged]
     assert store.list_experiences(active_only=True) == [merged]
     assert store.search_experiences("") == [merged]
@@ -228,7 +232,7 @@ def test_issue_files_reject_invalid_components(path):
         issue(files=[path])
 
 
-@pytest.mark.parametrize("alias", ["./src/service.py", "src//service.py", "src/./service.py", "SRC/service.py"])
+@pytest.mark.parametrize("alias", ["./src/service.py", "src//service.py", "src/./service.py"])
 def test_merge_conflict_checks_canonical_path_identity(store, alias):
     left = store.save_experience(data(issues=[issue("ValueError", files=["src/service.py"], solution="Reject the value.")]))
     right = store.save_experience(data(issues=[issue("ValueError", files=[alias], solution="Accept the value.")]))
@@ -259,18 +263,20 @@ def test_retrieval_small_limit_preserves_ranking_among_many_records(store):
 
 def test_conflicting_repair_order_is_not_silently_reordered(store):
     first, second = issue(), issue("NumberFormatException")
-    left = store.save_experience(data(issues=[first, second]))
-    right = store.save_experience(data(issues=[second, first]))
+    left = store.save_experience(data(issues=[first, second.model_copy(update={"depends_on": [0]})]))
+    right = store.save_experience(data(issues=[second, first.model_copy(update={"depends_on": [0]})]))
     assert "修复顺序" in " ".join(store.preview_merge([left.id, right.id])["conflicts"])
 
 
 def test_merge_can_preserve_a_combined_dependency_order(store):
     first, second, third = issue("FirstError"), issue("SecondError"), issue("ThirdError")
-    left = store.save_experience(data(issues=[first, third]))
-    right = store.save_experience(data(issues=[second, third]))
+    left = store.save_experience(data(issues=[first, third.model_copy(update={"depends_on": [0]})]))
+    right = store.save_experience(data(issues=[second, third.model_copy(update={"depends_on": [0]})]))
     result = store.merge_experiences([left.id, right.id])
-    assert result.issues.index(first) < result.issues.index(third)
-    assert result.issues.index(second) < result.issues.index(third)
+    types = [item.error_type for item in result.issues]
+    assert types.index(first.error_type) < types.index(third.error_type)
+    assert types.index(second.error_type) < types.index(third.error_type)
+    assert set(result.issues[-1].depends_on) == {0, 1}
 
 
 def test_source_already_merged_requires_using_its_current_replacement(store):

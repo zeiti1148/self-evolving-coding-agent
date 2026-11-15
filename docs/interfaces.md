@@ -493,13 +493,13 @@ backend/api, backend/agent, backend/tools, backend/experience
 | POST | `/api/experiences/promotion-preview` | `{source_id:UUID}`，返回草稿、最终注入预览、current_global_id |
 | POST | `/api/experiences/publish-global` | `{source_id,draft,supersedes_id:null或当前globalID}`，返回新记录 |
 
-参数/结构错误 422、未知来源 404、语义或版本冲突 409、存储故障 503。预览无写入。`active_only` 排除被合并或修订替代记录，复用状态仍应另用 `reuse_status` 过滤；管理查询结果不代表可注入集合。
+参数/结构错误 422、未知来源 404、语义或版本冲突 409、存储故障 503。预览无写入。`active_only` 排除被合并、修订替代、待处理冲突及已停用记录，复用状态仍应另用 `reuse_status` 过滤；管理查询结果不代表可注入集合。
 
-Experience 支持 schema_version 1/2/3，新增 batch_id、reuse_status、derived_from、supersedes_id、required_capabilities。新成功提取为 V3 active project。通用发布草稿仅允许知识字段，不接受来源、仓库或伪造证据；真实证据从源记录绑定。普通单条保存不能绕过批次/合并/发布操作写入来源索引或 active global。
+Experience 支持 schema_version 1/2/3/4，新增 batch_id、reuse_status、derived_from、supersedes_id、required_capabilities。新成功提取在声明结构化 constraints 时为 V4 active project，旧提取格式仍按 V3 保守处理。通用发布草稿仅允许知识字段，不接受来源、仓库或伪造证据；真实证据从源记录绑定。普通单条保存不能绕过批次/合并/发布操作写入来源索引或 active global。
 
 角色事件含 event_id/task_id/agent_id/role/phase/status/sequence/snapshot_revision/summary/created_at/usage；usage.reported_tokens 未报告为 null，不能当 0。角色无工具权限；PatchProposal 必须含提案/角色 UUID、快照版本、路径、before_sha256 和完整 UTF-8 替换内容。程序统一验证应用并独立测试。
 
-所有模型入口使用 `ExperienceStore.retrieve_experiences` + `policy.to_model_reference`，不可直接注入管理 search/list 结果。检索审计与实际模型请求 ID/内容哈希分开记录；终态的测试事实另行判断。
+所有生产模型入口使用 `ExperienceStore.retrieve_model_references`；旧 `retrieve_experiences` 保留兼容。不可直接注入管理 search/list 结果。检索审计与实际模型请求 ID/内容哈希分开记录；终态的测试事实另行判断。
 
 ## 任务测试源码链接
 
@@ -532,3 +532,45 @@ Vue 直接访问地址为 `/#/tasks/{id}/tests?file=相对路径`。省略 `file
 仅支持 Java/Python 业务代码，测试、配置、凭据和其他路径不可通过该接口读取。单版本单文件上限 200000 字节，每侧快照总原文上限 2000000 字节；单任务最多展示 100 个改动文件，超出的数量通过 omitted_files 告知。在线差异限制每个版本 4000 行，超过返回 413。快照损坏/版本不符/任务未结束返回 409；任务或文件不存在返回 404。成功响应带 `Cache-Control: no-store`。
 
 Vue 地址：`/#/tasks/{id}/changes?file=相对路径`，可选 `view=before` 或 `view=after` 指定原文版本。默认展示带三行上下文的增删对比，支持长行折行。两种查看页面共用任务与工作副本归属检查。同任务切换文件复用目录索引，正文仍重新读取；切换任务会清空索引并取消旧请求。
+
+
+## 自动经验整理与冲突处理接口
+
+`save_experiences` 返回稳定的原始批次 ID。原始记录、规则投影和 outbox 作业在一个短事务中保存；后台关系推断、向量生成、游标提交独立进行。整理失败不撤销已保存的原始经验。新待处理规则不会提前引用，重复批次返回原始有序 ID。
+
+`RepairIssue` 新增 `symbols: list[str]` 与 `depends_on: list[int]`。符号为 `path#qualified.function`，须由源代码校验；依赖是同条经验内零基索引，不能依赖自己、越界或成环。V4 `constraints` 是完整业务限制列表，`compatibility_key` 为服务器登记的兼容域。`AgentRequest.experience_contract` 来自 `ProjectDefinition.experience_contract`，客户端不能在任务提交时自定。
+
+```python
+store.retrieve_model_references(query='', *, language, repository_id, error_types,
+    capabilities=None, compatibility_key=None, source_revision=None, limit=5) -> list[dict]
+store.consolidate_experiences(*, language, repository_id, cursor=None) -> ConsolidationReport
+store.list_conflicts(*, language=None, repository_id=None, status='pending', limit=20, offset=0)
+store.resolve_conflict(conflict_id, resolution: ConflictResolution) -> ExperienceConflict
+store.reopen_conflict(conflict_id, version, note) -> ExperienceConflict
+store.review_history(conflict_id) -> list[dict]
+```
+
+| 方法 | 路径 | 输入与输出 |
+| --- | --- | --- |
+| POST | `/api/experiences/jobs` | `{language,repository_id}`，202，回填一页历史来源并返回整理报告；后台继续处理 |
+| GET | `/api/experiences/jobs` | 可筛选 language/repository_id；limit 1–100、offset；返回 MaintenanceJob 数组，失败/运行/等待优先 |
+| POST | `/api/experiences/jobs/{id}/retry` | 幂等重新排队；活跃租约不抢占；证据异常等 needs_review 不会被此操作绕过 |
+| POST | `/api/experiences/consolidate` | 兼容入口，最多约 2 秒/100 页的确定性整理，然后返回累计报告；cursor 仅保留格式兼容，实际游标在数据库 |
+| GET | `/api/experiences/{id}/maintenance` | ExperienceMaintenanceStatus，含当前规则、状态、结构化知识 |
+| GET | `/api/experiences/rules/{id}/sources` | RuleSources，limit 1–100、offset，含 source_ids/evidence_count/next_offset |
+| GET | `/api/experiences/conflicts` | language/repository_id/status/limit/offset；新旧审阅合并分页，状态 pending/resolved/obsolete |
+| POST | `/api/experiences/conflicts/{id}/resolve` | ConflictResolution，返回最新审阅项 |
+| POST | `/api/experiences/conflicts/{id}/reopen` | `{version,note}`，追加撤销事件并恢复待审阅 |
+| GET | `/api/experiences/conflicts/{id}/history` | ReviewEvent 数组，包含 version/action/data/created_at，按版本升序 |
+
+公共响应模型集中在 `backend/shared/knowledge_models.py`；作业租约令牌不会返回客户端。
+
+`ConsolidationReport`：`examined` 是累计比较次数（含重扫），`merged_ids` 是具有多个原始来源的规范规则 ID，**不是新生成的 Experience ID**；`conflict_ids` 是待处理真实冲突 ID。新增 `pending_jobs`、`failed_jobs`、`unknown_pairs`、`job_id`。旧 `deferred_groups` 固定为 0、`next_cursor` 为 null；不再因超过 60 条放弃处理。
+
+`ExperienceConflict` 保留两个完整 sources、details、status、正整数 version、带时区时间和决定字段。新记录增加两个 `rule_ids` 和 `relation`（conflict/unknown/equivalent/compatible）。来源展示用于核对，决定作用于相应规则及其依赖；未知关系与矛盾是不同状态。obsolete 表示关联规则被其他决定暂停，重新开放后可能恢复待审阅。
+
+`ConflictResolution` 包含严格整数 version、resolution、preferred_source_id、1–2000 字符 note。resolution 为 `prefer_source`、`keep_separate`、`confirm_equivalent` 或 `confirm_compatible`。只有 prefer_source 必须填写当前两来源之一；其他动作必须为 null。旧版来源级审阅只接受前两种。相同版本和内容的成功请求允许幂等重试；过期/不一致返回 409，未知 ID 返回 404，结构错误 422，存储故障 503。撤销要求最新版本和非空依据，追加补偿事件，不删除决定历史。
+
+`MergePreview.conflict_details` 保留 code/message/source_ids/field/suggestion，新增 unknown_relation、version_mismatch、semantic_equivalent。原有 conflicts 字符串列表继续保留，手动预览不写冲突队列。缺少语义依据的重叠文字不再直接视为矛盾。
+
+模型引用含原始代表 `id`、规范 `rule_id`、完整条件/约束/代码规则、摘要证据计数及必要前置规则。通用引用不包含来源路径、符号、仓库及源版本。完整来源与证据仍在管理接口；跨项目使用仍须独立测试。队列、版本变更、未解决冲突及依赖状态在发送前复核。

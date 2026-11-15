@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "history_scan_id": "3e07f801-b668-46b4-9057-9d8038d88408",
+  "model_calls": 2,
+  "original_records_unchanged": 8,
+  "conflict_relations_unchanged": 4,
+  "duplicate_submission_reused_scan": true,
+  "summary": {
+    "original_records": 8,
+    "knowledge_cards": 12,
+    "active": 8,
+    "paused": 3,
+    "unverified": 1,
+    "merged": 1,
+    "pending_reviews": 0
+  },
+  "api_source": "D:\\中级实训\\self-evolving-coding-agent\\.env"
+}

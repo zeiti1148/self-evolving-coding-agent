@@ -54,13 +54,14 @@ literal values, file paths, exception names, tool arguments and identifiers exac
 
 
 class Agent:
-    def __init__(self, llm: LLM, execute_tool: Callable, experience_store, *, use_experience: bool = True, timeout_seconds: float = 600):
+    def __init__(self, llm: LLM, execute_tool: Callable, experience_store, *, use_experience: bool = True, timeout_seconds: float = 600, verify_before: bool = False):
         self.llm = llm
         self.execute_tool = execute_tool
         self.experiences = experience_store
         self.use_experience = use_experience
         self.timeout_seconds = timeout_seconds
         self.last_run_audit: dict = {}
+        self.verify_before = verify_before
 
     def run(self, request: AgentRequest, *, on_step: Callable[[TaskStep], None] | None = None) -> AgentResult:
         calls: list[ToolCall] = []
@@ -87,8 +88,18 @@ class Agent:
             if not self.use_experience:
                 return []
             try:
+                if hasattr(self.experiences, 'retrieve_model_references'):
+                    references = self.experiences.retrieve_model_references(
+                        request.task_description + " " + " ".join(observed_errors) + "\n" + "\n".join(
+                            result.output[:4000] for result in results[-3:] if result.error_code == ErrorCode.TEST_FAILED), language=request.language,
+                        repository_id=request.repository_id, error_types=observed_errors, limit=5,
+                        capabilities=request.capabilities, compatibility_key=request.experience_contract,
+                        source_revision=request.source_revision, runner_hash=request.runner_hash)
+                    retrieved_ids = list(dict.fromkeys([*retrieved_ids, *(entry['id'] for entry in references)]))
+                    retrieval_events.append({'error_types':list(observed_errors), 'experience_ids':[entry['id'] for entry in references]})
+                    return references
                 references = self.experiences.retrieve_experiences(
-                    "", language=request.language, repository_id=request.repository_id,
+                    request.task_description, language=request.language, repository_id=request.repository_id,
                     error_types=observed_errors, limit=5, capabilities=request.capabilities)
                 retrieved_ids = list(dict.fromkeys([*retrieved_ids, *(entry.id for entry in references)]))
                 retrieval_events.append({"error_types": list(observed_errors),
@@ -168,6 +179,13 @@ class Agent:
         repair_succeeded = False
         final = None
         try:
+            if self.verify_before:
+                baseline = execute(ToolCall(id=str(uuid4()), name='run_tests', arguments={}))
+                messages.append({'role': 'user', 'content': 'Program-owned tests before any edits: ' + baseline.model_dump_json()})
+                from .orchestrator import repairable_test_failure
+                if not baseline.success and not repairable_test_failure(baseline, request.language):
+                    raise ApplicationError(baseline.error_code or ErrorCode.COMMAND_FAILED,
+                                           '原始项目的测试环境尚不可用，请查看首轮测试输出并调整依赖或测试配置。')
             for _ in range(request.max_steps):
                 remaining()
                 decisions += 1
@@ -234,7 +252,7 @@ class Agent:
         experience_ids = []
         experience_error = None
         extraction_diagnostic = {"status": "not_attempted"}
-        if status == "succeeded":
+        if status == "succeeded" or (status == "stopped" and repair_succeeded and changed):
             try:
                 saved = extract_and_save_experiences(self.llm, self.experiences, request,
                     summary=summary, changed_files=changed, calls=calls, results=results, deadline=deadline,

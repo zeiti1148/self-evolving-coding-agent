@@ -1,0 +1,10 @@
+{
+  "desktop": "1440x1080",
+  "mobile": "390x844",
+  "real_cards": 12,
+  "archived_sources": 4,
+  "retained_original_records": 8,
+  "original_source_navigation": true,
+  "console_errors": [],
+  "passed": true
+}

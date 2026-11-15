@@ -1,0 +1,7 @@
+{
+  "origin": "https://api.deepseek.com",
+  "model": "deepseek-flash",
+  "source": "explicit_file",
+  "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+  "transport": "direct"
+}

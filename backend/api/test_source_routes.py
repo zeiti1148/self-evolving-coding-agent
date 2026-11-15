@@ -27,6 +27,11 @@ def source_language(path: str) -> str | None:
     if not parts:
         return None
     name = parts[-1]
+    if name.endswith('_test.go'):
+        return 'go'
+    if PurePosixPath(name).suffix in {'.c', '.cc', '.cpp', '.cxx', '.h', '.hpp'} and (
+            any(p in {'test', 'tests', 'testing'} for p in parts[:-1]) or name.startswith('test_') or '_test.' in name):
+        return 'cpp'
     if name.endswith(".java") and any(parts[i:i + 2] == ("src", "test") for i in range(len(parts) - 2)):
         return "java"
     if name.endswith(".py") and (any(p in {"test", "tests"} for p in parts[:-1])

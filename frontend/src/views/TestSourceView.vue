@@ -85,7 +85,7 @@ onBeforeUnmount(() => { ++generation; controller?.abort() })
       </li></ul>
     </nav>
     <section v-if="source" class="panel source-reader" aria-labelledby="source-title">
-      <div class="source-reader-heading"><div><h2 id="source-title" class="source-filename">{{ source.path }}</h2><p class="field-hint">{{ source.language === 'java' ? 'Java' : 'Python' }} · {{ lineCount }} 行 · {{ source.size_bytes }} 字节</p></div>
+      <div class="source-reader-heading"><div><h2 id="source-title" class="source-filename">{{ source.path }}</h2><p class="field-hint">{{ ({java:'Java',python:'Python',go:'Go',cpp:'C++'})[source.language] }} · {{ lineCount }} 行 · {{ source.size_bytes }} 字节</p></div>
         <button class="button secondary small" type="button" data-copy-link @click="copyLink">复制源码链接</button>
       </div>
       <div class="source-link-bar"><label for="source-direct-link">直接访问链接</label><input id="source-direct-link" class="source-link-input" :value="directLink" readonly @focus="($event.target as HTMLInputElement).select()" /><p v-if="copyMessage" class="field-hint" role="status">{{ copyMessage }}</p></div>

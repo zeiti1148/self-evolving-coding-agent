@@ -1,0 +1,45 @@
+--- target-verified/src/_pytest/mark/structures.py
++++ cross-tested/src/_pytest/mark/structures.py
+@@ -366,30 +366,22 @@
+ ) -> List[Mark]:
+     """Obtain the unpacked marks that are stored on an object.
+ 
+-    If obj is a class and consider_mro is true, return marks applied to
+-    this class and all of its super-classes in MRO order. If consider_mro
+-    is false, only return marks applied directly to this class.
++    If obj is a class and consider_mro is true, return marks for every class
++    in the MRO.
+     """
+     if isinstance(obj, type):
+-        if not consider_mro:
++        if consider_mro:
++            mark_lists = [x.pytestmark for x in obj.__mro__ if "pytestmark" in x.__dict__]
++        else:
+             mark_lists = [obj.__dict__.get("pytestmark", [])]
+-        else:
+-            mark_lists = [
+-                x.__dict__.get("pytestmark", []) for x in reversed(obj.__mro__)
+-            ]
+-        mark_list = []
+-        for item in mark_lists:
+-            if isinstance(item, list):
+-                mark_list.extend(item)
+-            else:
+-                mark_list.append(item)
+     else:
+-        mark_attribute = getattr(obj, "pytestmark", [])
+-        if isinstance(mark_attribute, list):
+-            mark_list = mark_attribute
+-        else:
+-            mark_list = [mark_attribute]
+-    return list(normalize_mark_list(mark_list))
++        mark_lists = [getattr(obj, "pytestmark", [])]
++    mark_list: List[Mark] = []
++    for marks in mark_lists:
++        if not isinstance(marks, list):
++            marks = [marks]
++        mark_list.extend(normalize_mark_list(marks))
++    return mark_list
+ 
+ 
+ def normalize_mark_list(

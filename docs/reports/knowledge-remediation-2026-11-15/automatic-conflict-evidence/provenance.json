@@ -1,0 +1,11 @@
+{
+  "repo": "pytest-dev/pytest",
+  "base_commit": "680f3e2097712a067f08881f0e6c3c4b35cfbc61",
+  "parent_of_previous_base": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+  "upstream_pr": "https://github.com/pytest-dev/pytest/pull/10356",
+  "upstream_issue": "https://github.com/pytest-dev/pytest/issues/7792",
+  "archive_sha256": "cecb355e9be1dddff2c9a3a6c03afbc4879f88e60676c92645a0b71c2e8411bd",
+  "test_patch_sha256": "547d6960987bcf7820991b7c56d3c7245275789ab0f1cb352e7d1486d2fe9d79",
+  "gold_patch_provided": false,
+  "reason": "Fresh official source snapshot; prior human decisions and raw experiences remain unchanged."
+}
