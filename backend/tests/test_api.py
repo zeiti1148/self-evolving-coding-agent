@@ -109,12 +109,15 @@ def test_task_details_steps_and_audit_survive_api_restart(tmp_path):
         task_id = response.json()["task_id"]
     # Shutdown waits for the worker; experiment scripts also read after lifespan exits.
     expected = first.state.tasks.get(task_id).model_dump(mode="json")
+    expected_audit = first.state.tasks.get_audit(task_id)
+    assert expected_audit == {**Recorder.last_run_audit, "experience_counts": {"before": 0, "after": 0},
+                             "knowledge_automation_enabled": settings.knowledge_automation_enabled}
     second = create_app(settings)
     with TestClient(second) as client:
         response = client.get(f"/api/tasks/{task_id}")
         assert response.status_code == 200 and response.json() == expected
         assert client.get(f"/api/tasks/{task_id}/steps").json()["steps"][0]["result"]["output"] == "original output"
-        assert second.state.tasks.get_audit(task_id) == Recorder.last_run_audit
+        assert second.state.tasks.get_audit(task_id) == expected_audit
         assert second.state.tasks.get_request(task_id).task_description == "Fix the sample"
         history = client.get("/api/tasks?limit=1&offset=0")
         assert history.status_code == 200 and history.json() == [expected]

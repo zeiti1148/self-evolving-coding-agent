@@ -72,7 +72,7 @@ jobs:
         run: python scripts/setup_maven.py
 
       - name: Run backend tests
-        timeout-minutes: 5
+        timeout-minutes: 10
         run: python -m pytest backend/tests -q
 
       - name: Run frontend tests

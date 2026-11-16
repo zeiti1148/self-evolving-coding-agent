@@ -4,6 +4,7 @@ import { readMergeSuggestions } from './validation'
 import { readTestSource, readTestSources } from './validation'
 import { readCodeChanges, readCodeDiff } from './codeDiffValidation'
 import { readTaskEvidence } from './evidenceValidation'
+import { readTaskMetrics, readTaskMetricsList } from './metricsValidation'
 import { readExperienceLibrary, readHistoryScan, readRecovery, readRecoveries } from './libraryValidation'
 import { readAutomaticMerges, readConsolidationReport, readConflict, readConflicts, readJobs, readMaintenance, readRuleSources, readReviewHistory } from './experienceWorkflowValidation'
 
@@ -124,6 +125,8 @@ export function createHttpApi(baseUrl: string, fetcher: typeof fetch = globalThi
     runtimeOptions: signal => request('/api/runtime-options', data => data as {python: string[]; go: boolean; cpp: boolean}, 'GET', undefined, signal),
     createTask: (body, signal) => request('/api/tasks', readCreatedTask, 'POST', body, signal),
     getTask: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}`, data => readTask(data, id), 'GET', undefined, signal),
+    getTaskMetrics: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/metrics`, data => readTaskMetrics(data, id), 'GET', undefined, signal),
+    listTaskMetrics: (limit = 100, signal) => request(`/api/task-metrics?limit=${limit}`, readTaskMetricsList, 'GET', undefined, signal),
     getExperienceRetry: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/experience-retry`, data => retryState(data, id), 'GET', undefined, signal),
     retryExperience: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/experience-retry`, data => retryState(data, id), 'POST', {}, signal),
     getSteps: (id, signal) => request(`/api/tasks/${encodeURIComponent(id)}/steps`, data => readSteps(data, id), 'GET', undefined, signal),

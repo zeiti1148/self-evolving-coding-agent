@@ -226,7 +226,7 @@ it('keeps a verified result visible while HTTP step loading fails and recovers o
   ] })
   await router.push(`/tasks/${created.task_id}`)
   const wrapper = mount(TaskView, { global: { plugins: [router], provide: {
-    [apiContextKey as symbol]: { api: createHttpApi('', fetcher), mock: false },
+    [apiContextKey as symbol]: { api: { ...createHttpApi('', fetcher), getTaskMetrics: undefined }, mock: false },
   } } })
   try {
     await flushPromises()

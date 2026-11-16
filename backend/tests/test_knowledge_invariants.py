@@ -170,7 +170,10 @@ def test_equivalence_chain_never_overrides_unknown_endpoints(tmp_path):
     with connect(store.database_path) as connection:
         ids=[r[0] for r in connection.execute('SELECT id FROM knowledge_rules ORDER BY id')]
         connection.execute("UPDATE knowledge_relations SET kind='equivalent' WHERE left_rule=? OR right_rule=?",(ids[1],ids[1]))
+        assert set(ids)<=effective_rules(connection)
     assert retrieve(store)==[]
+    from backend.experience.library import library
+    assert all(card['state']=='paused' for card in library(store.database_path)['items'])
 
 
 def test_invalid_symbol_hint_keeps_the_file_scope_and_original_rule(tmp_path):

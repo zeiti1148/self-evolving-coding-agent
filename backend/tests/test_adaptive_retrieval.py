@@ -6,7 +6,7 @@ import pytest
 from backend.agent.core import Agent
 from backend.experience import ExperienceStore
 from backend.experience import retrieval
-from backend.shared import AgentRequest, ApplicationError, ErrorCode, ToolResult
+from backend.shared import AgentRequest, ApplicationError, ConflictResolution, ErrorCode, ToolResult
 from backend.tests.test_agent import SequenceLLM, tool_message
 from backend.tests.test_experience_policy import seed
 
@@ -67,12 +67,21 @@ def test_environment_failures_do_not_reuse_old_test_evidence(code):
     assert value.query is None and value.reason == "test_execution_error"
 
 
-def test_runtime_injects_after_failure_and_withdraws_after_pass(tmp_path):
+@pytest.mark.parametrize('reviewed', [True, False])
+def test_runtime_injects_after_failure_and_withdraws_after_pass(tmp_path, reviewed):
     store = ExperienceStore(tmp_path / "refs.db")
     relevant = seed(store)
     # These records must remain excluded when the adaptive gate opens.
     forbidden = [seed(store, repository_id="B"), seed(store, language="java"),
                  seed(store, status="candidate"), seed(store, capabilities=["unavailable"])]
+    [review] = store.list_conflicts()
+    assert review.relation == 'unknown'
+    # Differing capability requirements require review even when this query
+    # cannot use one side. Test gate timing with an explicitly reviewed fixture,
+    # and separately prove an open adaptive gate cannot bypass a pending review.
+    if reviewed:
+        store.resolve_conflict(review.id, ConflictResolution(version=review.version,
+            resolution='confirm_compatible', note='Unit fixture review: both notes preserve the same checked boundary behavior.'))
     llm = SequenceLLM([tool_message("run_tests"), tool_message("read_file"), tool_message("run_tests"),
                       ApplicationError(ErrorCode.LLM_ERROR, "Stop after observing withdrawal")])
     tests = 0
@@ -94,7 +103,7 @@ def test_runtime_injects_after_failure_and_withdraws_after_pass(tmp_path):
     agent = Agent(llm, execute, store, retrieval_strategy="adaptive")
     agent.run(request)
     ids = [[entry["id"] for entry in json.loads(messages[1]["content"])["reference_experiences"]] for messages in llm.requests]
-    assert ids == [[], [relevant.id], [relevant.id], []]
+    assert ids == ([[], [relevant.id], [relevant.id], []] if reviewed else [[], [], [], []])
     assert all(entry.id not in json.dumps(llm.requests) for entry in forbidden)
     reasons = {item.get("reason") for item in agent.last_run_audit["retrieval_events"]}
     assert {"no_failure_evidence", "test_failure", "tests_passed"}.issubset(reasons)

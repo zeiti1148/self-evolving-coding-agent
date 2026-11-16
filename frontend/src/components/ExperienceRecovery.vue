@@ -10,7 +10,7 @@ const rows=ref<ExperienceRecovery[]>([]),error=ref(''),busy=ref(false),note=ref(
 const tasks=ref<{id:string;label:string;project_label:string;tests:number;created_at:string}[]>([])
 const latest=computed(()=>rows.value[0])
 const running=computed(()=>['pending','running','waiting_task'].includes(latest.value?.state||''))
-const labels={pending:'等待验证',running:'正在验证',waiting_task:'等待修复任务',needs_evidence:'需要补充证据',needs_confirmation:'需要确认',succeeded:'已恢复限定范围复用',failed:'验证中断',invalidated:'证据已失效',kept:'保留原状态'}
+const labels={pending:'等待验证',running:'正在验证',waiting_task:'等待修复任务',needs_evidence:'需要补充证据',needs_confirmation:'需要确认',succeeded:'已恢复限定范围复用',failed:'验证中断',invalidated:'暂未恢复复用',kept:'保留原状态'}
 const stateLabels={active:'可复用',paused:'暂停复用',unverified:'待验证'}
 let controller:AbortController|undefined,writeController:AbortController|undefined,timer:ReturnType<typeof setTimeout>|undefined,disposed=false,generation=0,last=''
 async function load(){

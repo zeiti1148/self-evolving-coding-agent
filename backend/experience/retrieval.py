@@ -34,10 +34,12 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
         active_rules={r['rule_id'] for r in connection.execute('SELECT rule_id,experience_id FROM knowledge_sources')
                       if r['experience_id'] not in inactive_sources}
         blocked=effective_rules(connection)
-        from .recovery import active_grants
+        from .recovery import active_grants, prerequisite_grants
         grant_context=dict(repository_id=repository_id,compatibility_key=compatibility_key or source_revision,
                            source_revision=source_revision,runner_hash=runner_hash)
         grants=active_grants(connection,context=grant_context)
+        inherited=prerequisite_grants(connection,grants)
+        grants={**inherited,**grants}
         scoped_ids={r[0] for r in connection.execute('SELECT rule_id FROM knowledge_reuse_grants')} if connection.execute("SELECT 1 FROM sqlite_master WHERE name='knowledge_reuse_grants'").fetchone() else set()
         blocked-=grants.keys()
         rows=connection.execute("SELECT * FROM knowledge_rules WHERE language=? AND (scope='global' OR repository_id=?) AND state='ready'",
@@ -130,6 +132,8 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
         return [*result,identifier]
     for row,data in entries:
         identity=row['id']
+        if identity in inherited:
+            continue  # It may accompany its authorized target, never become a standalone suggestion.
         if wanted and data['issue']['error_type'].casefold() not in wanted:
             continue
         if identity in ambiguous or identity in picked:
@@ -139,6 +143,8 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
         try:
             additions=[v for v in closure(identity,set()) if v not in picked]
         except ValueError:
+            continue
+        if any(grants[parent]['rule_id'] not in {*picked,*additions} for parent in additions if parent in inherited):
             continue
         if len(picked)+len(additions)>limit:
             continue
@@ -151,6 +157,7 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
         # A decision may have changed while a local embedding was calculated.
         blocked=effective_rules(connection)
         current_grants=active_grants(connection,context=grant_context)
+        current_grants={**prerequisite_grants(connection,current_grants),**current_grants}
         if any(identity not in current_grants or current_grants[identity]!=value for identity,value in grants.items()):
             return []
         blocked-=current_grants.keys()
@@ -190,6 +197,8 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
                 grant=current_grants[identity]
                 references[-1]['reuse_boundary']=dict(repository_id=grant['repository_id'],source_revision=grant['source_revision'],
                     runner_hash=grant['runner_hash'],recovery_id=grant['recovery_id'],mode='verified_context_only')
+                if identity!=grant['rule_id']:
+                    references[-1]['reuse_boundary']['prerequisite_for']=grant['rule_id']
                 references[-1]['applicability']=[*references[-1]['applicability'],'仅限已核对的来源项目、代码版本与测试配置；其他上下文必须重新验证。']
     for reference in references:
         if reference['scope']=='global':

@@ -8,7 +8,7 @@ from threading import Lock
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -23,7 +23,7 @@ from backend.experience.knowledge import digest
 from backend.shared import (AgentRequest, ApplicationError, Experience, TaskCreateRequest,
                             TaskCreateResponse, TaskStatusResponse, TaskStepsResponse, ErrorCode)
 from backend.tools import ToolService, WorkspaceManager
-from .store import TaskStorageError, TaskStore
+from .store import TaskIdempotencyConflict, TaskStorageError, TaskStore
 from .experience_routes import register_experience_routes, MergeRequest
 from .test_source_routes import register_test_source_routes
 from .code_diff_routes import register_code_diff_routes
@@ -63,8 +63,9 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             tasks.initialize()
             experiences.initialize()
             uploads.initialize()
-            maintenance.start()
-            automatic_merge.start()
+            if settings.knowledge_automation_enabled:
+                maintenance.start()
+                automatic_merge.start()
         except TaskStorageError:
             logger.warning("Task storage unavailable at startup; task endpoints will report 503.")
         try:
@@ -79,7 +80,7 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
 
     app = FastAPI(title="Self-Evolving Coding Agent", lifespan=lifespan)
     app.add_middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
-                       allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
+                       allow_methods=["GET", "POST"], allow_headers=["Content-Type", "Idempotency-Key"])
     app.state.tasks = tasks
     app.state.tools = tools
     app.state.settings = settings
@@ -89,6 +90,10 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
     @app.exception_handler(TaskStorageError)
     async def task_storage_error(request, exc):
         return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+    @app.exception_handler(TaskIdempotencyConflict)
+    async def task_idempotency_conflict(request, exc):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
 
     def ensure_recorded(task_id: str | None = None):
         with recording_lock:
@@ -135,6 +140,8 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             callbacks = {"on_step": lambda step: tasks.append(task_id, step)}
             if request.execution_mode == "multi":
                 callbacks["on_event"] = lambda event: tasks.append_agent_event(task_id, event)
+            from .task_metrics import experience_count
+            experience_before = experience_count(settings.database_path)
             result = agent.run(AgentRequest(task_id=task_id, workspace=workspace,
                                task_description=request.task_description, max_steps=request.max_steps,
                                language=project.language, repository_id=project.repository_id,
@@ -142,14 +149,23 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
                                runner_hash=digest(project.runner_config.model_dump(mode='json')),
                                execution_mode=request.execution_mode), **callbacks)
             save_code_snapshot(task_id)
-            tasks.finish(task_id, result=result, audit=getattr(agent, "last_run_audit", {}))
+            audit = dict(getattr(agent, "last_run_audit", {}))
+            audit["experience_counts"] = {"before": experience_before, "after": experience_count(settings.database_path)}
+            audit["knowledge_automation_enabled"] = settings.knowledge_automation_enabled
+            tasks.finish(task_id, result=result, audit=audit)
         except ApplicationError as exc:
             fail_task(task_id, exc.message)
         except Exception:
             fail_task(task_id, "任务调度或执行失败。")
 
     @app.post("/api/tasks", status_code=202, response_model=TaskCreateResponse)
-    def create_task(request: TaskCreateRequest):
+    def create_task(request: TaskCreateRequest,
+                    idempotency_key: Annotated[UUID | None, Header(alias="Idempotency-Key",
+                        description="可选的提交 UUID；相同标识和请求只接受一次，重复提交返回原任务。")]=None):
+        if idempotency_key is not None:
+            previous = tasks.get_submission(request, str(idempotency_key))
+            if previous is not None:
+                return previous
         source = settings.projects.get(request.source_project)
         if source is None:
             raise HTTPException(400, "源项目尚未登记或当前不可用。")
@@ -158,7 +174,12 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
             validate_project_language(settings.project(request.source_project))
         except (ApplicationError, ValueError):
             raise HTTPException(400, "源项目尚未登记或当前不可用。") from None
-        response = tasks.create(request)
+        if idempotency_key is None:
+            response = tasks.create(request)
+        else:
+            response, created = tasks.create_idempotent(request, str(idempotency_key))
+            if not created:
+                return response
         if request.knowledge_recovery_id:
             try:
                 attach_task(settings.database_path, request.knowledge_recovery_id, response.task_id)
@@ -206,6 +227,8 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
     register_test_source_routes(app, tasks, manager, ensure_recorded)
     register_code_diff_routes(app, tasks, manager, ensure_recorded)
     register_task_evidence_routes(app, tasks, manager, experiences, settings, ensure_recorded)
+    from .task_metrics import register_task_metrics_routes
+    register_task_metrics_routes(app, settings)
     from .experience_retry import register_experience_retry_routes
     register_experience_retry_routes(app, tasks, manager, experiences, settings, executor,
                                     llm_factory or (lambda: ChatClient(settings)), ensure_recorded)

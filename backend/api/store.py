@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import sqlite3
 from threading import RLock
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from backend.shared import (
     AgentEvent, AgentResult, TaskCreateRequest, TaskCreateResponse, TaskStatusResponse, TaskStep, TaskStepsResponse,
@@ -20,6 +21,13 @@ class TaskStorageError(Exception):
 
     def __init__(self):
         super().__init__("任务存储不可用或包含无效数据。")
+
+
+class TaskIdempotencyConflict(Exception):
+    """A submission key is already bound to a different validated request."""
+
+    def __init__(self):
+        super().__init__("该提交标识已用于另一项任务请求，请为新任务使用新的 Idempotency-Key。")
 
 
 def now():
@@ -50,6 +58,11 @@ SCHEMA = (
     )""",
     "CREATE INDEX IF NOT EXISTS api_tasks_created_idx ON api_tasks(created_at DESC, id DESC)",
     "CREATE INDEX IF NOT EXISTS api_tasks_status_idx ON api_tasks(status)",
+    """CREATE TABLE IF NOT EXISTS api_task_submissions (
+        idempotency_key TEXT PRIMARY KEY NOT NULL,
+        request_hash TEXT NOT NULL,
+        task_id TEXT NOT NULL UNIQUE REFERENCES api_tasks(id)
+    )""",
     agent_events.SCHEMA,
 )
 
@@ -267,17 +280,63 @@ class TaskStore:
             audit.setdefault('experience_retry_history', []).append(dict(retry))
             self._write_audit(connection, task_id, audit)
 
-    def create(self, request: TaskCreateRequest | None = None) -> TaskCreateResponse:
-        request_json = (TaskCreateRequest.model_validate(request.model_dump()).model_dump_json()
-                        if request is not None else None)
+    @staticmethod
+    def _request_json(request: TaskCreateRequest | None) -> str | None:
+        if request is None:
+            return None
+        validated = TaskCreateRequest.model_validate(request.model_dump())
+        return json.dumps(validated.model_dump(mode="json"), sort_keys=True,
+                          ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+
+    @staticmethod
+    def _insert_task(connection, request_json: str | None) -> TaskCreateResponse:
         response = TaskCreateResponse(task_id=str(uuid4()))
         status = TaskStatusResponse(task_id=response.task_id, status="pending", created_at=response.created_at)
-        with self._transaction() as connection:
-            connection.execute(
-                "INSERT INTO api_tasks (id, request_json, status, created_at, status_json) VALUES (?, ?, ?, ?, ?)",
-                (response.task_id, request_json, "pending", response.created_at.isoformat(), status.model_dump_json()),
-            )
+        connection.execute(
+            "INSERT INTO api_tasks (id, request_json, status, created_at, status_json) VALUES (?, ?, ?, ?, ?)",
+            (response.task_id, request_json, "pending", response.created_at.isoformat(), status.model_dump_json()),
+        )
         return response
+
+    def create(self, request: TaskCreateRequest | None = None) -> TaskCreateResponse:
+        request_json = self._request_json(request)
+        with self._transaction() as connection:
+            return self._insert_task(connection, request_json)
+
+    def _submission_response(self, connection, key: str, request_hash: str) -> TaskCreateResponse | None:
+        row = connection.execute(
+            "SELECT request_hash, task_id FROM api_task_submissions WHERE idempotency_key=?", (key,),
+        ).fetchone()
+        if row is None:
+            return None
+        if row["request_hash"] != request_hash:
+            raise TaskIdempotencyConflict()
+        status = self._status(self._row(connection, row["task_id"]))
+        # Replay the original acceptance, even after task completion or restart.
+        return TaskCreateResponse(task_id=status.task_id, created_at=status.created_at)
+
+    def get_submission(self, request: TaskCreateRequest, key: str) -> TaskCreateResponse | None:
+        """Allow replay even when the originally accepted project is no longer available."""
+        canonical_key = str(UUID(str(key)))
+        request_hash = hashlib.sha256(self._request_json(request).encode("utf-8")).hexdigest()
+        with self._transaction() as connection:
+            return self._submission_response(connection, canonical_key, request_hash)
+
+    def create_idempotent(self, request: TaskCreateRequest, key: str) -> tuple[TaskCreateResponse, bool]:
+        """Commit key and task together; only the winning caller may schedule execution."""
+        canonical_key = str(UUID(str(key)))
+        request_json = self._request_json(request)
+        request_hash = hashlib.sha256(request_json.encode("utf-8")).hexdigest()
+        with self._transaction() as connection:
+            previous = self._submission_response(connection, canonical_key, request_hash)
+            if previous is not None:
+                return previous, False
+            response = self._insert_task(connection, request_json)
+            connection.execute(
+                "INSERT INTO api_task_submissions (idempotency_key,request_hash,task_id) VALUES (?,?,?)",
+                (canonical_key, request_hash, response.task_id),
+            )
+            return response, True
 
     def get(self, task_id: str) -> TaskStatusResponse:
         with self._transaction() as connection:

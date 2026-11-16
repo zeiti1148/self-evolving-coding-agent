@@ -8,7 +8,7 @@ const paths: Record<string, string> = {
   play: 'm8 5 11 7-11 7V5Z', code: 'm8 6-6 6 6 6m8-12 6 6-6 6m-3-14-2 16',
   check: 'm5 12 4 4L19 6', clock: 'M12 8v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
   arrow: 'M5 12h14m-5-5 5 5-5 5', file: 'M14 2H5v20h14V7l-5-5Zm0 0v5h5M8 12h8m-8 4h6',
-  chevron: 'm9 5 7 7-7 7', shield: 'm12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Zm-4 9 3 3 5-6',
+  chevron: 'm9 5 7 7-7 7', 'chevron-down': 'm6 9 6 6 6-6', shield: 'm12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Zm-4 9 3 3 5-6',
   refresh: 'M20 7v5h-5m5 0a8 8 0 1 0-2 6M20 12l-3-5', warning: 'm12 3 10 18H2L12 3Zm0 6v5m0 3v1',
 }
 </script>

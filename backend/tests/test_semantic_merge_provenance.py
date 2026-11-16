@@ -6,7 +6,7 @@ from backend.experience.database import connect
 from backend.experience.equivalence import equivalent_groups
 from backend.experience.knowledge import provenance_page
 from backend.experience.relations import classify
-from backend.tests.test_experience_consolidation import EvidenceClassifier, record, retrieve, save, scan
+from backend.tests.test_experience_consolidation import EvidenceClassifier, decision, record, retrieve, save, scan
 
 
 def projected(value):
@@ -70,12 +70,17 @@ def test_shared_evidence_is_counted_once(tmp_path):
     assert provenance_page(store.database_path,ref['rule_id'])['evidence_count']==1
 
 
-def test_unknown_unselected_error_does_not_block_query(tmp_path):
+def test_error_filter_cannot_bypass_an_unreviewed_unknown_relation(tmp_path):
     store=ExperienceStore(tmp_path/'rules.db')
     source=save(store,record())
     other=record();other.issues[0].error_type='TypeError';other.issues[0].solution='Normalize first'
     save(store,other);scan(store)
     assert retrieve(store)==[]
+    refs=store.retrieve_model_references(language='python',repository_id='team/repository',error_types=['ValueError'])
+    assert refs==[]
+    [review]=store.list_conflicts()
+    assert review.relation=='unknown'
+    store.resolve_conflict(review.id,decision(resolution='confirm_compatible'))
     refs=store.retrieve_model_references(language='python',repository_id='team/repository',error_types=['ValueError'])
     assert [r['id'] for r in refs]==[source.id]
 

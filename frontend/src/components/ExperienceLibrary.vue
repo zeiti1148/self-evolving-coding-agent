@@ -6,6 +6,7 @@ import { useApiContext } from '../api/context'
 import ExperienceText from './ExperienceText.vue'
 import ExperienceRecovery from './ExperienceRecovery.vue'
 import { experienceTitle, knowledgeTitle } from '../utils/experiencePresentation'
+import { createPagePolling } from '../utils/pagePolling'
 const props = defineProps<{ filters: ExperienceFilters; refreshKey: number }>()
 const emit = defineEmits<{ changed: []; activity: [] }>()
 const { api } = useApiContext(), route = useRoute(), router = useRouter()
@@ -18,7 +19,8 @@ const selected = ref<KnowledgeCard | null>(null), detailTab = ref('content'), di
 const pageSize = 10, labels = { active: '可复用', paused: '暂停复用', unverified: '待验证' }
 const languageLabels: Record<string, string> = { python: 'Python', java: 'Java', go: 'Go', cpp: 'C++' }
 let controller: AbortController | undefined, writeController: AbortController | undefined
-let timer: ReturnType<typeof setTimeout> | undefined, debounce: ReturnType<typeof setTimeout> | undefined, generation = 0, disposed = false
+let debounce: ReturnType<typeof setTimeout> | undefined, generation = 0, disposed = false, failures = 0
+const polling = createPagePolling()
 const scanning = computed(() => ['pending', 'running'].includes(data.value?.history_scan?.state ?? ''))
 const counts = computed(() => data.value?.summary)
 const total = computed(() => data.value?.total ?? data.value?.items.length ?? 0)
@@ -50,12 +52,13 @@ async function open(card: KnowledgeCard, tab = 'content') {
 function close() { dialog.value?.close?.(); selected.value = null; remember() }
 async function load() {
   if (!api.getExperienceLibrary || disposed) return
+  polling.cancel()
   controller?.abort(); const active = new AbortController(); controller = active; const current = ++generation
   loading.value = true
   try {
     const value = await api.getExperienceLibrary(parameters(), active.signal)
     if (disposed || active.signal.aborted || generation !== current) return
-    data.value = value; error.value = ''
+    data.value = value; error.value = ''; failures = 0
     const updated = value.items.find(card => card.id === selected.value?.id)
     if (updated) selected.value = updated
     if (!selected.value && query('card')) {
@@ -63,8 +66,14 @@ async function load() {
       if (card && !disposed && !active.signal.aborted && current===generation) await open(card, 'recovery')
     }
     if (!value.items.length && offset.value && total.value <= offset.value) { offset.value = 0; remember(); void load() }
-  } catch (cause) { if (!active.signal.aborted && !disposed) error.value = cause instanceof Error ? cause.message : '经验目录读取失败' }
-  finally { if (!disposed && generation === current) { loading.value = false; if (timer) clearTimeout(timer); timer = setTimeout(load, 5000) } }
+  } catch (cause) { if (!active.signal.aborted && !disposed && generation === current) { failures++; error.value = cause instanceof Error ? cause.message : '经验目录读取失败' } }
+  finally {
+    if (!disposed && generation === current) {
+      loading.value = false
+      const working = scanning.value || data.value?.items.some(card => ['pending','running','waiting_task'].includes(card.recovery?.state ?? ''))
+      polling.schedule(() => void load(), failures ? Math.min(30000, 5000 * 2 ** Math.min(failures, 3)) : working ? 5000 : 30000)
+    }
+  }
 }
 function apply() { if (debounce) clearTimeout(debounce); offset.value = 0; remember(); void load() }
 function reset() { search.value = ''; language.value = ''; repository.value = ''; errorType.value = ''; tag.value = ''; status.value = 'all'; apply() }
@@ -82,8 +91,13 @@ function recovered(value: Recovery) {
   void load()
 }
 watch(search, () => { if (debounce) clearTimeout(debounce); debounce = setTimeout(apply, 300) })
+watch(() => query('card'), id => {
+  if (id === selected.value?.id || (!id && !selected.value)) return
+  dialog.value?.close?.(); selected.value = null
+  if (id) void load()
+})
 watch(() => [props.filters, props.refreshKey], load, { immediate: true, deep: true })
-onBeforeUnmount(() => { disposed = true; generation++; controller?.abort(); writeController?.abort(); if (timer) clearTimeout(timer); if (debounce) clearTimeout(debounce) })
+onBeforeUnmount(() => { disposed = true; generation++; controller?.abort(); writeController?.abort(); polling.dispose(); if (debounce) clearTimeout(debounce) })
 </script>
 
 <template>

@@ -16,6 +16,8 @@ from .principles import StrictModel, _json_call
 from .store import COLUMNS, decode_row, validation_error
 
 POLICY = 'scoped-evidence-recovery-v1'
+RESTORED_REASON = '验证通过，已恢复复用；仅限已验证的项目、代码版本与测试配置。其他项目仍不能使用。'
+RELATED_PENDING_REASON = '本条补充验证已通过并保留证据；共享约束或依赖规则仍需补证，当前继续暂停复用。关联证据充分后自动恢复，无需重复验证本条。'
 SCHEMA = '''
 CREATE TABLE IF NOT EXISTS knowledge_recoveries (
  id TEXT PRIMARY KEY, card_id TEXT NOT NULL, state TEXT NOT NULL, version INTEGER NOT NULL,
@@ -43,8 +45,74 @@ def related_versions(connection, identifier):
         'WHERE left_rule=? OR right_rule=? ORDER BY id', (identifier,identifier))}
 
 
+def grant_files_valid(grant):
+    try:
+        from backend.tools.workspace import inventory
+        if digest(inventory(Path(grant['workspace'])))!=grant['inventory_hash']:
+            return False
+        for artifact in grant['artifacts']:
+            path=Path(artifact['path'])
+            if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest()!=artifact['sha256']:
+                return False
+    except (OSError,ValueError,ApplicationError):
+        return False
+    return True
+
+
+def boundary_rules(connection, identifier):
+    """Shared/equivalent content and provenance/required execution ancestors."""
+    from .knowledge import CURRENT_RULES,shared_context_rules
+    members = shared_context_rules(connection, {identifier})
+    current={row[0] for row in connection.execute(CURRENT_RULES)}
+    equivalents=[tuple(row) for row in connection.execute(
+        "SELECT left_rule,right_rule FROM knowledge_relations WHERE kind='equivalent'")
+        if row[0] in current and row[1] in current]
+    dependencies = [tuple(row) for row in connection.execute(
+        'SELECT parent_id,child_id FROM knowledge_dependencies UNION SELECT parent_id,child_id FROM knowledge_prerequisites')]
+    while True:
+        previous = set(members)
+        members.update(parent for parent, child in dependencies if child in members)
+        for left,right in equivalents:
+            if left in members or right in members:members.update((left,right))
+        members = shared_context_rules(connection, members)
+        if members == previous:
+            return members
+
+
+def shared_context_proof(connection, identifier):
+    """Fingerprint immutable content and live boundaries, not authorization IDs."""
+    from .knowledge import CURRENT_SOURCES, is_current
+    members=boundary_rules(connection,identifier)
+    if len(members)==1:return None
+    dependencies = [tuple(row) for row in connection.execute(
+        'SELECT parent_id,child_id FROM knowledge_dependencies UNION SELECT parent_id,child_id FROM knowledge_prerequisites')]
+    links = [tuple(row) for row in connection.execute('SELECT rule_id,experience_id,ordinal FROM knowledge_sources') if row[0] in members]
+    current_sources = {row[0] for row in connection.execute(CURRENT_SOURCES)}
+    from .store import QUARANTINED
+    quarantined={row[0] for row in connection.execute(QUARANTINED)}
+    source_ids={row[1] for row in links}
+    source_reviews=[dict(row) for row in connection.execute('SELECT * FROM experience_conflicts')
+                    if row['left_id'] in source_ids or row['right_id'] in source_ids]
+    reviews = [dict(row) for row in connection.execute('SELECT * FROM knowledge_relations')
+               if row['left_rule'] in members or row['right_rule'] in members]
+    endpoints = {rule for row in reviews for rule in (row['left_rule'], row['right_rule'])}
+    return digest(dict(policy='shared-constraint-boundary-v1',
+        rules={rule: rule_snapshot(connection, rule) for rule in sorted(members)},
+        current_rules={rule: is_current(connection, rule) for rule in sorted(members | endpoints)},
+        links=sorted(links), sources={key:dict(current=key in current_sources,quarantined=key in quarantined,
+                                             hash=digest(source(connection,key))) for key in sorted(source_ids)},
+        source_reviews=sorted(source_reviews,key=lambda row:row['id']),
+        reviews=sorted(reviews,key=lambda row:row['id']),
+        pauses=sorted(tuple(row) for row in connection.execute('SELECT rule_id,review_id FROM knowledge_pauses')
+                      if row[0] in members | endpoints),
+        dependencies=sorted((parent,child) for parent,child in dependencies if child in members)))
+
+
 def grant_valid(connection, grant, *, files=True):
     from .knowledge import is_current
+    from .store import QUARANTINED
+    if set(grant['source_hashes']) & {row[0] for row in connection.execute(QUARANTINED)}:
+        return False  # A source-level pending decision also invalidates scoped ancestors.
     rule = rule_snapshot(connection,grant['rule_id'])
     latest=connection.execute('SELECT id FROM knowledge_recoveries WHERE card_id=? ORDER BY created_at DESC LIMIT 1',(grant['card_id'],)).fetchone()
     if not latest or latest['id']!=grant['recovery_id']:return False
@@ -52,18 +120,12 @@ def grant_valid(connection, grant, *, files=True):
             or related_versions(connection,rule['id'])!=grant['review_versions']
             or any(digest(source(connection,key))!=value for key,value in grant['source_hashes'].items())):
         return False
-    if files:
-        try:
-            from backend.tools.workspace import inventory
-            if digest(inventory(Path(grant['workspace'])))!=grant['inventory_hash']:
-                return False
-            for artifact in grant['artifacts']:
-                path=Path(artifact['path'])
-                if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest()!=artifact['sha256']:
-                    return False
-        except (OSError,ValueError,ApplicationError):
-            return False
-    return True
+    # Shared content has an immutable boundary proof; authorization availability
+    # is checked separately, avoiding two valid grants invalidating each other.
+    if ('shared_context_hash' in grant and
+            grant.get('shared_context_hash') != shared_context_proof(connection,rule['id'])):
+        return False
+    return not files or grant_files_valid(grant)
 
 
 def grant_matches_context(grant, context):
@@ -87,7 +149,53 @@ def grant_matches_context(grant, context):
             same_source_revision(context['compatibility_key'], grant['compatibility_key']))
 
 
-def active_grants(connection, *, context=None, files=True):
+def prerequisite_rules(connection, identifier, *, include_provenance=False):
+    edges={}
+    query='SELECT parent_id,child_id FROM knowledge_prerequisites'
+    if include_provenance:query+=' UNION SELECT parent_id,child_id FROM knowledge_dependencies'
+    for parent,child in connection.execute(query):
+        edges.setdefault(child,set()).add(parent)
+    required=set();pending=list(edges.get(identifier,()))
+    while pending:
+        parent=pending.pop()
+        if parent in required:continue
+        required.add(parent);pending.extend(edges.get(parent,()))
+    return required
+
+
+def prerequisite_grants(connection, grants):
+    """Minimum safe prerequisites inherit a grant's scope, never broad reuse."""
+    from .knowledge import blocked_without_seeds,effective_rules,shared_context_rules
+    blocked=effective_rules(connection);inherited={}
+    for identifier,grant in sorted(grants.items()):
+        members=shared_context_rules(connection,{identifier})
+        approved={key for key,value in grants.items() if grant_matches_context(value,grant)}
+        other_causes=blocked_without_seeds(connection,approved)
+        for parent in prerequisite_rules(connection,identifier):
+            if parent not in grants and parent in blocked and parent in members and parent not in other_causes:
+                inherited.setdefault(parent,grant)
+    return inherited
+
+
+def grant_dependencies_available(connection, identifier, grant, candidates, blocked):
+    from .knowledge import blocked_without_seeds,is_current,shared_context_rules
+    members=shared_context_rules(connection,{identifier})
+    approved={identifier}|{key for key,value in candidates.items() if grant_matches_context(value,grant)}
+    other_causes=blocked_without_seeds(connection,approved)
+    restricted={row[0] for row in connection.execute('SELECT rule_id FROM knowledge_reuse_grants')}
+    for parent in prerequisite_rules(connection,identifier,include_provenance=True):
+        rule=rule_snapshot(connection,parent)
+        if not rule or rule['state']!='ready' or not is_current(connection,parent):return False
+        if parent in restricted:
+            if parent not in candidates or not grant_matches_context(candidates[parent],grant):return False
+            continue
+        if parent not in blocked:continue
+        if parent in candidates and grant_matches_context(candidates[parent],grant):continue
+        if parent not in members or parent in other_causes:return False
+    return True
+
+
+def individually_valid_grants(connection, *, context=None, files=True):
     if not connection.execute("SELECT 1 FROM sqlite_master WHERE name='knowledge_reuse_grants'").fetchone():
         return {}
     result={}
@@ -97,19 +205,44 @@ def active_grants(connection, *, context=None, files=True):
         if context is not None and not grant_matches_context(grant, context):
             continue
         if grant_valid(connection,grant,files=files):result[grant['rule_id']]=grant
-    # A grant cannot silently restore unavailable execution prerequisites.
-    from .knowledge import effective_rules
+    return result
+
+
+def eligible_grants(connection, candidates):
+    """Resolve scope/dependency availability without circular authorization hashes."""
+    from .knowledge import blocked_without_seeds,effective_rules
+    result=dict(candidates)
+    restricted={row[0] for row in connection.execute('SELECT rule_id FROM knowledge_reuse_grants')}
     blocked=effective_rules(connection)
     changed=True
     while changed:
-        invalid={child for parent,child in connection.execute('SELECT parent_id,child_id FROM knowledge_prerequisites')
-                 if child in result and parent in blocked and parent not in result}
+        invalid=set()
+        for identifier,grant in result.items():
+            siblings=boundary_rules(connection,identifier)-{identifier}
+            approved={key for key,value in result.items() if grant_matches_context(value,grant)}
+            # A scoped or invalid sibling must not leak through another rule.
+            # Legacy grants retain their old meaning if there is no additional
+            # boundary beyond their own and independently valid peer evidence.
+            if ((siblings & restricted)-approved or
+                    'shared_context_hash' not in grant and (siblings|{identifier}) & blocked_without_seeds(connection,approved) or
+                    not grant_dependencies_available(connection,identifier,grant,result,blocked)):
+                invalid.add(identifier)
         changed=bool(invalid)
         for child in invalid:result.pop(child)
     return result
 
 
-def public(row, connection=None):
+def grant_snapshot(connection, *, context=None, files=True):
+    """One request/snapshot's independently checked and collectively usable grants."""
+    candidates=individually_valid_grants(connection,context=context,files=files)
+    return candidates,eligible_grants(connection,candidates) if candidates else {}
+
+
+def active_grants(connection, *, context=None, files=True):
+    return grant_snapshot(connection,context=context,files=files)[1]
+
+
+def public(row, connection=None, *, grant_state=None):
     data=json.loads(row['data'])
     view={k:data[k] for k in ('before','after','reason','steps','runs','scope','candidate','candidate_rule_index','actor','model_requests') if k in data}
     view.update(id=row['id'],card_id=row['card_id'],state=row['state'],version=row['version'],task_id=row['task_id'],
@@ -121,15 +254,24 @@ def public(row, connection=None):
             'SELECT id,status,version,resolution FROM knowledge_relations WHERE id=?',(identifier,))]
     if row['state']=='succeeded' and connection is not None:
         grants=[json.loads(r[0]) for r in connection.execute('SELECT data FROM knowledge_reuse_grants WHERE recovery_id=?',(row['id'],))]
-        available=active_grants(connection,files=False)
-        if not grants or not all(g['rule_id'] in available and grant_valid(connection,g) for g in grants):
-            view.update(state='invalidated',reason='来源、验证文件、审阅版本或依赖规则发生变化，需要重新验证后恢复。')
+        candidates,available=grant_state if grant_state is not None else grant_snapshot(connection)
+        if not grants or not all(candidates.get(g['rule_id'])==g for g in grants):
+            view.update(state='invalidated',reason='本条来源、验证文件或审阅边界发生变化，需要重新验证后恢复。')
+        elif not all(g['rule_id'] in available for g in grants):
+            view.update(state='invalidated',reason=RELATED_PENDING_REASON)
+        else:
+            view.update(reason=RESTORED_REASON)
+        if 'after' in view:
+            view['after']={**view['after'],'state':'active' if view['state']=='succeeded' else 'paused'}
     return view
 
 
 def history(path,card_id):
     with connect(path) as connection:
-        return [public(r,connection) for r in connection.execute('SELECT * FROM knowledge_recoveries WHERE card_id=? ORDER BY created_at DESC',(card_id,))]
+        connection.execute('BEGIN')
+        rows=connection.execute('SELECT * FROM knowledge_recoveries WHERE card_id=? ORDER BY created_at DESC',(card_id,)).fetchall()
+        state=grant_snapshot(connection) if any(row['state']=='succeeded' for row in rows) else None
+        return [public(row,connection,grant_state=state) for row in rows]
 
 
 def enqueue(path,card_id, *, task_id=None,retry=False):
@@ -204,28 +346,36 @@ class RecoveryService:
                 raise validation_error('补充测试证据已变化，请重新验证。')
         from backend.projects import source_revision
         project=context['project'];binding=context['binding']
-        for related in connection.execute('SELECT * FROM knowledge_relations WHERE left_rule=? OR right_rule=?',(rule_id,rule_id)):
+        from .knowledge import is_current
+        members=boundary_rules(connection,rule_id)
+        for related in connection.execute('SELECT * FROM knowledge_relations'):
             if related['kind'] not in {'conflict','unknown'}:continue
-            other=rule_snapshot(connection,related['right_rule'] if related['left_rule']==rule_id else related['left_rule'])
+            if not {related['left_rule'],related['right_rule']} & members:continue
+            if not all(is_current(connection,key) for key in (related['left_rule'],related['right_rule'])):continue
+            if related['status']=='pending' and connection.execute('SELECT 1 FROM knowledge_pauses WHERE rule_id IN (?,?)',
+                    (related['left_rule'],related['right_rule'])).fetchone():continue
+            other=rule_snapshot(connection,related['right_rule'] if related['left_rule'] in members else related['left_rule'])
             if other['scope']=='global' or (other['repository_id']==rule['repository_id'] and other['compatibility_key']==rule['compatibility_key']):
                 raise validation_error('同一项目版本仍存在无法区分的规则，需重新审阅冲突。')
         if rule['scope']!='project' or not rule['repository_id'] or not rule['compatibility_key']:
             raise validation_error('无法确定项目与版本边界，不能自动恢复。')
-        from .knowledge import effective_rules
-        blocked=effective_rules(connection);approved=active_grants(connection,files=False)
-        if any(parent in blocked and parent not in approved for parent, in connection.execute('SELECT parent_id FROM knowledge_prerequisites WHERE child_id=?',(rule_id,))):
-            raise validation_error('该规则依赖的其他规则仍暂停，请先恢复其依赖。')
         scope=dict(project_id=project.id,project_label=project.label,repository_id=rule['repository_id'],
             compatibility_key=rule['compatibility_key'],source_revision=source_revision(project.source,context['record'].baseline),runner_hash=binding['runner_hash'])
         grant=dict(scope,rule_id=rule_id,rule_hash=digest(rule),review_versions=related_versions(connection,rule_id),
+            shared_context_hash=shared_context_proof(connection,rule_id),
             source_hashes={**data['source_hashes'],entry['id']:digest(entry)},workspace=str(context['record'].path),
             inventory_hash=binding['inventory_hash'],recovery_id=row['id'],card_id=row['card_id'],
             artifacts=[dict(path=str(self.verifier.settings.workspace_root.parent/r['artifact_path']),sha256=r['artifact_sha256']) for r in runs])
+        # Store independently verified evidence even if another authorization is
+        # unavailable. It remains excluded from retrieval until the fixed point
+        # is satisfied; this allows two expired peers to recover sequentially.
+        approved=individually_valid_grants(connection)
+        usable=rule_id in eligible_grants(connection,{**approved,rule_id:grant})
         connection.execute('INSERT OR REPLACE INTO knowledge_reuse_grants VALUES(?,?,?)',(rule_id,row['id'],canonical(grant)))
         data.update(scope=scope,review_versions=grant['review_versions'],selected_rule_id=rule_id,
-            after=dict(state='active',reuse_mode='scoped',summary=json.loads(rule['data'])['issue']['solution'],
+            after=dict(state='active' if usable else 'paused',reuse_mode='scoped',summary=json.loads(rule['data'])['issue']['solution'],
                        evidence_count=len(runs),source_id=entry['id']),
-            reason='验证通过，已恢复复用；仅限已验证的项目、代码版本与测试配置。其他项目仍不能使用。')
+            reason=RESTORED_REASON if usable else RELATED_PENDING_REASON)
 
     def run_once(self):
         with connect(self.path) as connection:
@@ -307,7 +457,7 @@ class RecoveryService:
                             if tuple(claim)!=('running',token) or any(digest(source(connection,k))!=v for k,v in data['source_hashes'].items()):raise ValueError('Recovery changed')
                             rule_id=row['card_id'] if data['kind']=='rule' and not needs_link else connection.execute('SELECT rule_id FROM knowledge_sources WHERE experience_id=? AND ordinal=?',(entry['id'],data['candidate_rule_index'])).fetchone()[0]
                             self.grant(connection,row,data,entry,rule_id,context,runs)
-                            state='succeeded';data['steps'].append(dict(stage='restored',reason=data['reason'],at=now()))
+                            state='succeeded';data['steps'].append(dict(stage='restored' if data['after']['state']=='active' else 'evidence_ready',reason=data['reason'],at=now()))
                             connection.execute("UPDATE knowledge_recoveries SET state=?,data=?,version=version+1,lease_until=NULL,updated_at=? WHERE id=? AND token=?",(state,canonical(data),now(),row['id'],token))
                     return True
         except Exception as exc:

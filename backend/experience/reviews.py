@@ -149,7 +149,9 @@ def reopen(path,identifier,version,note):
         return read(connection,connection.execute('SELECT * FROM knowledge_relations WHERE id=?',(identifier,)).fetchone())
 
 
-def history(path,identifier):
-    with connect(path) as connection:
-        return [dict(r) | {'data':json.loads(r['data'])} for r in connection.execute(
-            'SELECT version,action,data,created_at FROM knowledge_decisions WHERE review_id=? ORDER BY version',(identifier,))]
+def history(path,identifier,*,connection=None):
+    if connection is None:
+        with connect(path) as connection:
+            return history(path,identifier,connection=connection)
+    return [dict(r) | {'data':json.loads(r['data'])} for r in connection.execute(
+        'SELECT version,action,data,created_at FROM knowledge_decisions WHERE review_id=? ORDER BY version',(identifier,))]

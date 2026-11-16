@@ -125,13 +125,57 @@ CURRENT_RULES = """SELECT DISTINCT s.rule_id FROM knowledge_sources s WHERE s.ex
  SELECT source_id FROM experience_merge_sources UNION SELECT previous_id FROM experience_publication_revisions
  UNION SELECT experience_id FROM experience_retirements)"""
 
+CURRENT_SOURCES = """SELECT id FROM experiences WHERE id NOT IN (
+ SELECT source_id FROM experience_merge_sources UNION SELECT previous_id FROM experience_publication_revisions
+ UNION SELECT experience_id FROM experience_retirements)"""
+
+# Every projection retains the source's whole constraint set. Until constraints
+# are independently scoped to issues, a sibling cannot be treated as independent
+# merely because its own issue describes another function or error type.
+SHARED_CONTEXT = """SELECT s.experience_id,s.rule_id FROM knowledge_sources s
+ WHERE s.experience_id IN (""" + CURRENT_SOURCES + """) AND EXISTS (
+ SELECT 1 FROM knowledge_sources sibling JOIN knowledge_rules r ON r.id=sibling.rule_id
+ WHERE sibling.experience_id=s.experience_id AND json_array_length(r.data,'$.constraints')>0)"""
+
+
+def shared_context_rules(connection, identifiers):
+    """Current source bundles only; retired sources must not connect live rules."""
+    groups = {}
+    for source_id, rule_id in connection.execute(SHARED_CONTEXT):
+        groups.setdefault(source_id, set()).add(rule_id)
+    members = set(identifiers)
+    while True:
+        previous = len(members)
+        for rules in groups.values():
+            if members & rules:
+                members.update(rules)
+        if len(members) == previous:
+            return members
+
 
 def is_current(connection, identifier):
     return bool(connection.execute('SELECT 1 FROM knowledge_sources s WHERE s.rule_id=? AND s.experience_id NOT IN ('
         'SELECT source_id FROM experience_merge_sources UNION SELECT previous_id FROM experience_publication_revisions '
         'UNION SELECT experience_id FROM experience_retirements) LIMIT 1',(identifier,)).fetchone())
 
-BLOCKED = """WITH RECURSIVE current_rules(id) AS (""" + CURRENT_RULES + """), blocked(id) AS (
+AMBIGUITY_SEEDS = """
+ SELECT r.left_rule FROM knowledge_relations r WHERE r.kind IN ('conflict','unknown') AND r.status='pending'
+   AND r.left_rule IN current_rules AND r.right_rule IN current_rules
+   AND NOT EXISTS(SELECT 1 FROM knowledge_pauses p WHERE p.rule_id IN (r.left_rule,r.right_rule))
+ UNION SELECT r.right_rule FROM knowledge_relations r WHERE r.kind IN ('conflict','unknown') AND r.status='pending'
+   AND r.left_rule IN current_rules AND r.right_rule IN current_rules
+   AND NOT EXISTS(SELECT 1 FROM knowledge_pauses p WHERE p.rule_id IN (r.left_rule,r.right_rule))
+"""
+# Filter ambiguity before candidate selection, preserving its equivalent bridges.
+# An unrelated member's evidence expiry alone does not invalidate verified peers.
+AMBIGUITY_PROPAGATION = """
+ UNION SELECT r.right_rule FROM knowledge_relations r JOIN ambiguous a ON a.id=r.left_rule
+   WHERE r.kind='equivalent' AND r.left_rule IN current_rules AND r.right_rule IN current_rules
+ UNION SELECT r.left_rule FROM knowledge_relations r JOIN ambiguous a ON a.id=r.right_rule
+   WHERE r.kind='equivalent' AND r.left_rule IN current_rules AND r.right_rule IN current_rules
+"""
+
+BLOCKED_SEEDS = """
  SELECT id FROM knowledge_rules WHERE state!='ready'
  UNION SELECT r.id FROM knowledge_rules r WHERE EXISTS(SELECT 1 FROM knowledge_sources s WHERE s.rule_id=r.id)
    AND NOT EXISTS(SELECT 1 FROM knowledge_sources s WHERE s.rule_id=r.id
@@ -139,18 +183,34 @@ BLOCKED = """WITH RECURSIVE current_rules(id) AS (""" + CURRENT_RULES + """), bl
        UNION SELECT left_id FROM experience_conflicts WHERE status='pending'
        UNION SELECT right_id FROM experience_conflicts WHERE status='pending'))
  UNION SELECT rule_id FROM knowledge_pauses
- UNION SELECT r.left_rule FROM knowledge_relations r WHERE r.kind='conflict' AND r.status='pending'
-   AND r.left_rule IN current_rules AND r.right_rule IN current_rules
-   AND NOT EXISTS(SELECT 1 FROM knowledge_pauses p WHERE p.rule_id=r.right_rule)
- UNION SELECT r.right_rule FROM knowledge_relations r WHERE r.kind='conflict' AND r.status='pending'
-   AND r.left_rule IN current_rules AND r.right_rule IN current_rules
-   AND NOT EXISTS(SELECT 1 FROM knowledge_pauses p WHERE p.rule_id=r.left_rule)
- UNION SELECT d.child_id FROM knowledge_dependencies d JOIN blocked b ON d.parent_id=b.id
-) SELECT id FROM blocked"""
+ UNION SELECT rule_id FROM knowledge_reuse_grants
+ UNION SELECT id FROM ambiguous
+"""
+BLOCKED_PREFIX = """WITH RECURSIVE current_rules(id) AS (""" + CURRENT_RULES + """),
+ shared_context(source_id,rule_id) AS (""" + SHARED_CONTEXT + """),
+ ambiguous(id) AS (""" + AMBIGUITY_SEEDS + AMBIGUITY_PROPAGATION + """),
+ seeds(id) AS (""" + BLOCKED_SEEDS + """), blocked(id) AS (
+ SELECT id FROM seeds"""
+DEPENDENCY_PROPAGATION = ' UNION SELECT d.child_id FROM knowledge_dependencies d JOIN blocked b ON d.parent_id=b.id'
+SHARED_PROPAGATION = """
+ UNION SELECT sibling.rule_id FROM shared_context origin JOIN blocked b ON b.id=origin.rule_id
+   JOIN shared_context sibling ON sibling.source_id=origin.source_id
+"""
+BLOCKED = BLOCKED_PREFIX + DEPENDENCY_PROPAGATION + SHARED_PROPAGATION + ') SELECT id FROM blocked'
 
 
 def effective_rules(connection):
     return {r[0] for r in connection.execute(BLOCKED)}
+
+
+def blocked_without_seeds(connection, identifiers):
+    """Trace causes not covered by independently checked grants in one scope."""
+    identifiers = sorted(set(identifiers))
+    if not identifiers:
+        return effective_rules(connection)
+    query = (BLOCKED_PREFIX + ' WHERE id NOT IN (' + ','.join('?' for _ in identifiers) + ')' + DEPENDENCY_PROPAGATION +
+             SHARED_PROPAGATION + ') SELECT id FROM blocked')
+    return {r[0] for r in connection.execute(query, identifiers)}
 
 
 def source_requires_review(connection, identifier):
@@ -167,37 +227,47 @@ def source_requires_review(connection, identifier):
     return False
 
 
-def source_status(path, identifier, *, offset=0, limit=50):
-    with connect(path) as connection:
-        blocked = effective_rules(connection)
-        rows = connection.execute('SELECT r.* FROM knowledge_rules r JOIN knowledge_sources s ON r.id=s.rule_id '
-                                  'WHERE s.experience_id=? ORDER BY s.ordinal', (identifier,)).fetchall()
-        rules = [dict(id=r['id'], state=r['state'], effective_status='paused' if r['id'] in blocked else 'active',
-                      data=json.loads(r['data'])) for r in rows]
-        current_ids = [r['id'] for r in rules if r['effective_status'] == 'active']
-        return dict(experience_id=identifier, effective_status='active' if current_ids else 'paused',
-                    current_rule_ids=current_ids, rules=rules)
+def source_status(path, identifier, *, offset=0, limit=50, connection=None, blocked=None):
+    if connection is None:
+        with connect(path) as connection:
+            connection.execute('BEGIN')
+            return source_status(path, identifier, offset=offset, limit=limit, connection=connection)
+    if blocked is None:
+        from .recovery import active_grants
+        blocked = effective_rules(connection) - active_grants(connection).keys()
+    rows = connection.execute('SELECT r.* FROM knowledge_rules r JOIN knowledge_sources s ON r.id=s.rule_id '
+                              'WHERE s.experience_id=? ORDER BY s.ordinal', (identifier,)).fetchall()
+    rules = [dict(id=r['id'], state=r['state'], effective_status='paused' if r['id'] in blocked else 'active',
+                  data=json.loads(r['data'])) for r in rows]
+    current_ids = [r['id'] for r in rules if r['effective_status'] == 'active']
+    return dict(experience_id=identifier, effective_status='active' if current_ids else 'paused',
+                current_rule_ids=current_ids, rules=rules)
 
 
-def provenance_page(path, identifier, *, offset=0, limit=50):
-    with connect(path) as connection:
-        connection.execute('BEGIN')
-        if not connection.execute('SELECT 1 FROM knowledge_rules WHERE id=?',(identifier,)).fetchone():
-            from backend.shared import ApplicationError,ErrorCode
-            raise ApplicationError(ErrorCode.EXPERIENCE_NOT_FOUND,'未找到规范规则。')
-        from .equivalence import equivalent_groups
-        from .store import SUPERSEDED, RETIRED, QUARANTINED
-        inactive={r[0] for r in connection.execute(f'{SUPERSEDED} UNION {RETIRED} UNION {QUARANTINED}')}
-        active={r[0] for r in connection.execute('SELECT rule_id,experience_id FROM knowledge_sources') if r[1] not in inactive}
-        active-=effective_rules(connection)
-        relations={(r[0],r[1]):r[2] for r in connection.execute('SELECT left_rule,right_rule,kind FROM knowledge_relations')}
-        dependencies={}
-        for row in connection.execute('SELECT parent_id,child_id FROM knowledge_prerequisites'):
-            dependencies.setdefault(row[1],set()).add(row[0])
-        members=sorted(equivalent_groups(active,relations,dependencies).get(identifier,{identifier}))
-        placeholders=','.join('?' for _ in members)
-        rows = connection.execute(f'SELECT DISTINCT experience_id FROM knowledge_sources WHERE rule_id IN ({placeholders}) '
-                                  'ORDER BY experience_id LIMIT ? OFFSET ?', (*members, limit+1, offset)).fetchall()
-        evidence = connection.execute(f'SELECT count(DISTINCT evidence_id) FROM knowledge_rule_evidence WHERE rule_id IN ({placeholders})', members).fetchone()[0]
-        return dict(rule_id=identifier, source_ids=[r[0] for r in rows[:limit]], evidence_count=evidence,
-                    next_offset=offset+limit if len(rows)>limit else None)
+def provenance_page(path, identifier, *, offset=0, limit=50, connection=None, blocked=None):
+    if connection is None:
+        with connect(path) as connection:
+            connection.execute('BEGIN')
+            return provenance_page(path, identifier, offset=offset, limit=limit, connection=connection)
+    if not connection.execute('SELECT 1 FROM knowledge_rules WHERE id=?',(identifier,)).fetchone():
+        from backend.shared import ApplicationError,ErrorCode
+        raise ApplicationError(ErrorCode.EXPERIENCE_NOT_FOUND,'未找到规范规则。')
+    from .equivalence import equivalent_groups
+    from .store import SUPERSEDED, RETIRED, QUARANTINED
+    inactive={r[0] for r in connection.execute(f'{SUPERSEDED} UNION {RETIRED} UNION {QUARANTINED}')}
+    active={r[0] for r in connection.execute('SELECT rule_id,experience_id FROM knowledge_sources') if r[1] not in inactive}
+    if blocked is None:
+        from .recovery import active_grants
+        blocked=effective_rules(connection) - active_grants(connection).keys()
+    active-=blocked
+    relations={(r[0],r[1]):r[2] for r in connection.execute('SELECT left_rule,right_rule,kind FROM knowledge_relations')}
+    dependencies={}
+    for row in connection.execute('SELECT parent_id,child_id FROM knowledge_prerequisites'):
+        dependencies.setdefault(row[1],set()).add(row[0])
+    members=sorted(equivalent_groups(active,relations,dependencies).get(identifier,{identifier}))
+    placeholders=','.join('?' for _ in members)
+    rows = connection.execute(f'SELECT DISTINCT experience_id FROM knowledge_sources WHERE rule_id IN ({placeholders}) '
+                              'ORDER BY experience_id LIMIT ? OFFSET ?', (*members, limit+1, offset)).fetchall()
+    evidence = connection.execute(f'SELECT count(DISTINCT evidence_id) FROM knowledge_rule_evidence WHERE rule_id IN ({placeholders})', members).fetchone()[0]
+    return dict(rule_id=identifier, source_ids=[r[0] for r in rows[:limit]], evidence_count=evidence,
+                next_offset=offset+limit if len(rows)>limit else None)

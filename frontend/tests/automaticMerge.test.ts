@@ -32,6 +32,40 @@ async function setup(api=client(), parent=false) {
 }
 
 describe('automatic merge in the experience library',()=>{
+  it('slows completed records and backs off failed refreshes while preserving the last result',async()=>{
+    vi.useFakeTimers()
+    const api=client()
+    const {wrapper}=await setup(api)
+    try {
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(api.listAutomaticMerges).toHaveBeenCalledTimes(1)
+      vi.mocked(api.listAutomaticMerges!).mockRejectedValueOnce(new Error('请求超时'))
+      await vi.advanceTimersByTimeAsync(25000);await flushPromises()
+      expect(api.listAutomaticMerges).toHaveBeenCalledTimes(2)
+      expect(wrapper.text()).toContain('已保留上次结果')
+      expect(wrapper.text()).toContain('1 条共同规则')
+      await vi.advanceTimersByTimeAsync(5000)
+      expect(api.listAutomaticMerges).toHaveBeenCalledTimes(2)
+      await vi.advanceTimersByTimeAsync(5000);await flushPromises()
+      expect(api.listAutomaticMerges).toHaveBeenCalledTimes(3)
+      expect(wrapper.text()).not.toContain('已保留上次结果')
+    } finally {wrapper.unmount();vi.useRealTimers()}
+  })
+
+  it('distinguishes no comparison target from a completed merge',async()=>{
+    const api=client(), empty=structuredClone(merged)
+    Object.assign(empty.items[0]!, {changes:[],candidate_total:0,selected_candidates:0,
+      notice:'当前没有更早且符合比较条件的经验；后续修复会自动与本条比较。'})
+    vi.mocked(api.listAutomaticMerges!).mockResolvedValue(empty)
+    const {wrapper}=await setup(api)
+    try {
+      expect(wrapper.text()).toContain('暂无比较对象')
+      expect(wrapper.text()).toContain('原始经验已保存')
+      expect(wrapper.text()).not.toContain('0 项处理结果')
+      expect(wrapper.text()).not.toContain('比较完成')
+    } finally {wrapper.unmount()}
+  })
+
   it('shows both original tasks, the merged rule and preserved business boundaries in the normal page',async()=>{
     const {wrapper}=await setup(client(),true)
     try {

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { ExperienceConflict } from '../api/contracts'
 import ExperienceText from './ExperienceText.vue'
+import AppIcon from './AppIcon.vue'
 import { testCell } from '../utils/experiencePresentation'
 const props = defineProps<{ review: ExperienceConflict }>()
 function sourceLabel(id: string) { return '来源 ' + (props.review.sources.findIndex(s=>s.id===id)+1) }
@@ -24,7 +25,7 @@ const matrix = computed(() => props.review.sources.map(source => ({ source, cell
       </table>
     </div>
     <details v-if="review.automatic_resolution.runs.length" class="test-details">
-      <summary>展开 {{ review.automatic_resolution.runs.length }} 次测试明细与失败用例 <span aria-hidden="true">⌄</span></summary>
+      <summary>{{ review.automatic_resolution.runs.length }} 次测试明细与失败用例 <AppIcon name="chevron-down" class="disclosure-chevron" :size="18" /></summary>
       <p class="field-hint">每行是一次实际执行；交叉测试使用对方函数，保留目标项目原测试集。</p>
       <div class="conflict-test-table">
         <table><caption>全部测试执行记录</caption><thead><tr><th scope="col">实现 → 测试</th><th scope="col">轮次</th><th scope="col">真实结果</th></tr></thead>
@@ -36,13 +37,13 @@ const matrix = computed(() => props.review.sources.map(source => ({ source, cell
         </table>
       </div>
       <details v-for="run in review.automatic_resolution.runs.filter(r=>r.failed_tests.length)" :key="run.id" class="failure-detail">
-        <summary>{{ sourceLabel(run.implementation_source_id) }} → {{ sourceLabel(run.target_source_id) }} · 第 {{ run.repeat }} 次 · 失败用例 <span aria-hidden="true">⌄</span></summary>
+        <summary>{{ sourceLabel(run.implementation_source_id) }} → {{ sourceLabel(run.target_source_id) }} · 第 {{ run.repeat }} 次 · 失败用例 <AppIcon name="chevron-down" class="disclosure-chevron" :size="18" /></summary>
         <ul><li v-for="test in run.failed_tests" :key="test">{{ test }}</li></ul>
         <p class="field-hint">{{ run.reproduces_baseline ? '复现了该任务原始失败用例' : '未能对应原始缺陷，需要确认' }}</p>
         <p class="field-hint">证据 SHA-256：{{ run.artifact_sha256 }}</p>
       </details>
     </details>
-    <details class="automation-method"><summary>自动处理是怎么判断的？ <span aria-hidden="true">⌄</span></summary><ol>
+    <details class="automation-method"><summary>自动处理是怎么判断的？ <AppIcon name="chevron-down" class="disclosure-chevron" :size="18" /></summary><ol>
       <li>核对原始任务、冻结源码和完整测试配置。</li>
       <li>双方实现分别运行各自测试，确认原经验有效。</li>
       <li>交换冲突函数，双方各重复验证两次。</li>

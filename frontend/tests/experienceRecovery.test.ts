@@ -21,6 +21,22 @@ async function setup(api:AgentApi,task=false) {
   await flushPromises();return{wrapper,router}
 }
 describe('normal evidence recovery workflow',()=>{
+  it.each([
+    '本条证据已变化，请重新验证。',
+    '本条验证已通过，关联规则待补证；已保留本条证据，无须重复验证。',
+  ])('preserves the server reason for unavailable reuse: %s',async(reason)=>{
+    const api=client()
+    vi.mocked(api.listExperienceRecovery!).mockResolvedValue([{...recovery,state:'invalidated',reason}])
+    const {wrapper}=await setup(api)
+    try {
+      expect(wrapper.get('.recovery-result strong').text()).toBe('暂未恢复复用')
+      expect(wrapper.get('.recovery-result p').text()).toBe(reason)
+      expect(wrapper.get('.recovery-transition').text()).toContain('暂未恢复复用')
+      expect(wrapper.text()).not.toContain('证据已失效')
+      expect(api.startExperienceRecovery).not.toHaveBeenCalled()
+      expect(api.confirmExperienceRecovery).not.toHaveBeenCalled()
+    }finally{wrapper.unmount()}
+  })
   it('offers an ordinary task for missing evidence without a force-enable action',async()=>{
     const api=client(),{wrapper}=await setup(api)
     try {

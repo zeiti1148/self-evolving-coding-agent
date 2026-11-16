@@ -1,0 +1,5132 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-15T16:51:54.788582+00:00",
+  "status": "complete",
+  "planned_tasks": 20,
+  "primary_plan_size": 16,
+  "ablation_plan_size": 4,
+  "missing_planned_records": 0,
+  "protocol": {
+    "before_revision": "d724266393588a1e93ec70f37b9351ef05288c12",
+    "after_revision": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+    "primary_tasks": 16,
+    "independent_sequences_per_version": 2,
+    "decision_budget": 30,
+    "task_timeout_seconds": 900,
+    "llm_timeout_seconds": 90,
+    "execution_mode": "single",
+    "order": "replicate1 before-after; replicate2 after-before",
+    "outcomes": "All submitted terminal outcomes retained; no automatic repair retry.",
+    "sources": "Original upstream source plus public regression tests; no production gold patch.",
+    "initial_memory": "Empty independent DB per version and repetition; later cases only see earlier actual repairs in that sequence.",
+    "retrieval_ablation": "After a successful first pytest task, freeze references for a separate contextual/adaptive paired reuse run.",
+    "comparison_limits": "Whole-update comparison includes prompt/tool/extraction changes. Small sample; repeated instances are not independent projects.",
+    "plan": [
+      {
+        "key": "before1-pytest-10356",
+        "arm": "before1",
+        "phase": "pytest-10356",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "after1-pytest-10356",
+        "arm": "after1",
+        "phase": "pytest-10356",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "after2-pytest-10356",
+        "arm": "after2",
+        "phase": "pytest-10356",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "before2-pytest-10356",
+        "arm": "before2",
+        "phase": "pytest-10356",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "before1-sphinx-8548",
+        "arm": "before1",
+        "phase": "sphinx-8548",
+        "case_id": "sphinx-8548"
+      },
+      {
+        "key": "after1-sphinx-8548",
+        "arm": "after1",
+        "phase": "sphinx-8548",
+        "case_id": "sphinx-8548"
+      },
+      {
+        "key": "after2-sphinx-8548",
+        "arm": "after2",
+        "phase": "sphinx-8548",
+        "case_id": "sphinx-8548"
+      },
+      {
+        "key": "before2-sphinx-8548",
+        "arm": "before2",
+        "phase": "sphinx-8548",
+        "case_id": "sphinx-8548"
+      },
+      {
+        "key": "before1-pytest-10447",
+        "arm": "before1",
+        "phase": "pytest-10447",
+        "case_id": "pytest-10447"
+      },
+      {
+        "key": "after1-pytest-10447",
+        "arm": "after1",
+        "phase": "pytest-10447",
+        "case_id": "pytest-10447"
+      },
+      {
+        "key": "after2-pytest-10447",
+        "arm": "after2",
+        "phase": "pytest-10447",
+        "case_id": "pytest-10447"
+      },
+      {
+        "key": "before2-pytest-10447",
+        "arm": "before2",
+        "phase": "pytest-10447",
+        "case_id": "pytest-10447"
+      },
+      {
+        "key": "before1-pytest-10356-reuse",
+        "arm": "before1",
+        "phase": "pytest-10356-reuse",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "after1-pytest-10356-reuse",
+        "arm": "after1",
+        "phase": "pytest-10356-reuse",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "after2-pytest-10356-reuse",
+        "arm": "after2",
+        "phase": "pytest-10356-reuse",
+        "case_id": "pytest-10356"
+      },
+      {
+        "key": "before2-pytest-10356-reuse",
+        "arm": "before2",
+        "phase": "pytest-10356-reuse",
+        "case_id": "pytest-10356"
+      }
+    ]
+  },
+  "independent_defect_cases": 3,
+  "cases": [
+    {
+      "id": "pytest-10356",
+      "label": "Consider MRO when obtaining marks for classes",
+      "repo": "pytest-dev/pytest",
+      "base_commit": "680f3e2097712a067f08881f0e6c3c4b35cfbc61",
+      "archive_sha256": "2d1d7a4a60ba6784ed893bed6856fd25d3a288062a821b77bd6b435a54860bea",
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "tests_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+      "baseline": {
+        "tests": 275,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_ms": 19164,
+        "truncated": false
+      },
+      "test_scope": "Full selected upstream modules, not the entire upstream repository suite",
+      "exclusions_reason": "Known unrelated upstream expected-failure/optional Cython environment; original regression cases remain included.",
+      "issue_url": "https://github.com/pytest-dev/pytest/issues/7792",
+      "upstream_pr_url": "https://github.com/pytest-dev/pytest/pull/10356"
+    },
+    {
+      "id": "sphinx-8548",
+      "label": "autodoc inherited-members won't work for inherited attributes (data members).",
+      "repo": "sphinx-doc/sphinx",
+      "base_commit": "dd1615c59dc6fff633e27dbb3861f2d27e1fb976",
+      "archive_sha256": "9b1052456ec815c21e77afb29c99c5f06b6286f35b7e775c88a5e51438fc90ae",
+      "source_digest": "c94251e0b3981365c4ffe0c6f2c54ef402ff641e819dcc4598e0765e19c728a4",
+      "tests_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+      "baseline": {
+        "tests": 133,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "duration_ms": 10613,
+        "truncated": false
+      },
+      "test_scope": "Full selected upstream modules, not the entire upstream repository suite",
+      "exclusions_reason": "Known unrelated upstream expected-failure/optional Cython environment; original regression cases remain included.",
+      "issue_url": "https://github.com/sphinx-doc/sphinx/issues/741",
+      "upstream_pr_url": "https://github.com/sphinx-doc/sphinx/pull/8548"
+    },
+    {
+      "id": "pytest-10447",
+      "label": "Parent class marked fixture no longer reached with pytest 7.2",
+      "repo": "pytest-dev/pytest",
+      "base_commit": "b77d0deaf53697630ba534f62dc871f4eb275f14",
+      "archive_sha256": "a457f6d4d32aaa3cb5961fd1da2271964488d904c92268ddb243444b3e5d29a7",
+      "source_digest": "f8fbdf2ad76621ce203cc7cbb3b30ec477382a856a430f3c00ccec1939b7fa0e",
+      "tests_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+      "baseline": {
+        "tests": 277,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0,
+        "duration_ms": 18893,
+        "truncated": false
+      },
+      "test_scope": "Full selected upstream modules, not the entire upstream repository suite",
+      "exclusions_reason": "Known unrelated upstream expected-failure/optional Cython environment; original regression cases remain included.",
+      "issue_url": "https://github.com/pytest-dev/pytest/issues/10447",
+      "upstream_pr_url": "https://github.com/pytest-dev/pytest/pull/11155"
+    }
+  ],
+  "rows": [
+    {
+      "key": "before1-pytest-10356",
+      "arm": "before1",
+      "condition": "before",
+      "repetition": 1,
+      "phase": "pytest-10356",
+      "cohort": "initial",
+      "case_id": "pytest-10356",
+      "task_id": "b1e243a0-8bd9-40b9-9934-d9e35942824b",
+      "task_url": "http://127.0.0.1:5181/#/tasks/b1e243a0-8bd9-40b9-9934-d9e35942824b",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "e3c999c8-00fd-4454-bc41-72a8259b66e4"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 279420,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 1286973,
+      "reported_task_tokens": 1286973,
+      "token_requests_reported": 26,
+      "token_requests_observed": 26,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 0,
+      "original_records_after": 1,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": null,
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 26
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after1-pytest-10356",
+      "arm": "after1",
+      "condition": "after",
+      "repetition": 1,
+      "phase": "pytest-10356",
+      "cohort": "initial",
+      "case_id": "pytest-10356",
+      "task_id": "7cca8258-685f-4409-8351-ce5e4edd56f8",
+      "task_url": "http://127.0.0.1:5182/#/tasks/7cca8258-685f-4409-8351-ce5e4edd56f8",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "e335294b-a137-4af2-a46c-f92715dbee08"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 208623,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 267350,
+      "reported_task_tokens": 267350,
+      "token_requests_reported": 19,
+      "token_requests_observed": 19,
+      "background_tokens": 0,
+      "background_elapsed_ms": 15055,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。",
+      "background_observation_timeout": false,
+      "original_records_before": 0,
+      "original_records_after": 1,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2",
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "adaptive",
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 18,
+        "tests_passed": 1
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after2-pytest-10356",
+      "arm": "after2",
+      "condition": "after",
+      "repetition": 2,
+      "phase": "pytest-10356",
+      "cohort": "initial",
+      "case_id": "pytest-10356",
+      "task_id": "35ee39ad-a773-4ffe-9a5c-4e162e95a526",
+      "task_url": "http://127.0.0.1:5184/#/tasks/35ee39ad-a773-4ffe-9a5c-4e162e95a526",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "bf94bd44-e160-44d7-88db-a159ddbf36d3"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 177728,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 552441,
+      "reported_task_tokens": 552441,
+      "token_requests_reported": 27,
+      "token_requests_observed": 27,
+      "background_tokens": 0,
+      "background_elapsed_ms": 8544,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。",
+      "background_observation_timeout": false,
+      "original_records_before": 0,
+      "original_records_after": 1,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": "9054735cad0762c6dc869f1114c99fe3ca54cd1e15e070fa6ce9875bd3430c1e",
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "adaptive",
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 22,
+        "tests_passed": 5
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before2-pytest-10356",
+      "arm": "before2",
+      "condition": "before",
+      "repetition": 2,
+      "phase": "pytest-10356",
+      "cohort": "initial",
+      "case_id": "pytest-10356",
+      "task_id": "0d51c7a7-642f-41f5-b243-37d335e75ec2",
+      "task_url": "http://127.0.0.1:5183/#/tasks/0d51c7a7-642f-41f5-b243-37d335e75ec2",
+      "status": "stopped",
+      "terminal": true,
+      "verified_success": false,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": false,
+      "experience_saved": null,
+      "experience_ids": [],
+      "stop_reason": "决策次数已用完。",
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 249638,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 933360,
+      "reported_task_tokens": 933360,
+      "token_requests_reported": 30,
+      "token_requests_observed": 30,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 0,
+      "original_records_after": 0,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": null,
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 31
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before1-sphinx-8548",
+      "arm": "before1",
+      "condition": "before",
+      "repetition": 1,
+      "phase": "sphinx-8548",
+      "cohort": "initial",
+      "case_id": "sphinx-8548",
+      "task_id": "ca35c4eb-ca0e-47ee-aeb6-a08248bea7ac",
+      "task_url": "http://127.0.0.1:5181/#/tasks/ca35c4eb-ca0e-47ee-aeb6-a08248bea7ac",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "a4bdf61a-a812-404b-abb7-9f3792447390"
+      ],
+      "stop_reason": null,
+      "expected_tests": 133,
+      "final_tests": 133,
+      "elapsed_ms": 250694,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 953334,
+      "reported_task_tokens": 953334,
+      "token_requests_reported": 26,
+      "token_requests_observed": 26,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "c94251e0b3981365c4ffe0c6f2c54ef402ff641e819dcc4598e0765e19c728a4",
+      "frozen_sha256": null,
+      "request_contract_sha256": "be0ce2b262aa515882d28f34acd9af41fbf53ecc21b0ae3e672887764fd5d060",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 27
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after1-sphinx-8548",
+      "arm": "after1",
+      "condition": "after",
+      "repetition": 1,
+      "phase": "sphinx-8548",
+      "cohort": "initial",
+      "case_id": "sphinx-8548",
+      "task_id": "39aff23b-7c4f-4a2f-89b5-dc824c57373a",
+      "task_url": "http://127.0.0.1:5182/#/tasks/39aff23b-7c4f-4a2f-89b5-dc824c57373a",
+      "status": "stopped",
+      "terminal": true,
+      "verified_success": false,
+      "comparison_valid": true,
+      "final_tests_passed": false,
+      "registered_verified_success": false,
+      "experience_saved": null,
+      "experience_ids": [],
+      "stop_reason": "决策次数已用完。",
+      "expected_tests": 133,
+      "final_tests": 133,
+      "elapsed_ms": 205529,
+      "final_failures": 1,
+      "final_errors": 0,
+      "final_exit_code": 1,
+      "final_error_code": "TEST_FAILED",
+      "final_diagnostic": null,
+      "task_tokens": 828944,
+      "reported_task_tokens": 828944,
+      "token_requests_reported": 30,
+      "token_requests_observed": 30,
+      "background_tokens": 0,
+      "background_elapsed_ms": 0,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": {
+        "initial": {
+          "state": "not_recorded",
+          "elapsed_ms": null,
+          "model_requests": null,
+          "token_usage": {
+            "total_tokens": null,
+            "reported_total_tokens": 0,
+            "reported_requests": 0,
+            "total_requests": null
+          },
+          "before_count": 1,
+          "after_count": 1,
+          "merged_count": null,
+          "conflict_count": null,
+          "resolved_count": null,
+          "pending_confirmation_count": null,
+          "experience_ids": [],
+          "notice": "未记录后台经验处理指标。"
+        },
+        "current": {
+          "state": "not_applicable",
+          "elapsed_ms": 0,
+          "model_requests": 0,
+          "token_usage": {
+            "total_tokens": 0,
+            "reported_total_tokens": 0,
+            "reported_requests": 0,
+            "total_requests": 0
+          },
+          "before_count": 1,
+          "after_count": 1,
+          "merged_count": 0,
+          "conflict_count": 0,
+          "resolved_count": 0,
+          "pending_confirmation_count": 0,
+          "experience_ids": [],
+          "notice": "本次任务已结束，结果与数据库均确认未生成经验来源，因此未启动后台自动经验处理。"
+        }
+      },
+      "background_model_requests": 0,
+      "background_state": "not_applicable",
+      "background_notice": "本次任务已结束，结果与数据库均确认未生成经验来源，因此未启动后台自动经验处理。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 1,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "c94251e0b3981365c4ffe0c6f2c54ef402ff641e819dcc4598e0765e19c728a4",
+      "frozen_sha256": null,
+      "request_contract_sha256": "be0ce2b262aa515882d28f34acd9af41fbf53ecc21b0ae3e672887764fd5d060",
+      "strategy": "adaptive",
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 31
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after2-sphinx-8548",
+      "arm": "after2",
+      "condition": "after",
+      "repetition": 2,
+      "phase": "sphinx-8548",
+      "cohort": "initial",
+      "case_id": "sphinx-8548",
+      "task_id": "f391fd5e-eacd-4488-b573-ec5ac498a18f",
+      "task_url": "http://127.0.0.1:5184/#/tasks/f391fd5e-eacd-4488-b573-ec5ac498a18f",
+      "status": "stopped",
+      "terminal": true,
+      "verified_success": false,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": false,
+      "experience_saved": true,
+      "experience_ids": [
+        "da9e02e8-3561-46a2-97f8-8acdcaded5f1"
+      ],
+      "stop_reason": "决策次数已用完。",
+      "expected_tests": 133,
+      "final_tests": 133,
+      "elapsed_ms": 275068,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 963915,
+      "reported_task_tokens": 963915,
+      "token_requests_reported": 31,
+      "token_requests_observed": 31,
+      "background_tokens": 20409,
+      "background_elapsed_ms": 69135,
+      "reported_background_tokens": 20409,
+      "background_metrics_correction": null,
+      "background_model_requests": 2,
+      "background_state": "succeeded",
+      "background_notice": "比较完成。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 1,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "c94251e0b3981365c4ffe0c6f2c54ef402ff641e819dcc4598e0765e19c728a4",
+      "frozen_sha256": null,
+      "request_contract_sha256": "be0ce2b262aa515882d28f34acd9af41fbf53ecc21b0ae3e672887764fd5d060",
+      "strategy": "adaptive",
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 31
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before2-sphinx-8548",
+      "arm": "before2",
+      "condition": "before",
+      "repetition": 2,
+      "phase": "sphinx-8548",
+      "cohort": "initial",
+      "case_id": "sphinx-8548",
+      "task_id": "41b474fd-b443-4508-8ed9-9bca90a456f7",
+      "task_url": "http://127.0.0.1:5183/#/tasks/41b474fd-b443-4508-8ed9-9bca90a456f7",
+      "status": "stopped",
+      "terminal": true,
+      "verified_success": false,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": false,
+      "experience_saved": null,
+      "experience_ids": [],
+      "stop_reason": "决策次数已用完。",
+      "expected_tests": 133,
+      "final_tests": 133,
+      "elapsed_ms": 176525,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 1279410,
+      "reported_task_tokens": 1279410,
+      "token_requests_reported": 30,
+      "token_requests_observed": 30,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 0,
+      "original_records_after": 0,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "c94251e0b3981365c4ffe0c6f2c54ef402ff641e819dcc4598e0765e19c728a4",
+      "frozen_sha256": null,
+      "request_contract_sha256": "be0ce2b262aa515882d28f34acd9af41fbf53ecc21b0ae3e672887764fd5d060",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 32
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before1-pytest-10447",
+      "arm": "before1",
+      "condition": "before",
+      "repetition": 1,
+      "phase": "pytest-10447",
+      "cohort": "initial",
+      "case_id": "pytest-10447",
+      "task_id": "60d9c732-175f-4337-9151-3ff5e8cb4826",
+      "task_url": "http://127.0.0.1:5181/#/tasks/60d9c732-175f-4337-9151-3ff5e8cb4826",
+      "status": "stopped",
+      "terminal": true,
+      "verified_success": false,
+      "comparison_valid": true,
+      "final_tests_passed": false,
+      "registered_verified_success": false,
+      "experience_saved": null,
+      "experience_ids": [],
+      "stop_reason": "决策次数已用完。",
+      "expected_tests": 277,
+      "final_tests": 0,
+      "elapsed_ms": 240578,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 1,
+      "final_error_code": "COMMAND_FAILED",
+      "final_diagnostic": "NameError: PLACEHOLDER",
+      "task_tokens": 1385772,
+      "reported_task_tokens": 1385772,
+      "token_requests_reported": 30,
+      "token_requests_observed": 30,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 2,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "f8fbdf2ad76621ce203cc7cbb3b30ec477382a856a430f3c00ccec1939b7fa0e",
+      "frozen_sha256": null,
+      "request_contract_sha256": "8ebc1069d03ad8090fdeed70ecfd5cc948dc7568caed39b57837f3e9b5bd75ec",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 32
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after1-pytest-10447",
+      "arm": "after1",
+      "condition": "after",
+      "repetition": 1,
+      "phase": "pytest-10447",
+      "cohort": "initial",
+      "case_id": "pytest-10447",
+      "task_id": "8a4b87b6-6ce8-49ec-9946-2947d48bd474",
+      "task_url": "http://127.0.0.1:5182/#/tasks/8a4b87b6-6ce8-49ec-9946-2947d48bd474",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "111b311c-159d-47cc-8794-16925a9a50a9"
+      ],
+      "stop_reason": null,
+      "expected_tests": 277,
+      "final_tests": 277,
+      "elapsed_ms": 109584,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 61909,
+      "reported_task_tokens": 61909,
+      "token_requests_reported": 7,
+      "token_requests_observed": 7,
+      "background_tokens": 20379,
+      "background_elapsed_ms": 170431,
+      "reported_background_tokens": 20379,
+      "background_metrics_correction": null,
+      "background_model_requests": 2,
+      "background_state": "succeeded",
+      "background_notice": "比较完成。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 2,
+      "resolved_conflicts": 1,
+      "pending_confirmations": 0,
+      "source_digest": "f8fbdf2ad76621ce203cc7cbb3b30ec477382a856a430f3c00ccec1939b7fa0e",
+      "frozen_sha256": null,
+      "request_contract_sha256": "8ebc1069d03ad8090fdeed70ecfd5cc948dc7568caed39b57837f3e9b5bd75ec",
+      "strategy": "adaptive",
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 6,
+        "tests_passed": 1
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after2-pytest-10447",
+      "arm": "after2",
+      "condition": "after",
+      "repetition": 2,
+      "phase": "pytest-10447",
+      "cohort": "initial",
+      "case_id": "pytest-10447",
+      "task_id": "4339f2cc-79d4-4a9b-ae72-73ec864e5154",
+      "task_url": "http://127.0.0.1:5184/#/tasks/4339f2cc-79d4-4a9b-ae72-73ec864e5154",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "e7415b0f-b365-4d09-9018-552ef67d5cf5"
+      ],
+      "stop_reason": null,
+      "expected_tests": 277,
+      "final_tests": 277,
+      "elapsed_ms": 93794,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 41136,
+      "reported_task_tokens": 41136,
+      "token_requests_reported": 6,
+      "token_requests_observed": 6,
+      "background_tokens": null,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 17331,
+      "background_metrics_correction": null,
+      "background_model_requests": null,
+      "background_state": "waiting",
+      "background_notice": "等待后台整理或冲突审阅，处理后自动继续。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。；部分后台调用尚未上报或历史审计缺失，总请求数与总 token 暂为未知。",
+      "background_observation_timeout": false,
+      "original_records_before": 2,
+      "original_records_after": 3,
+      "generated_principles": 0,
+      "discovered_conflicts": 1,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 1,
+      "source_digest": "f8fbdf2ad76621ce203cc7cbb3b30ec477382a856a430f3c00ccec1939b7fa0e",
+      "frozen_sha256": null,
+      "request_contract_sha256": "8ebc1069d03ad8090fdeed70ecfd5cc948dc7568caed39b57837f3e9b5bd75ec",
+      "strategy": "adaptive",
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 5,
+        "tests_passed": 1
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before2-pytest-10447",
+      "arm": "before2",
+      "condition": "before",
+      "repetition": 2,
+      "phase": "pytest-10447",
+      "cohort": "initial",
+      "case_id": "pytest-10447",
+      "task_id": "e1de3efe-715c-4655-8565-860c5b9ceb90",
+      "task_url": "http://127.0.0.1:5183/#/tasks/e1de3efe-715c-4655-8565-860c5b9ceb90",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "968ca012-95bd-4ffa-ad39-6fa79edc3ad5"
+      ],
+      "stop_reason": null,
+      "expected_tests": 277,
+      "final_tests": 277,
+      "elapsed_ms": 178883,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 381039,
+      "reported_task_tokens": 381039,
+      "token_requests_reported": 16,
+      "token_requests_observed": 16,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 0,
+      "original_records_after": 1,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "f8fbdf2ad76621ce203cc7cbb3b30ec477382a856a430f3c00ccec1939b7fa0e",
+      "frozen_sha256": null,
+      "request_contract_sha256": "8ebc1069d03ad8090fdeed70ecfd5cc948dc7568caed39b57837f3e9b5bd75ec",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 17
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before1-pytest-10356-reuse",
+      "arm": "before1",
+      "condition": "before",
+      "repetition": 1,
+      "phase": "pytest-10356-reuse",
+      "cohort": "reuse",
+      "case_id": "pytest-10356",
+      "task_id": "f6328ee4-e9c7-49c5-9179-01972c25da56",
+      "task_url": "http://127.0.0.1:5181/#/tasks/f6328ee4-e9c7-49c5-9179-01972c25da56",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "e182b81a-919d-4f16-9443-5df7849ceb57"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 162396,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 323175,
+      "reported_task_tokens": 323175,
+      "token_requests_reported": 14,
+      "token_requests_observed": 14,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 2,
+      "original_records_after": 3,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": null,
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": null,
+      "injected_requests": 13,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "not_recorded": 15
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after1-pytest-10356-reuse",
+      "arm": "after1",
+      "condition": "after",
+      "repetition": 1,
+      "phase": "pytest-10356-reuse",
+      "cohort": "reuse",
+      "case_id": "pytest-10356",
+      "task_id": "c82d766f-555b-41f8-8c71-469583182ad0",
+      "task_url": "http://127.0.0.1:5182/#/tasks/c82d766f-555b-41f8-8c71-469583182ad0",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "18838c5f-5cab-4dbd-9d45-0c17f790197a"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 129111,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 104508,
+      "reported_task_tokens": 104508,
+      "token_requests_reported": 10,
+      "token_requests_observed": 10,
+      "background_tokens": 0,
+      "background_elapsed_ms": 1355,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "比较完成。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 2,
+      "original_records_after": 3,
+      "generated_principles": 0,
+      "discovered_conflicts": 9,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": null,
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "adaptive",
+      "injected_requests": 5,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 10,
+        "tests_passed": 1
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "after2-pytest-10356-reuse",
+      "arm": "after2",
+      "condition": "after",
+      "repetition": 2,
+      "phase": "pytest-10356-reuse",
+      "cohort": "reuse",
+      "case_id": "pytest-10356",
+      "task_id": "5498c6a1-9b86-4aa2-b8c5-d37eb4692272",
+      "task_url": "http://127.0.0.1:5184/#/tasks/5498c6a1-9b86-4aa2-b8c5-d37eb4692272",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "eedbbbc7-466e-4361-a3d1-1fb09cbfbb32"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 128516,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 172213,
+      "reported_task_tokens": 172213,
+      "token_requests_reported": 13,
+      "token_requests_observed": 13,
+      "background_tokens": null,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": null,
+      "background_state": "waiting",
+      "background_notice": "等待后台整理或冲突审阅，处理后自动继续。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。；部分后台调用尚未上报或历史审计缺失，总请求数与总 token 暂为未知。",
+      "background_observation_timeout": false,
+      "original_records_before": 3,
+      "original_records_after": 4,
+      "generated_principles": 0,
+      "discovered_conflicts": 6,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 6,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": null,
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "adaptive",
+      "injected_requests": 11,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 12,
+        "tests_passed": 1
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "before2-pytest-10356-reuse",
+      "arm": "before2",
+      "condition": "before",
+      "repetition": 2,
+      "phase": "pytest-10356-reuse",
+      "cohort": "reuse",
+      "case_id": "pytest-10356",
+      "task_id": "b6083016-fa48-4760-a3f1-20a4b2a0b676",
+      "task_url": "http://127.0.0.1:5183/#/tasks/b6083016-fa48-4760-a3f1-20a4b2a0b676",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "17bfd637-129e-4704-86a7-98278f079a0b"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 212333,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 313772,
+      "reported_task_tokens": 313772,
+      "token_requests_reported": 11,
+      "token_requests_observed": 11,
+      "background_tokens": 0,
+      "background_elapsed_ms": null,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "not_supported",
+      "background_notice": "此运行版本没有自动经验处理；前后数量为保留的原始记录，不代表去重后的知识数。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 0,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": null,
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": null,
+      "injected_requests": 0,
+      "retrieved_source_count": 0,
+      "retrieval_reasons": {
+        "not_recorded": 12
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "contextual1",
+      "arm": "contextual1",
+      "condition": "contextual",
+      "repetition": 1,
+      "phase": "retrieval-reuse",
+      "cohort": "retrieval_ablation",
+      "case_id": "pytest-10356",
+      "task_id": "b6e8a5c5-4d92-4189-bf09-9f0fad0b2d90",
+      "task_url": "http://127.0.0.1:5185/#/tasks/b6e8a5c5-4d92-4189-bf09-9f0fad0b2d90",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "40ae806b-80c5-427c-9cb5-9974ad0e7d0a"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 158346,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 82981,
+      "reported_task_tokens": 82981,
+      "token_requests_reported": 6,
+      "token_requests_observed": 6,
+      "background_tokens": 0,
+      "background_elapsed_ms": 1502,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 7,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2",
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "contextual",
+      "injected_requests": 5,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "not_recorded": 7
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "adaptive1",
+      "arm": "adaptive1",
+      "condition": "adaptive",
+      "repetition": 1,
+      "phase": "retrieval-reuse",
+      "cohort": "retrieval_ablation",
+      "case_id": "pytest-10356",
+      "task_id": "b81bdd06-3f11-40eb-b438-d176be2641c6",
+      "task_url": "http://127.0.0.1:5186/#/tasks/b81bdd06-3f11-40eb-b438-d176be2641c6",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "4bcd7003-77c7-46b2-b7c3-4fb1a90c3506"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 250328,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 117784,
+      "reported_task_tokens": 117784,
+      "token_requests_reported": 10,
+      "token_requests_observed": 10,
+      "background_tokens": 0,
+      "background_elapsed_ms": 1504,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 9,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2",
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "adaptive",
+      "injected_requests": 5,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 10,
+        "tests_passed": 1
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "adaptive2",
+      "arm": "adaptive2",
+      "condition": "adaptive",
+      "repetition": 2,
+      "phase": "retrieval-reuse",
+      "cohort": "retrieval_ablation",
+      "case_id": "pytest-10356",
+      "task_id": "b6242777-c6c0-493a-9bdd-5cfa1516d3f2",
+      "task_url": "http://127.0.0.1:5188/#/tasks/b6242777-c6c0-493a-9bdd-5cfa1516d3f2",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "96f3c220-0fc1-4699-83d5-5286aa514284"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 203568,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 291759,
+      "reported_task_tokens": 291759,
+      "token_requests_reported": 21,
+      "token_requests_observed": 21,
+      "background_tokens": 0,
+      "background_elapsed_ms": 1129,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 4,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": "9054735cad0762c6dc869f1114c99fe3ca54cd1e15e070fa6ce9875bd3430c1e",
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "adaptive",
+      "injected_requests": 18,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "no_failure_evidence": 1,
+        "test_failure": 19,
+        "tests_passed": 2
+      },
+      "observed_complete": true
+    },
+    {
+      "key": "contextual2",
+      "arm": "contextual2",
+      "condition": "contextual",
+      "repetition": 2,
+      "phase": "retrieval-reuse",
+      "cohort": "retrieval_ablation",
+      "case_id": "pytest-10356",
+      "task_id": "4ad7c328-1a93-4e34-aef6-e889ce0921cb",
+      "task_url": "http://127.0.0.1:5187/#/tasks/4ad7c328-1a93-4e34-aef6-e889ce0921cb",
+      "status": "succeeded",
+      "terminal": true,
+      "verified_success": true,
+      "comparison_valid": true,
+      "final_tests_passed": true,
+      "registered_verified_success": true,
+      "experience_saved": true,
+      "experience_ids": [
+        "89ceb3bd-ee10-4d07-a960-ee437b78ed48"
+      ],
+      "stop_reason": null,
+      "expected_tests": 275,
+      "final_tests": 275,
+      "elapsed_ms": 157152,
+      "final_failures": 0,
+      "final_errors": 0,
+      "final_exit_code": 0,
+      "final_error_code": null,
+      "final_diagnostic": null,
+      "task_tokens": 72566,
+      "reported_task_tokens": 72566,
+      "token_requests_reported": 7,
+      "token_requests_observed": 7,
+      "background_tokens": 0,
+      "background_elapsed_ms": 2142,
+      "reported_background_tokens": 0,
+      "background_metrics_correction": null,
+      "background_model_requests": 0,
+      "background_state": "succeeded",
+      "background_notice": "暂无可比较的其他项目经验；同仓库规则仍自动整理。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+      "background_observation_timeout": false,
+      "original_records_before": 1,
+      "original_records_after": 2,
+      "generated_principles": 0,
+      "discovered_conflicts": 4,
+      "resolved_conflicts": 0,
+      "pending_confirmations": 0,
+      "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+      "frozen_sha256": "9054735cad0762c6dc869f1114c99fe3ca54cd1e15e070fa6ce9875bd3430c1e",
+      "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+      "strategy": "contextual",
+      "injected_requests": 6,
+      "retrieved_source_count": 1,
+      "retrieval_reasons": {
+        "not_recorded": 8
+      },
+      "observed_complete": true
+    }
+  ],
+  "summary": {
+    "before": {
+      "planned": 8,
+      "submitted": 8,
+      "invalid_comparisons": 0,
+      "terminal": 8,
+      "unfinished": 0,
+      "passed": 5,
+      "failed": 3,
+      "success_rate": 0.625,
+      "final_test_passed": 7,
+      "final_test_failed": 1,
+      "final_test_unconfirmed": 0,
+      "final_test_pass_rate": 0.875,
+      "experience_saved": 5,
+      "elapsed_ms": {
+        "available": 8,
+        "denominator": 8,
+        "mean": 218808.375,
+        "median": 226455.5,
+        "minimum": 162396,
+        "maximum": 279420,
+        "total": 1750467,
+        "reported_subtotal": 1750467
+      },
+      "task_tokens": {
+        "available": 8,
+        "denominator": 8,
+        "mean": 857104.375,
+        "median": 943347.0,
+        "minimum": 313772,
+        "maximum": 1385772,
+        "total": 6856835,
+        "reported_subtotal": 6856835
+      },
+      "background_tokens": {
+        "available": 8,
+        "denominator": 8,
+        "mean": 0,
+        "median": 0.0,
+        "minimum": 0,
+        "maximum": 0,
+        "total": 0,
+        "reported_subtotal": 0
+      },
+      "background_elapsed_ms": {
+        "available": 0,
+        "denominator": 8,
+        "mean": null,
+        "median": null,
+        "minimum": null,
+        "maximum": null,
+        "total": null,
+        "reported_subtotal": null
+      },
+      "reported_background_tokens": 0,
+      "reported_task_tokens": 6856835,
+      "token_requests_reported": 183,
+      "token_requests_observed": 183,
+      "known_usage_tasks": 8,
+      "background_states": {
+        "not_supported": 8
+      }
+    },
+    "after": {
+      "planned": 8,
+      "submitted": 8,
+      "invalid_comparisons": 0,
+      "terminal": 8,
+      "unfinished": 0,
+      "passed": 6,
+      "failed": 2,
+      "success_rate": 0.75,
+      "final_test_passed": 7,
+      "final_test_failed": 1,
+      "final_test_unconfirmed": 0,
+      "final_test_pass_rate": 0.875,
+      "experience_saved": 7,
+      "elapsed_ms": {
+        "available": 8,
+        "denominator": 8,
+        "mean": 165994.125,
+        "median": 153419.5,
+        "minimum": 93794,
+        "maximum": 275068,
+        "total": 1327953,
+        "reported_subtotal": 1327953
+      },
+      "task_tokens": {
+        "available": 8,
+        "denominator": 8,
+        "mean": 374052,
+        "median": 219781.5,
+        "minimum": 41136,
+        "maximum": 963915,
+        "total": 2992416,
+        "reported_subtotal": 2992416
+      },
+      "background_tokens": {
+        "available": 6,
+        "denominator": 8,
+        "mean": 6798,
+        "median": 0.0,
+        "minimum": 0,
+        "maximum": 20409,
+        "total": null,
+        "reported_subtotal": 40788
+      },
+      "background_elapsed_ms": {
+        "available": 6,
+        "denominator": 8,
+        "mean": 44086.666666666664,
+        "median": 11799.5,
+        "minimum": 0,
+        "maximum": 170431,
+        "total": null,
+        "reported_subtotal": 264520
+      },
+      "reported_background_tokens": 58119,
+      "reported_task_tokens": 2992416,
+      "token_requests_reported": 143,
+      "token_requests_observed": 143,
+      "known_usage_tasks": 8,
+      "background_states": {
+        "succeeded": 5,
+        "not_applicable": 1,
+        "waiting": 2
+      }
+    },
+    "contextual": {
+      "planned": 2,
+      "submitted": 2,
+      "invalid_comparisons": 0,
+      "terminal": 2,
+      "unfinished": 0,
+      "passed": 2,
+      "failed": 0,
+      "success_rate": 1.0,
+      "final_test_passed": 2,
+      "final_test_failed": 0,
+      "final_test_unconfirmed": 0,
+      "final_test_pass_rate": 1.0,
+      "experience_saved": 2,
+      "elapsed_ms": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 157749,
+        "median": 157749.0,
+        "minimum": 157152,
+        "maximum": 158346,
+        "total": 315498,
+        "reported_subtotal": 315498
+      },
+      "task_tokens": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 77773.5,
+        "median": 77773.5,
+        "minimum": 72566,
+        "maximum": 82981,
+        "total": 155547,
+        "reported_subtotal": 155547
+      },
+      "background_tokens": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 0,
+        "median": 0.0,
+        "minimum": 0,
+        "maximum": 0,
+        "total": 0,
+        "reported_subtotal": 0
+      },
+      "background_elapsed_ms": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 1822,
+        "median": 1822.0,
+        "minimum": 1502,
+        "maximum": 2142,
+        "total": 3644,
+        "reported_subtotal": 3644
+      },
+      "reported_background_tokens": 0,
+      "reported_task_tokens": 155547,
+      "token_requests_reported": 13,
+      "token_requests_observed": 13,
+      "known_usage_tasks": 2,
+      "background_states": {
+        "succeeded": 2
+      }
+    },
+    "adaptive": {
+      "planned": 2,
+      "submitted": 2,
+      "invalid_comparisons": 0,
+      "terminal": 2,
+      "unfinished": 0,
+      "passed": 2,
+      "failed": 0,
+      "success_rate": 1.0,
+      "final_test_passed": 2,
+      "final_test_failed": 0,
+      "final_test_unconfirmed": 0,
+      "final_test_pass_rate": 1.0,
+      "experience_saved": 2,
+      "elapsed_ms": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 226948,
+        "median": 226948.0,
+        "minimum": 203568,
+        "maximum": 250328,
+        "total": 453896,
+        "reported_subtotal": 453896
+      },
+      "task_tokens": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 204771.5,
+        "median": 204771.5,
+        "minimum": 117784,
+        "maximum": 291759,
+        "total": 409543,
+        "reported_subtotal": 409543
+      },
+      "background_tokens": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 0,
+        "median": 0.0,
+        "minimum": 0,
+        "maximum": 0,
+        "total": 0,
+        "reported_subtotal": 0
+      },
+      "background_elapsed_ms": {
+        "available": 2,
+        "denominator": 2,
+        "mean": 1316.5,
+        "median": 1316.5,
+        "minimum": 1129,
+        "maximum": 1504,
+        "total": 2633,
+        "reported_subtotal": 2633
+      },
+      "reported_background_tokens": 0,
+      "reported_task_tokens": 409543,
+      "token_requests_reported": 31,
+      "token_requests_observed": 31,
+      "known_usage_tasks": 2,
+      "background_states": {
+        "succeeded": 2
+      }
+    }
+  },
+  "cohorts": {
+    "initial": {
+      "before": {
+        "planned": 6,
+        "submitted": 6,
+        "invalid_comparisons": 0,
+        "terminal": 6,
+        "unfinished": 0,
+        "passed": 3,
+        "failed": 3,
+        "success_rate": 0.5,
+        "final_test_passed": 5,
+        "final_test_failed": 1,
+        "final_test_unconfirmed": 0,
+        "final_test_pass_rate": 0.8333333333333334,
+        "experience_saved": 3,
+        "elapsed_ms": {
+          "available": 6,
+          "denominator": 6,
+          "mean": 229289.66666666666,
+          "median": 245108.0,
+          "minimum": 176525,
+          "maximum": 279420,
+          "total": 1375738,
+          "reported_subtotal": 1375738
+        },
+        "task_tokens": {
+          "available": 6,
+          "denominator": 6,
+          "mean": 1036648,
+          "median": 1116372.0,
+          "minimum": 381039,
+          "maximum": 1385772,
+          "total": 6219888,
+          "reported_subtotal": 6219888
+        },
+        "background_tokens": {
+          "available": 6,
+          "denominator": 6,
+          "mean": 0,
+          "median": 0.0,
+          "minimum": 0,
+          "maximum": 0,
+          "total": 0,
+          "reported_subtotal": 0
+        },
+        "background_elapsed_ms": {
+          "available": 0,
+          "denominator": 6,
+          "mean": null,
+          "median": null,
+          "minimum": null,
+          "maximum": null,
+          "total": null,
+          "reported_subtotal": null
+        },
+        "reported_background_tokens": 0,
+        "reported_task_tokens": 6219888,
+        "token_requests_reported": 158,
+        "token_requests_observed": 158,
+        "known_usage_tasks": 6,
+        "background_states": {
+          "not_supported": 6
+        }
+      },
+      "after": {
+        "planned": 6,
+        "submitted": 6,
+        "invalid_comparisons": 0,
+        "terminal": 6,
+        "unfinished": 0,
+        "passed": 4,
+        "failed": 2,
+        "success_rate": 0.6666666666666666,
+        "final_test_passed": 5,
+        "final_test_failed": 1,
+        "final_test_unconfirmed": 0,
+        "final_test_pass_rate": 0.8333333333333334,
+        "experience_saved": 5,
+        "elapsed_ms": {
+          "available": 6,
+          "denominator": 6,
+          "mean": 178387.66666666666,
+          "median": 191628.5,
+          "minimum": 93794,
+          "maximum": 275068,
+          "total": 1070326,
+          "reported_subtotal": 1070326
+        },
+        "task_tokens": {
+          "available": 6,
+          "denominator": 6,
+          "mean": 452615.8333333333,
+          "median": 409895.5,
+          "minimum": 41136,
+          "maximum": 963915,
+          "total": 2715695,
+          "reported_subtotal": 2715695
+        },
+        "background_tokens": {
+          "available": 5,
+          "denominator": 6,
+          "mean": 8157.6,
+          "median": 0,
+          "minimum": 0,
+          "maximum": 20409,
+          "total": null,
+          "reported_subtotal": 40788
+        },
+        "background_elapsed_ms": {
+          "available": 5,
+          "denominator": 6,
+          "mean": 52633,
+          "median": 15055,
+          "minimum": 0,
+          "maximum": 170431,
+          "total": null,
+          "reported_subtotal": 263165
+        },
+        "reported_background_tokens": 58119,
+        "reported_task_tokens": 2715695,
+        "token_requests_reported": 120,
+        "token_requests_observed": 120,
+        "known_usage_tasks": 6,
+        "background_states": {
+          "succeeded": 4,
+          "not_applicable": 1,
+          "waiting": 1
+        }
+      }
+    },
+    "reuse": {
+      "before": {
+        "planned": 2,
+        "submitted": 2,
+        "invalid_comparisons": 0,
+        "terminal": 2,
+        "unfinished": 0,
+        "passed": 2,
+        "failed": 0,
+        "success_rate": 1.0,
+        "final_test_passed": 2,
+        "final_test_failed": 0,
+        "final_test_unconfirmed": 0,
+        "final_test_pass_rate": 1.0,
+        "experience_saved": 2,
+        "elapsed_ms": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 187364.5,
+          "median": 187364.5,
+          "minimum": 162396,
+          "maximum": 212333,
+          "total": 374729,
+          "reported_subtotal": 374729
+        },
+        "task_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 318473.5,
+          "median": 318473.5,
+          "minimum": 313772,
+          "maximum": 323175,
+          "total": 636947,
+          "reported_subtotal": 636947
+        },
+        "background_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 0,
+          "median": 0.0,
+          "minimum": 0,
+          "maximum": 0,
+          "total": 0,
+          "reported_subtotal": 0
+        },
+        "background_elapsed_ms": {
+          "available": 0,
+          "denominator": 2,
+          "mean": null,
+          "median": null,
+          "minimum": null,
+          "maximum": null,
+          "total": null,
+          "reported_subtotal": null
+        },
+        "reported_background_tokens": 0,
+        "reported_task_tokens": 636947,
+        "token_requests_reported": 25,
+        "token_requests_observed": 25,
+        "known_usage_tasks": 2,
+        "background_states": {
+          "not_supported": 2
+        }
+      },
+      "after": {
+        "planned": 2,
+        "submitted": 2,
+        "invalid_comparisons": 0,
+        "terminal": 2,
+        "unfinished": 0,
+        "passed": 2,
+        "failed": 0,
+        "success_rate": 1.0,
+        "final_test_passed": 2,
+        "final_test_failed": 0,
+        "final_test_unconfirmed": 0,
+        "final_test_pass_rate": 1.0,
+        "experience_saved": 2,
+        "elapsed_ms": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 128813.5,
+          "median": 128813.5,
+          "minimum": 128516,
+          "maximum": 129111,
+          "total": 257627,
+          "reported_subtotal": 257627
+        },
+        "task_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 138360.5,
+          "median": 138360.5,
+          "minimum": 104508,
+          "maximum": 172213,
+          "total": 276721,
+          "reported_subtotal": 276721
+        },
+        "background_tokens": {
+          "available": 1,
+          "denominator": 2,
+          "mean": 0,
+          "median": 0,
+          "minimum": 0,
+          "maximum": 0,
+          "total": null,
+          "reported_subtotal": 0
+        },
+        "background_elapsed_ms": {
+          "available": 1,
+          "denominator": 2,
+          "mean": 1355,
+          "median": 1355,
+          "minimum": 1355,
+          "maximum": 1355,
+          "total": null,
+          "reported_subtotal": 1355
+        },
+        "reported_background_tokens": 0,
+        "reported_task_tokens": 276721,
+        "token_requests_reported": 23,
+        "token_requests_observed": 23,
+        "known_usage_tasks": 2,
+        "background_states": {
+          "succeeded": 1,
+          "waiting": 1
+        }
+      }
+    },
+    "retrieval_ablation": {
+      "contextual": {
+        "planned": 2,
+        "submitted": 2,
+        "invalid_comparisons": 0,
+        "terminal": 2,
+        "unfinished": 0,
+        "passed": 2,
+        "failed": 0,
+        "success_rate": 1.0,
+        "final_test_passed": 2,
+        "final_test_failed": 0,
+        "final_test_unconfirmed": 0,
+        "final_test_pass_rate": 1.0,
+        "experience_saved": 2,
+        "elapsed_ms": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 157749,
+          "median": 157749.0,
+          "minimum": 157152,
+          "maximum": 158346,
+          "total": 315498,
+          "reported_subtotal": 315498
+        },
+        "task_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 77773.5,
+          "median": 77773.5,
+          "minimum": 72566,
+          "maximum": 82981,
+          "total": 155547,
+          "reported_subtotal": 155547
+        },
+        "background_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 0,
+          "median": 0.0,
+          "minimum": 0,
+          "maximum": 0,
+          "total": 0,
+          "reported_subtotal": 0
+        },
+        "background_elapsed_ms": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 1822,
+          "median": 1822.0,
+          "minimum": 1502,
+          "maximum": 2142,
+          "total": 3644,
+          "reported_subtotal": 3644
+        },
+        "reported_background_tokens": 0,
+        "reported_task_tokens": 155547,
+        "token_requests_reported": 13,
+        "token_requests_observed": 13,
+        "known_usage_tasks": 2,
+        "background_states": {
+          "succeeded": 2
+        }
+      },
+      "adaptive": {
+        "planned": 2,
+        "submitted": 2,
+        "invalid_comparisons": 0,
+        "terminal": 2,
+        "unfinished": 0,
+        "passed": 2,
+        "failed": 0,
+        "success_rate": 1.0,
+        "final_test_passed": 2,
+        "final_test_failed": 0,
+        "final_test_unconfirmed": 0,
+        "final_test_pass_rate": 1.0,
+        "experience_saved": 2,
+        "elapsed_ms": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 226948,
+          "median": 226948.0,
+          "minimum": 203568,
+          "maximum": 250328,
+          "total": 453896,
+          "reported_subtotal": 453896
+        },
+        "task_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 204771.5,
+          "median": 204771.5,
+          "minimum": 117784,
+          "maximum": 291759,
+          "total": 409543,
+          "reported_subtotal": 409543
+        },
+        "background_tokens": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 0,
+          "median": 0.0,
+          "minimum": 0,
+          "maximum": 0,
+          "total": 0,
+          "reported_subtotal": 0
+        },
+        "background_elapsed_ms": {
+          "available": 2,
+          "denominator": 2,
+          "mean": 1316.5,
+          "median": 1316.5,
+          "minimum": 1129,
+          "maximum": 1504,
+          "total": 2633,
+          "reported_subtotal": 2633
+        },
+        "reported_background_tokens": 0,
+        "reported_task_tokens": 409543,
+        "token_requests_reported": 31,
+        "token_requests_observed": 31,
+        "known_usage_tasks": 2,
+        "background_states": {
+          "succeeded": 2
+        }
+      }
+    }
+  },
+  "paired_update": {
+    "left": "before",
+    "right": "after",
+    "completed_pairs": 8,
+    "valid_pairs": 8,
+    "wins": 2,
+    "losses": 1,
+    "all_terminal": {
+      "pairs": 8,
+      "elapsed_delta_ms": {
+        "complete_pairs": 8,
+        "mean_delta": -52814.25,
+        "median_delta": -71353.5
+      },
+      "token_delta": {
+        "complete_pairs": 8,
+        "mean_delta": -483052.375,
+        "median_delta": -327699.0
+      }
+    },
+    "both_successful": {
+      "pairs": 4,
+      "elapsed_delta_ms": {
+        "complete_pairs": 4,
+        "mean_delta": -68247,
+        "median_delta": -77307.0
+      },
+      "token_delta": {
+        "complete_pairs": 4,
+        "mean_delta": -429938,
+        "median_delta": -279285.0
+      }
+    },
+    "both_final_tests_passed": {
+      "pairs": 6,
+      "elapsed_delta_ms": {
+        "complete_pairs": 6,
+        "mean_delta": -41059.166666666664,
+        "median_delta": -71353.5
+      },
+      "token_delta": {
+        "complete_pairs": 6,
+        "mean_delta": -402694.3333333333,
+        "median_delta": -327699.0
+      }
+    },
+    "details": [
+      {
+        "case_id": "pytest-10356",
+        "phase": "pytest-10356",
+        "repetition": 1,
+        "left_key": "before1-pytest-10356",
+        "right_key": "after1-pytest-10356",
+        "valid": true,
+        "left_success": true,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": true,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": -70797,
+        "token_delta": -1019623,
+        "left_elapsed_ms": 279420,
+        "right_elapsed_ms": 208623,
+        "left_tokens": 1286973,
+        "right_tokens": 267350
+      },
+      {
+        "case_id": "pytest-10356",
+        "phase": "pytest-10356",
+        "repetition": 2,
+        "left_key": "before2-pytest-10356",
+        "right_key": "after2-pytest-10356",
+        "valid": true,
+        "left_success": false,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": false,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": -71910,
+        "token_delta": -380919,
+        "left_elapsed_ms": 249638,
+        "right_elapsed_ms": 177728,
+        "left_tokens": 933360,
+        "right_tokens": 552441
+      },
+      {
+        "case_id": "sphinx-8548",
+        "phase": "sphinx-8548",
+        "repetition": 1,
+        "left_key": "before1-sphinx-8548",
+        "right_key": "after1-sphinx-8548",
+        "valid": true,
+        "left_success": true,
+        "right_success": false,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": false,
+        "both_successful": false,
+        "both_final_tests_passed": false,
+        "elapsed_delta_ms": -45165,
+        "token_delta": -124390,
+        "left_elapsed_ms": 250694,
+        "right_elapsed_ms": 205529,
+        "left_tokens": 953334,
+        "right_tokens": 828944
+      },
+      {
+        "case_id": "sphinx-8548",
+        "phase": "sphinx-8548",
+        "repetition": 2,
+        "left_key": "before2-sphinx-8548",
+        "right_key": "after2-sphinx-8548",
+        "valid": true,
+        "left_success": false,
+        "right_success": false,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": false,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": 98543,
+        "token_delta": -315495,
+        "left_elapsed_ms": 176525,
+        "right_elapsed_ms": 275068,
+        "left_tokens": 1279410,
+        "right_tokens": 963915
+      },
+      {
+        "case_id": "pytest-10447",
+        "phase": "pytest-10447",
+        "repetition": 1,
+        "left_key": "before1-pytest-10447",
+        "right_key": "after1-pytest-10447",
+        "valid": true,
+        "left_success": false,
+        "right_success": true,
+        "left_final_tests_passed": false,
+        "right_final_tests_passed": true,
+        "both_successful": false,
+        "both_final_tests_passed": false,
+        "elapsed_delta_ms": -130994,
+        "token_delta": -1323863,
+        "left_elapsed_ms": 240578,
+        "right_elapsed_ms": 109584,
+        "left_tokens": 1385772,
+        "right_tokens": 61909
+      },
+      {
+        "case_id": "pytest-10447",
+        "phase": "pytest-10447",
+        "repetition": 2,
+        "left_key": "before2-pytest-10447",
+        "right_key": "after2-pytest-10447",
+        "valid": true,
+        "left_success": true,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": true,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": -85089,
+        "token_delta": -339903,
+        "left_elapsed_ms": 178883,
+        "right_elapsed_ms": 93794,
+        "left_tokens": 381039,
+        "right_tokens": 41136
+      },
+      {
+        "case_id": "pytest-10356",
+        "phase": "pytest-10356-reuse",
+        "repetition": 1,
+        "left_key": "before1-pytest-10356-reuse",
+        "right_key": "after1-pytest-10356-reuse",
+        "valid": true,
+        "left_success": true,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": true,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": -33285,
+        "token_delta": -218667,
+        "left_elapsed_ms": 162396,
+        "right_elapsed_ms": 129111,
+        "left_tokens": 323175,
+        "right_tokens": 104508
+      },
+      {
+        "case_id": "pytest-10356",
+        "phase": "pytest-10356-reuse",
+        "repetition": 2,
+        "left_key": "before2-pytest-10356-reuse",
+        "right_key": "after2-pytest-10356-reuse",
+        "valid": true,
+        "left_success": true,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": true,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": -83817,
+        "token_delta": -141559,
+        "left_elapsed_ms": 212333,
+        "right_elapsed_ms": 128516,
+        "left_tokens": 313772,
+        "right_tokens": 172213
+      }
+    ]
+  },
+  "paired_retrieval": {
+    "left": "contextual",
+    "right": "adaptive",
+    "completed_pairs": 2,
+    "valid_pairs": 2,
+    "wins": 0,
+    "losses": 0,
+    "all_terminal": {
+      "pairs": 2,
+      "elapsed_delta_ms": {
+        "complete_pairs": 2,
+        "mean_delta": 69199,
+        "median_delta": 69199.0
+      },
+      "token_delta": {
+        "complete_pairs": 2,
+        "mean_delta": 126998,
+        "median_delta": 126998.0
+      }
+    },
+    "both_successful": {
+      "pairs": 2,
+      "elapsed_delta_ms": {
+        "complete_pairs": 2,
+        "mean_delta": 69199,
+        "median_delta": 69199.0
+      },
+      "token_delta": {
+        "complete_pairs": 2,
+        "mean_delta": 126998,
+        "median_delta": 126998.0
+      }
+    },
+    "both_final_tests_passed": {
+      "pairs": 2,
+      "elapsed_delta_ms": {
+        "complete_pairs": 2,
+        "mean_delta": 69199,
+        "median_delta": 69199.0
+      },
+      "token_delta": {
+        "complete_pairs": 2,
+        "mean_delta": 126998,
+        "median_delta": 126998.0
+      }
+    },
+    "details": [
+      {
+        "case_id": "pytest-10356",
+        "phase": "retrieval-reuse",
+        "repetition": 1,
+        "left_key": "contextual1",
+        "right_key": "adaptive1",
+        "valid": true,
+        "left_success": true,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": true,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": 91982,
+        "token_delta": 34803,
+        "left_elapsed_ms": 158346,
+        "right_elapsed_ms": 250328,
+        "left_tokens": 82981,
+        "right_tokens": 117784
+      },
+      {
+        "case_id": "pytest-10356",
+        "phase": "retrieval-reuse",
+        "repetition": 2,
+        "left_key": "contextual2",
+        "right_key": "adaptive2",
+        "valid": true,
+        "left_success": true,
+        "right_success": true,
+        "left_final_tests_passed": true,
+        "right_final_tests_passed": true,
+        "both_successful": true,
+        "both_final_tests_passed": true,
+        "elapsed_delta_ms": 46416,
+        "token_delta": 219193,
+        "left_elapsed_ms": 157152,
+        "right_elapsed_ms": 203568,
+        "left_tokens": 72566,
+        "right_tokens": 291759
+      }
+    ]
+  },
+  "paired_update_by_cohort": {
+    "initial": {
+      "left": "before",
+      "right": "after",
+      "completed_pairs": 6,
+      "valid_pairs": 6,
+      "wins": 2,
+      "losses": 1,
+      "all_terminal": {
+        "pairs": 6,
+        "elapsed_delta_ms": {
+          "complete_pairs": 6,
+          "mean_delta": -50902,
+          "median_delta": -71353.5
+        },
+        "token_delta": {
+          "complete_pairs": 6,
+          "mean_delta": -584032.1666666666,
+          "median_delta": -360411.0
+        }
+      },
+      "both_successful": {
+        "pairs": 2,
+        "elapsed_delta_ms": {
+          "complete_pairs": 2,
+          "mean_delta": -77943,
+          "median_delta": -77943.0
+        },
+        "token_delta": {
+          "complete_pairs": 2,
+          "mean_delta": -679763,
+          "median_delta": -679763.0
+        }
+      },
+      "both_final_tests_passed": {
+        "pairs": 4,
+        "elapsed_delta_ms": {
+          "complete_pairs": 4,
+          "mean_delta": -32313.25,
+          "median_delta": -71353.5
+        },
+        "token_delta": {
+          "complete_pairs": 4,
+          "mean_delta": -513985,
+          "median_delta": -360411.0
+        }
+      },
+      "details": [
+        {
+          "case_id": "pytest-10356",
+          "phase": "pytest-10356",
+          "repetition": 1,
+          "left_key": "before1-pytest-10356",
+          "right_key": "after1-pytest-10356",
+          "valid": true,
+          "left_success": true,
+          "right_success": true,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": true,
+          "both_successful": true,
+          "both_final_tests_passed": true,
+          "elapsed_delta_ms": -70797,
+          "token_delta": -1019623,
+          "left_elapsed_ms": 279420,
+          "right_elapsed_ms": 208623,
+          "left_tokens": 1286973,
+          "right_tokens": 267350
+        },
+        {
+          "case_id": "pytest-10356",
+          "phase": "pytest-10356",
+          "repetition": 2,
+          "left_key": "before2-pytest-10356",
+          "right_key": "after2-pytest-10356",
+          "valid": true,
+          "left_success": false,
+          "right_success": true,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": true,
+          "both_successful": false,
+          "both_final_tests_passed": true,
+          "elapsed_delta_ms": -71910,
+          "token_delta": -380919,
+          "left_elapsed_ms": 249638,
+          "right_elapsed_ms": 177728,
+          "left_tokens": 933360,
+          "right_tokens": 552441
+        },
+        {
+          "case_id": "sphinx-8548",
+          "phase": "sphinx-8548",
+          "repetition": 1,
+          "left_key": "before1-sphinx-8548",
+          "right_key": "after1-sphinx-8548",
+          "valid": true,
+          "left_success": true,
+          "right_success": false,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": false,
+          "both_successful": false,
+          "both_final_tests_passed": false,
+          "elapsed_delta_ms": -45165,
+          "token_delta": -124390,
+          "left_elapsed_ms": 250694,
+          "right_elapsed_ms": 205529,
+          "left_tokens": 953334,
+          "right_tokens": 828944
+        },
+        {
+          "case_id": "sphinx-8548",
+          "phase": "sphinx-8548",
+          "repetition": 2,
+          "left_key": "before2-sphinx-8548",
+          "right_key": "after2-sphinx-8548",
+          "valid": true,
+          "left_success": false,
+          "right_success": false,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": true,
+          "both_successful": false,
+          "both_final_tests_passed": true,
+          "elapsed_delta_ms": 98543,
+          "token_delta": -315495,
+          "left_elapsed_ms": 176525,
+          "right_elapsed_ms": 275068,
+          "left_tokens": 1279410,
+          "right_tokens": 963915
+        },
+        {
+          "case_id": "pytest-10447",
+          "phase": "pytest-10447",
+          "repetition": 1,
+          "left_key": "before1-pytest-10447",
+          "right_key": "after1-pytest-10447",
+          "valid": true,
+          "left_success": false,
+          "right_success": true,
+          "left_final_tests_passed": false,
+          "right_final_tests_passed": true,
+          "both_successful": false,
+          "both_final_tests_passed": false,
+          "elapsed_delta_ms": -130994,
+          "token_delta": -1323863,
+          "left_elapsed_ms": 240578,
+          "right_elapsed_ms": 109584,
+          "left_tokens": 1385772,
+          "right_tokens": 61909
+        },
+        {
+          "case_id": "pytest-10447",
+          "phase": "pytest-10447",
+          "repetition": 2,
+          "left_key": "before2-pytest-10447",
+          "right_key": "after2-pytest-10447",
+          "valid": true,
+          "left_success": true,
+          "right_success": true,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": true,
+          "both_successful": true,
+          "both_final_tests_passed": true,
+          "elapsed_delta_ms": -85089,
+          "token_delta": -339903,
+          "left_elapsed_ms": 178883,
+          "right_elapsed_ms": 93794,
+          "left_tokens": 381039,
+          "right_tokens": 41136
+        }
+      ]
+    },
+    "reuse": {
+      "left": "before",
+      "right": "after",
+      "completed_pairs": 2,
+      "valid_pairs": 2,
+      "wins": 0,
+      "losses": 0,
+      "all_terminal": {
+        "pairs": 2,
+        "elapsed_delta_ms": {
+          "complete_pairs": 2,
+          "mean_delta": -58551,
+          "median_delta": -58551.0
+        },
+        "token_delta": {
+          "complete_pairs": 2,
+          "mean_delta": -180113,
+          "median_delta": -180113.0
+        }
+      },
+      "both_successful": {
+        "pairs": 2,
+        "elapsed_delta_ms": {
+          "complete_pairs": 2,
+          "mean_delta": -58551,
+          "median_delta": -58551.0
+        },
+        "token_delta": {
+          "complete_pairs": 2,
+          "mean_delta": -180113,
+          "median_delta": -180113.0
+        }
+      },
+      "both_final_tests_passed": {
+        "pairs": 2,
+        "elapsed_delta_ms": {
+          "complete_pairs": 2,
+          "mean_delta": -58551,
+          "median_delta": -58551.0
+        },
+        "token_delta": {
+          "complete_pairs": 2,
+          "mean_delta": -180113,
+          "median_delta": -180113.0
+        }
+      },
+      "details": [
+        {
+          "case_id": "pytest-10356",
+          "phase": "pytest-10356-reuse",
+          "repetition": 1,
+          "left_key": "before1-pytest-10356-reuse",
+          "right_key": "after1-pytest-10356-reuse",
+          "valid": true,
+          "left_success": true,
+          "right_success": true,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": true,
+          "both_successful": true,
+          "both_final_tests_passed": true,
+          "elapsed_delta_ms": -33285,
+          "token_delta": -218667,
+          "left_elapsed_ms": 162396,
+          "right_elapsed_ms": 129111,
+          "left_tokens": 323175,
+          "right_tokens": 104508
+        },
+        {
+          "case_id": "pytest-10356",
+          "phase": "pytest-10356-reuse",
+          "repetition": 2,
+          "left_key": "before2-pytest-10356-reuse",
+          "right_key": "after2-pytest-10356-reuse",
+          "valid": true,
+          "left_success": true,
+          "right_success": true,
+          "left_final_tests_passed": true,
+          "right_final_tests_passed": true,
+          "both_successful": true,
+          "both_final_tests_passed": true,
+          "elapsed_delta_ms": -83817,
+          "token_delta": -141559,
+          "left_elapsed_ms": 212333,
+          "right_elapsed_ms": 128516,
+          "left_tokens": 313772,
+          "right_tokens": 172213
+        }
+      ]
+    }
+  },
+  "observations": [
+    {
+      "key": "before1-pytest-10356",
+      "before": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 1,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "after1-pytest-10356",
+      "before": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 1,
+        "rules": 3,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "after2-pytest-10356",
+      "before": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 1,
+        "rules": 2,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "before2-pytest-10356",
+      "before": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "before1-sphinx-8548",
+      "before": {
+        "original_records": 1,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "after1-sphinx-8548",
+      "before": {
+        "original_records": 1,
+        "rules": 3,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 1,
+        "rules": 3,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_applicable"
+    },
+    {
+      "key": "after2-sphinx-8548",
+      "before": {
+        "original_records": 1,
+        "rules": 2,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 3,
+        "shared_principles": 1,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "before2-sphinx-8548",
+      "before": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "before1-pytest-10447",
+      "before": {
+        "original_records": 2,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "after1-pytest-10447",
+      "before": {
+        "original_records": 1,
+        "rules": 3,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 5,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "conflict": 2
+        },
+        "resolved_relations": 1
+      },
+      "decisions": [
+        {
+          "review_id": "ac930ac3-7a94-53a7-84c7-67fe8e09805c",
+          "state": "resolved",
+          "actor": "system",
+          "resolution": "keep_separate",
+          "reason": "双方各自在原测试上下文通过，交叉使用却重复复现原始缺陷。自动分别保留并隔离互斥规则，暂停其自动复用；不按时间新旧选择。",
+          "runs": [
+            {
+              "implementation_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "target_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "outcome": "passed",
+              "tests": 275,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [],
+              "repeat": 1,
+              "reproduces_baseline": false,
+              "artifact_sha256": "524d4b54a0baf60d5802065d197352d482fb6d2e5ef252dcd0cb07a68e6e8bae"
+            },
+            {
+              "implementation_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "target_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "outcome": "passed",
+              "tests": 277,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [],
+              "repeat": 1,
+              "reproduces_baseline": false,
+              "artifact_sha256": "73531330ede40643ef62ce116c5ad743647fde43de7cbfe71a2b6645d0a78dcf"
+            },
+            {
+              "implementation_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "target_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "outcome": "failed",
+              "tests": 275,
+              "failures": 1,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 1,
+              "reproduces_baseline": true,
+              "artifact_sha256": "303dccd6b3efc76f2321466d9715471e0baac4061b13ad8bd39afc7d45ed5554"
+            },
+            {
+              "implementation_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "target_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "outcome": "failed",
+              "tests": 275,
+              "failures": 1,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 2,
+              "reproduces_baseline": true,
+              "artifact_sha256": "10a1a5589c15e0c0883dc02c3ebe2d9faded1092d1756d41c14f28e1c74b7e59"
+            },
+            {
+              "implementation_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "target_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "outcome": "failed",
+              "tests": 277,
+              "failures": 2,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_fixture_order_mro",
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 1,
+              "reproduces_baseline": true,
+              "artifact_sha256": "5b631145c7e8fb853df9106ef1ad376f1a9109b82b2e8a20542eecb386a1f26e"
+            },
+            {
+              "implementation_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "target_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "outcome": "failed",
+              "tests": 277,
+              "failures": 2,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_fixture_order_mro",
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 2,
+              "reproduces_baseline": true,
+              "artifact_sha256": "7088e9fd39165213834bcedcd3699e6057f741b614eaa2a07a47d2877e67c6f1"
+            }
+          ]
+        }
+      ],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "after2-pytest-10447",
+      "before": {
+        "original_records": 2,
+        "rules": 3,
+        "shared_principles": 1,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 3,
+        "rules": 4,
+        "shared_principles": 1,
+        "relation_kinds": {
+          "conflict": 1
+        },
+        "resolved_relations": 0
+      },
+      "decisions": [
+        {
+          "review_id": "7ba80add-6f0d-5723-b8f0-081a2c681dd4",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。函数调用接口或装饰器不同，不能可靠移植。",
+          "runs": []
+        }
+      ],
+      "complete": true,
+      "background_state": "waiting"
+    },
+    {
+      "key": "before2-pytest-10447",
+      "before": {
+        "original_records": 0,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 1,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "before1-pytest-10356-reuse",
+      "before": {
+        "original_records": 2,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 3,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "after1-pytest-10356-reuse",
+      "before": {
+        "original_records": 2,
+        "rules": 5,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "conflict": 2
+        },
+        "resolved_relations": 1
+      },
+      "after": {
+        "original_records": 3,
+        "rules": 8,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "conflict": 2,
+          "unknown": 9
+        },
+        "resolved_relations": 1
+      },
+      "decisions": [
+        {
+          "review_id": "ac930ac3-7a94-53a7-84c7-67fe8e09805c",
+          "state": "resolved",
+          "actor": "system",
+          "resolution": "keep_separate",
+          "reason": "双方各自在原测试上下文通过，交叉使用却重复复现原始缺陷。自动分别保留并隔离互斥规则，暂停其自动复用；不按时间新旧选择。",
+          "runs": [
+            {
+              "implementation_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "target_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "outcome": "passed",
+              "tests": 275,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [],
+              "repeat": 1,
+              "reproduces_baseline": false,
+              "artifact_sha256": "524d4b54a0baf60d5802065d197352d482fb6d2e5ef252dcd0cb07a68e6e8bae"
+            },
+            {
+              "implementation_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "target_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "outcome": "passed",
+              "tests": 277,
+              "failures": 0,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [],
+              "repeat": 1,
+              "reproduces_baseline": false,
+              "artifact_sha256": "73531330ede40643ef62ce116c5ad743647fde43de7cbfe71a2b6645d0a78dcf"
+            },
+            {
+              "implementation_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "target_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "outcome": "failed",
+              "tests": 275,
+              "failures": 1,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 1,
+              "reproduces_baseline": true,
+              "artifact_sha256": "303dccd6b3efc76f2321466d9715471e0baac4061b13ad8bd39afc7d45ed5554"
+            },
+            {
+              "implementation_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "target_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "outcome": "failed",
+              "tests": 275,
+              "failures": 1,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 2,
+              "reproduces_baseline": true,
+              "artifact_sha256": "10a1a5589c15e0c0883dc02c3ebe2d9faded1092d1756d41c14f28e1c74b7e59"
+            },
+            {
+              "implementation_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "target_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "outcome": "failed",
+              "tests": 277,
+              "failures": 2,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_fixture_order_mro",
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 1,
+              "reproduces_baseline": true,
+              "artifact_sha256": "5b631145c7e8fb853df9106ef1ad376f1a9109b82b2e8a20542eecb386a1f26e"
+            },
+            {
+              "implementation_source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+              "target_source_id": "111b311c-159d-47cc-8794-16925a9a50a9",
+              "outcome": "failed",
+              "tests": 277,
+              "failures": 2,
+              "errors": 0,
+              "skipped": 0,
+              "failed_tests": [
+                "testing.test_mark.test_mark_fixture_order_mro",
+                "testing.test_mark.test_mark_mro"
+              ],
+              "repeat": 2,
+              "reproduces_baseline": true,
+              "artifact_sha256": "7088e9fd39165213834bcedcd3699e6057f741b614eaa2a07a47d2877e67c6f1"
+            }
+          ]
+        }
+      ],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "after2-pytest-10356-reuse",
+      "before": {
+        "original_records": 3,
+        "rules": 4,
+        "shared_principles": 1,
+        "relation_kinds": {
+          "conflict": 1
+        },
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 4,
+        "rules": 7,
+        "shared_principles": 1,
+        "relation_kinds": {
+          "conflict": 1,
+          "unknown": 6
+        },
+        "resolved_relations": 0
+      },
+      "decisions": [
+        {
+          "review_id": "7ba80add-6f0d-5723-b8f0-081a2c681dd4",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。函数调用接口或装饰器不同，不能可靠移植。",
+          "runs": []
+        },
+        {
+          "review_id": "d3fd3b49-b538-47aa-a4e4-8e1305eba9e3",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。快照、执行条件或审阅状态未通过校验。",
+          "runs": []
+        },
+        {
+          "review_id": "da95468f-94fb-4c12-a3cf-716d8f4c6af2",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。快照、执行条件或审阅状态未通过校验。",
+          "runs": []
+        },
+        {
+          "review_id": "025826b8-f513-4b6b-95fc-fbb6eaffbae5",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。快照、执行条件或审阅状态未通过校验。",
+          "runs": []
+        },
+        {
+          "review_id": "efb63932-a79f-4b56-8087-0e0d545ab359",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。快照、执行条件或审阅状态未通过校验。",
+          "runs": []
+        },
+        {
+          "review_id": "17d22c36-d99c-45c3-96ec-868af1d0d8da",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。快照、执行条件或审阅状态未通过校验。",
+          "runs": []
+        },
+        {
+          "review_id": "7f8e317e-9294-4e72-be75-30a7b087abbc",
+          "state": "needs_confirmation",
+          "actor": "system",
+          "resolution": null,
+          "reason": "证据不足，保留双方并交由用户确认。快照、执行条件或审阅状态未通过校验。",
+          "runs": []
+        }
+      ],
+      "complete": true,
+      "background_state": "waiting"
+    },
+    {
+      "key": "before2-pytest-10356-reuse",
+      "before": {
+        "original_records": 1,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 0,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "not_supported"
+    },
+    {
+      "key": "contextual1",
+      "before": {
+        "original_records": 1,
+        "rules": 3,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 6,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "unknown": 7
+        },
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "adaptive1",
+      "before": {
+        "original_records": 1,
+        "rules": 3,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 6,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "unknown": 9
+        },
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "adaptive2",
+      "before": {
+        "original_records": 1,
+        "rules": 2,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 4,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "unknown": 4
+        },
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    },
+    {
+      "key": "contextual2",
+      "before": {
+        "original_records": 1,
+        "rules": 2,
+        "shared_principles": 0,
+        "relation_kinds": {},
+        "resolved_relations": 0
+      },
+      "after": {
+        "original_records": 2,
+        "rules": 5,
+        "shared_principles": 0,
+        "relation_kinds": {
+          "unknown": 4
+        },
+        "resolved_relations": 0
+      },
+      "decisions": [],
+      "complete": true,
+      "background_state": "succeeded"
+    }
+  ],
+  "limitations": [
+    "Only three independent defect cases; two repeated sequences and repeat repairs do not add independent projects.",
+    "Whole-update effects include prompts/tools/extraction; contextual/adaptive attribution requires the same frozen references.",
+    "Pending/running/planned tasks are unfinished, not failures or successes.",
+    "Missing token usage remains unknown; reported subtotals are lower bounds, not zero-filled totals.",
+    "Task elapsed includes repair and extraction; background elapsed includes queueing, comparison and evidence tests.",
+    "Original records are retained; shared-principle counts are not deleted-source counts."
+  ],
+  "test_integrity": {
+    "state": "verified",
+    "checked": 20,
+    "unchanged": 20,
+    "records": [
+      {
+        "key": "before1-pytest-10356",
+        "task_id": "b1e243a0-8bd9-40b9-9934-d9e35942824b",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after1-pytest-10356",
+        "task_id": "7cca8258-685f-4409-8351-ce5e4edd56f8",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after2-pytest-10356",
+        "task_id": "35ee39ad-a773-4ffe-9a5c-4e162e95a526",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before2-pytest-10356",
+        "task_id": "0d51c7a7-642f-41f5-b243-37d335e75ec2",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before1-sphinx-8548",
+        "task_id": "ca35c4eb-ca0e-47ee-aeb6-a08248bea7ac",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "actual_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "expected_test_files": 740,
+        "actual_test_files": 740,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 783,
+        "full_fixture_actual_files": 783,
+        "full_fixture_expected_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_actual_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after1-sphinx-8548",
+        "task_id": "39aff23b-7c4f-4a2f-89b5-dc824c57373a",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "actual_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "expected_test_files": 740,
+        "actual_test_files": 740,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 783,
+        "full_fixture_actual_files": 783,
+        "full_fixture_expected_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_actual_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after2-sphinx-8548",
+        "task_id": "f391fd5e-eacd-4488-b573-ec5ac498a18f",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "actual_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "expected_test_files": 740,
+        "actual_test_files": 740,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 783,
+        "full_fixture_actual_files": 783,
+        "full_fixture_expected_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_actual_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before2-sphinx-8548",
+        "task_id": "41b474fd-b443-4508-8ed9-9bca90a456f7",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "actual_digest": "3a619597884ba1aa3cb720994bf5c0247a03738008a0383ce2d9a4060d515a81",
+        "expected_test_files": 740,
+        "actual_test_files": 740,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 783,
+        "full_fixture_actual_files": 783,
+        "full_fixture_expected_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_actual_digest": "dcb037bde8bad1f7505972fc3ae59db7a0d57fc865387ebb0e8ff83694da4b70",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before1-pytest-10447",
+        "task_id": "60d9c732-175f-4337-9151-3ff5e8cb4826",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "expected_test_files": 166,
+        "actual_test_files": 166,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 166,
+        "full_fixture_actual_files": 166,
+        "full_fixture_expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after1-pytest-10447",
+        "task_id": "8a4b87b6-6ce8-49ec-9946-2947d48bd474",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "expected_test_files": 166,
+        "actual_test_files": 166,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 166,
+        "full_fixture_actual_files": 166,
+        "full_fixture_expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after2-pytest-10447",
+        "task_id": "4339f2cc-79d4-4a9b-ae72-73ec864e5154",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "expected_test_files": 166,
+        "actual_test_files": 166,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 166,
+        "full_fixture_actual_files": 166,
+        "full_fixture_expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before2-pytest-10447",
+        "task_id": "e1de3efe-715c-4655-8565-860c5b9ceb90",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "expected_test_files": 166,
+        "actual_test_files": 166,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 166,
+        "full_fixture_actual_files": 166,
+        "full_fixture_expected_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_actual_digest": "c3d04e3c1dcc5c51d3f6183d6575ad53d6c2f248018d81b76981975efe9cce8c",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before1-pytest-10356-reuse",
+        "task_id": "f6328ee4-e9c7-49c5-9179-01972c25da56",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after1-pytest-10356-reuse",
+        "task_id": "c82d766f-555b-41f8-8c71-469583182ad0",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "after2-pytest-10356-reuse",
+        "task_id": "5498c6a1-9b86-4aa2-b8c5-d37eb4692272",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "before2-pytest-10356-reuse",
+        "task_id": "b6083016-fa48-4760-a3f1-20a4b2a0b676",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "contextual1",
+        "task_id": "b6e8a5c5-4d92-4189-bf09-9f0fad0b2d90",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "adaptive1",
+        "task_id": "b81bdd06-3f11-40eb-b438-d176be2641c6",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "adaptive2",
+        "task_id": "b6242777-c6c0-493a-9bdd-5cfa1516d3f2",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      },
+      {
+        "key": "contextual2",
+        "task_id": "4ad7c328-1a93-4e34-aef6-e889ce0921cb",
+        "state": "verified",
+        "unchanged": true,
+        "source_manifest_matches": true,
+        "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "expected_test_files": 165,
+        "actual_test_files": 165,
+        "changed": [],
+        "added": [],
+        "removed": [],
+        "full_fixture_expected_files": 165,
+        "full_fixture_actual_files": 165,
+        "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+        "full_fixture_changed": [],
+        "full_fixture_added": [],
+        "full_fixture_removed": []
+      }
+    ],
+    "method": "匹配上传manifest的inventory摘要；另以完整相对路径遍历tests/与testing/，补核target等fixture子目录，忽略缓存。"
+  },
+  "captured_history": [
+    {
+      "filename": "after2-merge-before-conflict.json",
+      "sha256": "fe3c60a76da890a5940da64e5442372dc78b897836fa8457f4426864bf1886a7",
+      "arm": "after2",
+      "stage": "before_conflict",
+      "changes": [
+        {
+          "id": "88e69a36-a000-5bd9-b922-56314d1bb08a",
+          "kind": "shared_principle",
+          "state": "merged",
+          "reason": "两源均支持该有条件原则：它们同属类继承链上类级元数据查询遗漏基类条目的因果模式，修复动作均为显式按 MRO 读取各类自身命名空间定义后合并。候选未把 pytest 的累积/返回类型/开关与 Sphinx 的键结构/同名覆盖/inherited-members 过滤互相迁移；pytest 的生成器物化仅作为该源业务参数保留，Sphinx 的输出格式也未外推。故通过。",
+          "source_ids": [
+            "bf94bd44-e160-44d7-88db-a159ddbf36d3",
+            "da9e02e8-3561-46a2-97f8-8acdcaded5f1"
+          ],
+          "title": "类继承元数据应按 MRO 逐类读取自身命名空间并合并"
+        }
+      ]
+    },
+    {
+      "filename": "after2-principle-after-conflict.json",
+      "sha256": "7d0ea2de68b29128bdb286fa8bd724276d3809d8bf2046e6c060984afad4c294",
+      "arm": "after2",
+      "stage": "after_conflict",
+      "changes": [
+        {
+          "id": "88e69a36-a000-5bd9-b922-56314d1bb08a",
+          "kind": "shared_principle",
+          "state": "invalidated",
+          "reason": "来源已变更、停用或有待审阅规则；历史合并当前不可复用。",
+          "source_ids": [
+            "bf94bd44-e160-44d7-88db-a159ddbf36d3",
+            "da9e02e8-3561-46a2-97f8-8acdcaded5f1"
+          ],
+          "title": "类继承元数据应按 MRO 逐类读取自身命名空间并合并"
+        }
+      ]
+    },
+    {
+      "filename": "after1-conflict-resolved.json",
+      "sha256": "1cc08464304ae892cdb59739229f6760e1164531067e1723fbcc7218f211c974",
+      "arm": "after1",
+      "stage": "automatic_conflict",
+      "changes": [
+        {
+          "id": "3b168bbb-40f2-560e-958c-780fbecb94be",
+          "kind": "review",
+          "state": "obsolete",
+          "reason": "左项要求父类 usefixtures 先于子类执行，为此必须反向遍历 MRO；右项使用正向 obj.__mro__，会把子类 C 的标记排在父类 A/B 之前。在同一父类-子类继承场景中，两者规定的夹具执行先后相反，不能同时成立。",
+          "source_ids": [
+            "e335294b-a137-4af2-a46c-f92715dbee08",
+            "111b311c-159d-47cc-8794-16925a9a50a9"
+          ],
+          "title": null
+        },
+        {
+          "id": "ac930ac3-7a94-53a7-84c7-67fe8e09805c",
+          "kind": "review",
+          "state": "resolved",
+          "reason": "左项要求反向 MRO，先基类后派生类；右项要求按 obj.__mro__ 正向收集并明确给出 C(A, B) 的 [C,A,B] 顺序。对同一个多重继承类对象，二者不能同时满足，属于互斥的标记顺序规定。",
+          "source_ids": [
+            "e335294b-a137-4af2-a46c-f92715dbee08",
+            "111b311c-159d-47cc-8794-16925a9a50a9"
+          ],
+          "title": null
+        }
+      ]
+    },
+    {
+      "filename": "after2-conflict-confirmation.json",
+      "sha256": "3c63b252d955675e4ea1bec82acd955d37689a7321b0e53d202cb52ff0c8303a",
+      "arm": "after2",
+      "stage": "insufficient_evidence",
+      "changes": [
+        {
+          "id": "7ba80add-6f0d-5723-b8f0-081a2c681dd4",
+          "kind": "review",
+          "state": "pending",
+          "reason": "左侧要求按 obj.__mro__ 正序累积并保证 C、A、B 顺序，即派生类标记先于基类；右侧要求对 obj.__mro__ 反向遍历，使最基类标记先返回、派生类标记后返回。两者作用于同一函数的同一 consider_mro=True 分支，对同一多重继承场景规定了互斥的标记顺序，无法同时满足。",
+          "source_ids": [
+            "bf94bd44-e160-44d7-88db-a159ddbf36d3",
+            "e7415b0f-b365-4d09-9018-552ef67d5cf5"
+          ],
+          "title": null
+        },
+        {
+          "id": "cf5c3d92-804a-524d-a92f-c2541cc0836b",
+          "kind": "shared_principle",
+          "state": "rejected",
+          "reason": "源1的根因是命名空间键不匹配（Foo vs Bar）导致基类实例属性注释未被发现，修复需基类回退且派生类优先；源2的根因是 MRO 正向遍历导致派生类标记先于基类，修复需反向遍历。两者的优先级方向相反，且过滤/记录 class_ 与 consider_mro=False 等约束互不适用，故不构成同一具体因果修复原则。",
+          "source_ids": [
+            "da9e02e8-3561-46a2-97f8-8acdcaded5f1",
+            "e7415b0f-b365-4d09-9018-552ef67d5cf5"
+          ],
+          "title": "不同修复原则：Sphinx 基类命名空间回退 vs pytest 反向 MRO 收集"
+        }
+      ]
+    }
+  ],
+  "shared_constraint_leak_audit": {
+    "schema_version": 1,
+    "artifact_type": "historical_reference_payload_audit",
+    "created_at": "2026-11-15T16:52:02.820237+00:00",
+    "task": {
+      "task_id": "c82d766f-555b-41f8-8c71-469583182ad0",
+      "source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+      "status": "succeeded",
+      "started_at": "2026-11-15T16:24:14.246245Z",
+      "finished_at": "2026-11-15T16:26:23.357266Z",
+      "comparison_metadata": {
+        "runtime_label": "更新后·第1轮",
+        "code_revision": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+        "comparison_group": "更新后",
+        "variant": "after",
+        "adapter": null,
+        "initial_baseline": "ordinary-upload-preflight",
+        "initial_baseline_in_model_context": true,
+        "task_public_url": "http://127.0.0.1:5182/#/tasks/c82d766f-555b-41f8-8c71-469583182ad0",
+        "task_id": "c82d766f-555b-41f8-8c71-469583182ad0",
+        "max_steps": 30,
+        "started_at": "2026-11-15T16:24:17.731837+00:00",
+        "finished_at": "2026-11-15T16:26:23.195649+00:00"
+      },
+      "retrieval_strategy": "adaptive",
+      "experience_format": "full"
+    },
+    "evidence_inputs": {
+      "database_path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\runs\\after1\\app.db",
+      "database_access": "SQLite mode=ro; PRAGMA query_only=ON; explicit read transaction",
+      "task_row_sha256": {
+        "request_json": "c5f9dc2506d4d19f1e1b68c11b52a9adee71691fb48c085f63b1cd585eebefa4",
+        "status_json": "9bf752f46efbaabf3543c5fc9b90dcbafdc26a1b16098d386b1859542a606a9b",
+        "audit_json": "8fb0880909a7a33476bd775107956c300e4ab2255359b1388995dc70018725ee"
+      },
+      "frozen_database_path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\after1-retrieval-reference.db",
+      "frozen_database_sha256": "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2",
+      "frozen_unchanged_after_read": true,
+      "before_snapshot_path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\observations\\after1-pytest-10356-reuse-before.json",
+      "before_snapshot_sha256": "7240bb158f7d5e87584e98364cb78cc69a08af357c08fa4034f48472862cb277",
+      "prior_source_record_sha256": "985978a43d49b1136a3c7df95e51d8aaaa081ac5c54ce8184371705110d30117"
+    },
+    "pause_evidence": {
+      "paused_rule_id": "39c882ac-6fd4-5ed3-be28-bd7b235a652e",
+      "current_pause_link": {
+        "rule_id": "39c882ac-6fd4-5ed3-be28-bd7b235a652e",
+        "review_id": "ac930ac3-7a94-53a7-84c7-67fe8e09805c"
+      },
+      "review_before_task": {
+        "id": "ac930ac3-7a94-53a7-84c7-67fe8e09805c",
+        "left_rule": "39c882ac-6fd4-5ed3-be28-bd7b235a652e",
+        "right_rule": "43f32b64-186e-5132-86bc-2ba2219e156d",
+        "kind": "conflict",
+        "details": "{\"condition\":\"两者都适用于 obj 为类且 consider_mro=True 的 get_unpacked_marks 路径，并都规定类自身与基类 pytestmark 的合并顺序；在该路径上顺序必须唯一。\",\"independent_review\":{\"claim_index\":0,\"mutually_exclusive\":true,\"overlapping_scope\":true,\"reason\":\"左项明确要求在 get_unpacked_marks 的 consider_mro=True 分支使用 reversed(obj.__mro__)，使基类标记先于派生类；右项明确要求在同类路径使用 obj.__mro__ 正向收集，并声明 C(A,B) 会得到 [C,A,B]（派生类在前）。两者都作用于 obj 为类且考虑 MRO 的标记收集，且规定的顺序相反，无法在同一路径同时满足，不是单纯措辞差异。\",\"supported\":true},\"policy\":\"cross-upload-conflicts-v1\",\"quotes\":[{\"issue_index\":0,\"quote\":\"在 `get_unpacked_marks` 的 `consider_mro=True` 分支中，用 `reversed(obj.__mro__)` 代替 `obj.__mro__` 来构造 `mark_lists`，使基类标记先于派生类标记；保留 `consider_mro=False` 与非类对象分支不变。\",\"source_id\":\"111b311c-159d-47cc-8794-16925a9a50a9\"},{\"issue_index\":1,\"quote\":\"为 get_unpacked_marks 增加 consider_mro: bool = True；当 obj 是类且 consider_mro=True 时，使用 [x.__dict__.get(\\\"pytestmark\\\", []) for x in obj.__mro__] 按 MRO 收集并展平各层标记；consider_mro=False 时仅读取 obj.__dict__.get(\\\"pytestmark\\\", [])；非类对象保持 getattr 读取。这样 C(A, B) 会得到 [C, A, B] 顺序的标记，显式传入 consider_mro=False 时只得到当前类标记。\",\"source_id\":\"e335294b-a137-4af2-a46c-f92715dbee08\"}],\"reason\":\"左项要求反向 MRO，先基类后派生类；右项要求按 obj.__mro__ 正向收集并明确给出 C(A, B) 的 [C,A,B] 顺序。对同一个多重继承类对象，二者不能同时满足，属于互斥的标记顺序规定。\",\"source_ids\":[\"111b311c-159d-47cc-8794-16925a9a50a9\",\"e335294b-a137-4af2-a46c-f92715dbee08\"],\"targets\":[\"src/_pytest/mark/structures.py#get_unpacked_marks\"]}",
+        "model_version": "cross-upload-conflicts-v1",
+        "status": "resolved",
+        "version": 2,
+        "created_at": "2026-11-15T16:13:29.179719+00:00",
+        "resolved_at": "2026-11-15T16:15:25.292910+00:00",
+        "resolution": "keep_separate",
+        "preferred_source_id": null,
+        "note": "系统自动处理：双方各自在原测试上下文通过，交叉使用却重复复现原始缺陷。自动分别保留并隔离互斥规则，暂停其自动复用；不按时间新旧选择。"
+      },
+      "recorded_resolution_events": [
+        {
+          "id": 1,
+          "review_id": "ac930ac3-7a94-53a7-84c7-67fe8e09805c",
+          "version": 2,
+          "action": "resolve",
+          "data": {
+            "actor": "system",
+            "evidence_hash": "c8c04f38b229e8ace91c1410e87dce100b03fb64326d108871bbee158debaa89",
+            "note": "系统自动处理：双方各自在原测试上下文通过，交叉使用却重复复现原始缺陷。自动分别保留并隔离互斥规则，暂停其自动复用；不按时间新旧选择。",
+            "policy": "verified-cross-tests-v1",
+            "preferred_source_id": null,
+            "previous_kind": "conflict",
+            "resolution": "keep_separate",
+            "version": 1
+          },
+          "created_at": "2026-11-15T16:15:25.293024+00:00"
+        }
+      ],
+      "resolution_precedes_task": true,
+      "historical_boundary": "The pre-task snapshot records this resolved keep_separate decision. The append-only resolution event and present pause link corroborate it; the snapshot does not itself contain a knowledge_pauses table dump."
+    },
+    "reference_reconstruction": {
+      "method": "Use the product read-only checked-rule retrieval to serialize candidates from the actually earned first-task frozen database; empty query avoids embedding inference. Match the entire candidate object and entire single-object reference array against independent hashes recorded at request and decision boundaries.",
+      "used_experience_store_constructor": false,
+      "live_model_calls": 0,
+      "query": "",
+      "retrieval_context": {
+        "language": "python",
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "error_types": [
+          "AssertionError"
+        ],
+        "compatibility_key": "tree:e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+        "source_revision": "tree:e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6"
+      },
+      "candidate_limit": 10,
+      "character_budget": 100000,
+      "note": "Expanded candidate enumeration is for offline identification only; it is not a repair run or a replay of historical candidate ranking.",
+      "frozen_rule_data_equals_before_snapshot": true,
+      "frozen_source_links_equal_before_snapshot": true,
+      "unpaused_sibling_rule_id": "7ada03c4-2fcd-52df-8b67-583df806a74f",
+      "full_matched_reference_payload": {
+        "id": "e335294b-a137-4af2-a46c-f92715dbee08",
+        "rule_id": "7ada03c4-2fcd-52df-8b67-583df806a74f",
+        "schema_version": 4,
+        "language": "python",
+        "scope": "project",
+        "repository_id": "uploaded/51ef9ec8d8e9141d2742593cfbd73adf",
+        "reuse_status": "active",
+        "task_summary": "get_unpacked_marks 直接返回 normalize_mark_list(mark_list)，而 normalize_mark_list 是生成器；测试使用列表相等断言 all_marks == [...]，因此即使标记内容正确也会因返回类型不是列表而触发 AssertionError。",
+        "error_type": "AssertionError",
+        "root_cause": "get_unpacked_marks 直接返回 normalize_mark_list(mark_list)，而 normalize_mark_list 是生成器；测试使用列表相等断言 all_marks == [...]，因此即使标记内容正确也会因返回类型不是列表而触发 AssertionError。",
+        "solution": "让 get_unpacked_marks 返回具体列表，例如 return list(normalize_mark_list(mark_list))，保留 normalize_mark_list 对 Mark/MarkDecorator 的规范化与类型校验。",
+        "applicability": [
+          "使用 pytest 标记装饰类，并通过多重继承复用测试类的场景。",
+          "函数、模块、方法等非类对象仍需要保持原有标记读取行为的场景。",
+          "类对象有多个基类，且类自身或各基类都设置了 pytestmark 的 pytest 标记修复场景。",
+          "需要在 API 上区分“当前类直接定义的标记”和“按 MRO 继承得到的标记”的场景。",
+          "需要按 MRO 合并类级 pytestmark，而不是只取最先解析到的单个属性值的场景。"
+        ],
+        "constraints": [
+          "get_unpacked_marks 必须返回可进行列表相等比较的具体列表，不能直接返回生成器。",
+          "get_unpacked_marks 新增 consider_mro 关键字参数，默认值为 True。",
+          "get_unpacked_marks(C, consider_mro=False) 只应返回 [C 的标记]。",
+          "store_mark 写回 obj.pytestmark 时必须使用 consider_mro=False，只保留当前对象自身已有标记，再追加新标记。",
+          "不能把多个基类的标记覆盖成仅一个基类的标记，也不能把基类标记复制成子类自身标记。",
+          "仅修改生产源码 src/_pytest/mark/structures.py，不得修改测试、依赖或构建配置。",
+          "修复后必须通过全部登记测试，并保留其他正常行为。",
+          "合并后的标记仍需经过 normalize_mark_list 规范化，保留对 Mark 和 MarkDecorator 的提取与类型校验。",
+          "多重继承场景 C(A, B) 且 A、B、C 均有标记时，get_unpacked_marks(C) 应返回 [C 的标记, A 的标记, B 的标记]。",
+          "类对象在 consider_mro=False 时只能返回当前类 __dict__ 中直接定义的 pytestmark，不能返回继承标记。",
+          "类对象在 consider_mro=True 时必须按 __mro__ 顺序收集类自身及所有基类的 pytestmark，并按该顺序展平合并。",
+          "非类对象仍通过 getattr(obj, \"pytestmark\", []) 读取；若读取结果不是 list，要按单个标记包装处理。"
+        ],
+        "compatibility_key": "tree:e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+        "required_capabilities": [],
+        "issues": [
+          {
+            "error_type": "AssertionError",
+            "files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "root_cause": "get_unpacked_marks 直接返回 normalize_mark_list(mark_list)，而 normalize_mark_list 是生成器；测试使用列表相等断言 all_marks == [...]，因此即使标记内容正确也会因返回类型不是列表而触发 AssertionError。",
+            "solution": "让 get_unpacked_marks 返回具体列表，例如 return list(normalize_mark_list(mark_list))，保留 normalize_mark_list 对 Mark/MarkDecorator 的规范化与类型校验。",
+            "symbols": [
+              "src/_pytest/mark/structures.py#get_unpacked_marks"
+            ]
+          }
+        ],
+        "evidence_summary": {
+          "verified_runs": 1,
+          "level": "source_project_tests",
+          "minimum_tests": 275
+        },
+        "source_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ]
+      },
+      "individual_serialization": "sha256(json.dumps(reference, sort_keys=True, ensure_ascii=False).encode())",
+      "individual_sha256": "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da",
+      "list_serialization": "sha256(json.dumps([reference], sort_keys=True).encode())",
+      "list_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c",
+      "candidate_hashes": [
+        {
+          "rule_id": "7ada03c4-2fcd-52df-8b67-583df806a74f",
+          "source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+          "individual_sha256": "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da",
+          "single_reference_list_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c"
+        },
+        {
+          "rule_id": "39c882ac-6fd4-5ed3-be28-bd7b235a652e",
+          "source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+          "individual_sha256": "8a9f11d24ffecc27686a6b4b1f099e2d74a541853cca349cbe81cda8ca7e54ab",
+          "single_reference_list_sha256": "a32b5afaf26b1d0cc6bbc58a3c7ea65a32d19c9108e7340aaa4d2d8ef0ab8fc3"
+        },
+        {
+          "rule_id": "1b3357a9-cdb9-5c0a-996d-abcec7cc1560",
+          "source_id": "e335294b-a137-4af2-a46c-f92715dbee08",
+          "individual_sha256": "2238b8ee9514473d5dacad2a3556b8dc020581de1706f23b36b5cba65b2c8c39",
+          "single_reference_list_sha256": "f92c4a6b74d49b6eeccd776dd70961ffad01bc2951251ab767649620e3b4f774"
+        }
+      ]
+    },
+    "actual_request_audit": [
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "318443b4-b8ff-4f8b-911e-5a9168f9b2c6",
+        "request_experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "request_experience_hashes": [
+          "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da"
+        ],
+        "request_index_1based": 1,
+        "matches_reconstructed_single_reference": true
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "da74ee77-f138-44cd-b5ef-ca740ad8d6a7",
+        "request_experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "request_experience_hashes": [
+          "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da"
+        ],
+        "request_index_1based": 2,
+        "matches_reconstructed_single_reference": true
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "a7cbdd5b-b5bc-43a3-b701-9374a039fa7c",
+        "request_experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "request_experience_hashes": [
+          "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da"
+        ],
+        "request_index_1based": 3,
+        "matches_reconstructed_single_reference": true
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "62111788-a3b4-45f5-a0f1-010bcaa88afa",
+        "request_experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "request_experience_hashes": [
+          "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da"
+        ],
+        "request_index_1based": 4,
+        "matches_reconstructed_single_reference": true
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "f3b56a2a-690a-4354-a2cd-448375d96818",
+        "request_experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "request_experience_hashes": [
+          "ad9326ad1f4814067841f994ce480c302d33778f6735c4cfb16109fcca41e4da"
+        ],
+        "request_index_1based": 5,
+        "matches_reconstructed_single_reference": true
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "dc5da3ea-e0f6-4312-a8e8-0f6155a9fab2",
+        "request_experience_ids": [],
+        "request_experience_hashes": [],
+        "request_index_1based": 6,
+        "matches_reconstructed_single_reference": false
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "906a998b-6e62-4179-a209-75f2a3bd6b8b",
+        "request_experience_ids": [],
+        "request_experience_hashes": [],
+        "request_index_1based": 7,
+        "matches_reconstructed_single_reference": false
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "5a438ab2-04fe-4d85-b6a9-f1e9d61e449f",
+        "request_experience_ids": [],
+        "request_experience_hashes": [],
+        "request_index_1based": 8,
+        "matches_reconstructed_single_reference": false
+      },
+      {
+        "phase": "decision",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "aa39f6d9-e11d-495c-b221-c29c2346db95",
+        "request_experience_ids": [],
+        "request_experience_hashes": [],
+        "request_index_1based": 9,
+        "matches_reconstructed_single_reference": false
+      },
+      {
+        "phase": "extraction",
+        "attempt": 1,
+        "success": true,
+        "http_status": 200,
+        "returned_model": "deepseek-flash",
+        "response_id": "c8d16579-70a3-4d55-8717-84e54507f9d9",
+        "request_experience_ids": [],
+        "request_experience_hashes": [],
+        "request_index_1based": 10,
+        "matches_reconstructed_single_reference": false
+      }
+    ],
+    "actual_injection_events": [
+      {
+        "decision": 1,
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "content_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c",
+        "list_payload_matches": true
+      },
+      {
+        "decision": 2,
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "content_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c",
+        "list_payload_matches": true
+      },
+      {
+        "decision": 3,
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "content_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c",
+        "list_payload_matches": true
+      },
+      {
+        "decision": 4,
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "content_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c",
+        "list_payload_matches": true
+      },
+      {
+        "decision": 5,
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "content_sha256": "4d96279c38c89ce7a66b7129f3c04d4c057011ad1961583d64d02addedb0892c",
+        "list_payload_matches": true
+      },
+      {
+        "decision": 6,
+        "experience_ids": [],
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "list_payload_matches": false
+      },
+      {
+        "decision": 7,
+        "experience_ids": [],
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "list_payload_matches": false
+      },
+      {
+        "decision": 8,
+        "experience_ids": [],
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "list_payload_matches": false
+      },
+      {
+        "decision": 9,
+        "experience_ids": [],
+        "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "list_payload_matches": false
+      }
+    ],
+    "actual_retrieval_events": [
+      {
+        "error_types": [],
+        "experience_ids": [],
+        "reason": "no_failure_evidence"
+      },
+      {
+        "error_types": [
+          "AssertionError"
+        ],
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "AssertionError"
+        ],
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "AssertionError"
+        ],
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "AssertionError"
+        ],
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "AssertionError"
+        ],
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "AssertionError"
+        ],
+        "experience_ids": [
+          "e335294b-a137-4af2-a46c-f92715dbee08"
+        ],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "TypeError",
+          "ValueError"
+        ],
+        "experience_ids": [],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "TypeError",
+          "ValueError"
+        ],
+        "experience_ids": [],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "TypeError",
+          "ValueError"
+        ],
+        "experience_ids": [],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [
+          "TypeError",
+          "ValueError"
+        ],
+        "experience_ids": [],
+        "reason": "test_failure"
+      },
+      {
+        "error_types": [],
+        "experience_ids": [],
+        "reason": "tests_passed"
+      }
+    ],
+    "actual_test_trace": [
+      {
+        "sequence": 1,
+        "call_id": "c783abde-512d-4401-9dba-6eda08f70274",
+        "success": false,
+        "error_code": "TEST_FAILED",
+        "runner": "pytest",
+        "tests": 275,
+        "failures": 1,
+        "errors": 0,
+        "skipped": 0,
+        "error_types": [
+          "AssertionError"
+        ],
+        "final_verification": null
+      },
+      {
+        "sequence": 11,
+        "call_id": "e315767d-3aa3-4b9c-ae1d-6985ee390033",
+        "success": false,
+        "error_code": "TEST_FAILED",
+        "runner": "pytest",
+        "tests": 275,
+        "failures": 2,
+        "errors": 0,
+        "skipped": 0,
+        "error_types": [
+          "TypeError",
+          "ValueError"
+        ],
+        "final_verification": null
+      },
+      {
+        "sequence": 14,
+        "call_id": "eba17552-d6f3-4f0d-8add-e2dfb7f1547f",
+        "success": true,
+        "error_code": null,
+        "runner": "pytest",
+        "tests": 275,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "error_types": [],
+        "final_verification": null
+      },
+      {
+        "sequence": 15,
+        "call_id": "cfcbd49e-12c2-4ed8-85d6-392bd8f92778",
+        "success": true,
+        "error_code": null,
+        "runner": "pytest",
+        "tests": 275,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "error_types": [],
+        "final_verification": true
+      }
+    ],
+    "confirmed_findings": {
+      "matching_request_count": 5,
+      "matching_request_indices_1based": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "matching_decisions": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "direct_paused_rule_object_in_reference_field": false,
+      "injected_solution": "让 get_unpacked_marks 返回具体列表，例如 return list(normalize_mark_list(mark_list))，保留 normalize_mark_list 对 Mark/MarkDecorator 的规范化与类型校验。",
+      "shared_constraints": [
+        "get_unpacked_marks 必须返回可进行列表相等比较的具体列表，不能直接返回生成器。",
+        "get_unpacked_marks 新增 consider_mro 关键字参数，默认值为 True。",
+        "get_unpacked_marks(C, consider_mro=False) 只应返回 [C 的标记]。",
+        "store_mark 写回 obj.pytestmark 时必须使用 consider_mro=False，只保留当前对象自身已有标记，再追加新标记。",
+        "不能把多个基类的标记覆盖成仅一个基类的标记，也不能把基类标记复制成子类自身标记。",
+        "仅修改生产源码 src/_pytest/mark/structures.py，不得修改测试、依赖或构建配置。",
+        "修复后必须通过全部登记测试，并保留其他正常行为。",
+        "合并后的标记仍需经过 normalize_mark_list 规范化，保留对 Mark 和 MarkDecorator 的提取与类型校验。",
+        "多重继承场景 C(A, B) 且 A、B、C 均有标记时，get_unpacked_marks(C) 应返回 [C 的标记, A 的标记, B 的标记]。",
+        "类对象在 consider_mro=False 时只能返回当前类 __dict__ 中直接定义的 pytestmark，不能返回继承标记。",
+        "类对象在 consider_mro=True 时必须按 __mro__ 顺序收集类自身及所有基类的 pytestmark，并按该顺序展平合并。",
+        "非类对象仍通过 getattr(obj, \"pytestmark\", []) 读取；若读取结果不是 list，要按单个标记包装处理。"
+      ],
+      "constraints_carrying_paused_mro_requirement": [
+        {
+          "index_0based": 8,
+          "text": "多重继承场景 C(A, B) 且 A、B、C 均有标记时，get_unpacked_marks(C) 应返回 [C 的标记, A 的标记, B 的标记]。"
+        },
+        {
+          "index_0based": 10,
+          "text": "类对象在 consider_mro=True 时必须按 __mro__ 顺序收集类自身及所有基类的 pytestmark，并按该顺序展平合并。"
+        }
+      ],
+      "paused_rule_issue": {
+        "error_type": "AssertionError",
+        "files": [
+          "src/_pytest/mark/structures.py"
+        ],
+        "root_cause": "原实现对类对象只执行 getattr(obj, \"pytestmark\", [])，属性查找沿 MRO 只返回最先可见的一组 pytestmark；C(A, B) 这类多重继承中某个基类的标记会被遮蔽，无法合并所有基类标记。",
+        "solution": "为 get_unpacked_marks 增加 consider_mro: bool = True；当 obj 是类且 consider_mro=True 时，使用 [x.__dict__.get(\"pytestmark\", []) for x in obj.__mro__] 按 MRO 收集并展平各层标记；consider_mro=False 时仅读取 obj.__dict__.get(\"pytestmark\", [])；非类对象保持 getattr 读取。这样 C(A, B) 会得到 [C, A, B] 顺序的标记，显式传入 consider_mro=False 时只得到当前类标记。",
+        "symbols": [
+          "src/_pytest/mark/structures.py#get_unpacked_marks"
+        ]
+      },
+      "mutually_exclusive_semantics_fully_excluded": false,
+      "later_reference_arrays_empty": true,
+      "withdrawn_decisions": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "extraction_request_indices_without_references": [
+        10
+      ]
+    },
+    "interpretation": "The paused MRO rule was not sent as a reference object. A different unpaused list-return rule was sent, and its unchanged shared constraints still carried the same forward-MRO ordering requirement. Rule-ID isolation therefore did not fully isolate the conflicting meaning.",
+    "traceability_limits": [
+      "The record stores reference hashes rather than a raw HTTP request-body capture. Exact full-object and full-array matches identify the serialized reference payload under the usual SHA-256 collision-resistance assumption.",
+      "HTTP 200 and successful responses establish successful recorded requests; they do not prove how the remote model interpreted or used any constraint.",
+      "Later empty reference arrays prove removal from the dedicated reference field, not erasure of influence from previous conversation messages or generated code.",
+      "This audit identifies historical transmitted content. It does not claim a causal improvement or regression in repair success, token use or elapsed time.",
+      "Current database retrieval eligibility may differ after later tasks and reviews; current absence cannot negate this historical hash match."
+    ]
+  },
+  "supplemental_safety": {
+    "state": "已完成，独立补充记录",
+    "excluded_from_primary": true,
+    "registered_tasks": 1,
+    "submitted": 1,
+    "observed_complete": 1,
+    "rows": [
+      {
+        "key": "safety1",
+        "arm": "safety1",
+        "condition": "safety_patch",
+        "repetition": 1,
+        "phase": "supplemental-safety",
+        "cohort": "supplemental_safety",
+        "case_id": "pytest-10356",
+        "task_id": "bf53e089-ba3a-4965-b5b8-5c42c47544c0",
+        "task_url": "http://127.0.0.1:5189/#/tasks/bf53e089-ba3a-4965-b5b8-5c42c47544c0",
+        "status": "succeeded",
+        "terminal": true,
+        "verified_success": true,
+        "comparison_valid": true,
+        "final_tests_passed": true,
+        "registered_verified_success": true,
+        "experience_saved": true,
+        "experience_ids": [
+          "f3389c98-0e87-4b21-bfeb-af79766ca5e4"
+        ],
+        "stop_reason": null,
+        "expected_tests": 275,
+        "final_tests": 275,
+        "elapsed_ms": 158633,
+        "final_failures": 0,
+        "final_errors": 0,
+        "final_exit_code": 0,
+        "final_error_code": null,
+        "final_diagnostic": null,
+        "task_tokens": 63104,
+        "reported_task_tokens": 63104,
+        "token_requests_reported": 7,
+        "token_requests_observed": 7,
+        "background_tokens": 0,
+        "background_elapsed_ms": 2342,
+        "reported_background_tokens": 0,
+        "background_metrics_correction": null,
+        "background_model_requests": 0,
+        "background_state": "succeeded",
+        "background_notice": "比较完成。；前后数量是原始记录；共同原则不删除来源。后台耗时包含排队、审阅与测试。；冲突与待确认数量表示本次来源涉及的审阅关系，包含同仓库未知关系，不表示全部由本次新建。",
+        "background_observation_timeout": false,
+        "original_records_before": 3,
+        "original_records_after": 4,
+        "generated_principles": 0,
+        "resolved_conflicts": 0,
+        "pending_confirmations": 0,
+        "source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+        "frozen_sha256": null,
+        "request_contract_sha256": "54461146d2831af749b603f00ceb94aa7f7524c3cbc3336730c7a60c9821a0da",
+        "strategy": "adaptive",
+        "injected_requests": 0,
+        "retrieved_source_count": 0,
+        "retrieval_reasons": {
+          "no_failure_evidence": 1,
+          "test_failure": 6,
+          "tests_passed": 1
+        },
+        "observed_complete": true,
+        "involved_review_relations": 18,
+        "relation_count_scope": "Includes historical unknown/review relationships involving this source; not newly discovered conflicts."
+      }
+    ],
+    "summary": {
+      "planned": 1,
+      "submitted": 1,
+      "invalid_comparisons": 0,
+      "terminal": 1,
+      "unfinished": 0,
+      "passed": 1,
+      "failed": 0,
+      "success_rate": 1.0,
+      "final_test_passed": 1,
+      "final_test_failed": 0,
+      "final_test_unconfirmed": 0,
+      "final_test_pass_rate": 1.0,
+      "experience_saved": 1,
+      "elapsed_ms": {
+        "available": 1,
+        "denominator": 1,
+        "mean": 158633,
+        "median": 158633,
+        "minimum": 158633,
+        "maximum": 158633,
+        "total": 158633,
+        "reported_subtotal": 158633
+      },
+      "task_tokens": {
+        "available": 1,
+        "denominator": 1,
+        "mean": 63104,
+        "median": 63104,
+        "minimum": 63104,
+        "maximum": 63104,
+        "total": 63104,
+        "reported_subtotal": 63104
+      },
+      "background_tokens": {
+        "available": 1,
+        "denominator": 1,
+        "mean": 0,
+        "median": 0,
+        "minimum": 0,
+        "maximum": 0,
+        "total": 0,
+        "reported_subtotal": 0
+      },
+      "background_elapsed_ms": {
+        "available": 1,
+        "denominator": 1,
+        "mean": 2342,
+        "median": 2342,
+        "minimum": 2342,
+        "maximum": 2342,
+        "total": 2342,
+        "reported_subtotal": 2342
+      },
+      "reported_background_tokens": 0,
+      "reported_task_tokens": 63104,
+      "token_requests_reported": 7,
+      "token_requests_observed": 7,
+      "known_usage_tasks": 1,
+      "background_states": {
+        "succeeded": 1
+      }
+    },
+    "provenance": [
+      {
+        "key": "safety1",
+        "seed_backup_sha256": "5d001e09850079eea5742d1a59af21ba3721f6810ed093b6e2edc90fc145ab2a",
+        "core": {
+          "git_head": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+          "source_sha256": {
+            "backend/agent/core.py": "a216cf34fd584f8603c4b9a1dc5f5f1c99ac93d09a2a510e230d3988c1c9c4c5",
+            "backend/agent/context.py": "b38334bb60a52bb9cb34830185478c572ff6ca342f62dcd14fdac2cb1b526903",
+            "backend/experience/store.py": "9c97c82df990453212620742baf35a23ce4b3228c46e7b1c42964895664dc287",
+            "backend/experience/knowledge.py": "6b3295c8898045d8aba49063ad6d1a11d2a793314bb2b206aab01b7ef2918865",
+            "backend/experience/library.py": "2dd9026b2b26f6386fa183dd11357eac2ee643f37db9c6006e81cda82dad6139",
+            "backend/experience/retrieval.py": "16cede9813fba2fad5c8b28435d2f83e0bc80f571f2b794b91944e159fad394e",
+            "backend/experience/retrieval_evidence.py": "1b6c7baaf9fb3b36f4c02941b116320315ea675aaf6bb229ded91a9d6eded5c5",
+            "backend/experience/recovery.py": "bb0494c24054c08624a9f737172245b5a1df4f68ce711fa6c200679fdea757a1",
+            "backend/experience/automation.py": "5a00c4a0db1ef082ca44017f34448053deaae4276ed3a217cfafde4aa2ad0524",
+            "backend/experience/automatic_resolution.py": "245eff66f3bb3efb6b7f9cd0a125623faef78a7862a94cb2760020299dc6fbfd"
+          }
+        },
+        "case_source_digest": "e92caa63fd8abfd2dbfa09b5962837c5c589177d5de6d22ffb4563e8588b14e6",
+        "case_archive_sha256": "2d1d7a4a60ba6784ed893bed6856fd25d3a288062a821b77bd6b435a54860bea",
+        "limitation": "This supplementary run is excluded from the original 20-trial comparison. It seeds the current after1 database without editing experience or paused records. Later unknown relations already block the earlier 7ada source; therefore this run can verify the current repair flow and actual injected constraints, but does not reproduce the earlier c82 constraint leak or establish a controlled patch effect."
+      }
+    ],
+    "snapshot_origin": {
+      "seed_database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\runs\\after1\\app.db",
+      "seed_method": "SQLite online backup, source read-only; no row edits",
+      "backup_sha256": "5d001e09850079eea5742d1a59af21ba3721f6810ed093b6e2edc90fc145ab2a",
+      "seed_task_ids": [
+        "39aff23b-7c4f-4a2f-89b5-dc824c57373a",
+        "7cca8258-685f-4409-8351-ce5e4edd56f8",
+        "8a4b87b6-6ce8-49ec-9946-2947d48bd474",
+        "c82d766f-555b-41f8-8c71-469583182ad0"
+      ],
+      "core": {
+        "git_head": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+        "source_sha256": {
+          "backend/agent/core.py": "a216cf34fd584f8603c4b9a1dc5f5f1c99ac93d09a2a510e230d3988c1c9c4c5",
+          "backend/agent/context.py": "b38334bb60a52bb9cb34830185478c572ff6ca342f62dcd14fdac2cb1b526903",
+          "backend/experience/store.py": "9c97c82df990453212620742baf35a23ce4b3228c46e7b1c42964895664dc287",
+          "backend/experience/knowledge.py": "6b3295c8898045d8aba49063ad6d1a11d2a793314bb2b206aab01b7ef2918865",
+          "backend/experience/library.py": "2dd9026b2b26f6386fa183dd11357eac2ee643f37db9c6006e81cda82dad6139",
+          "backend/experience/retrieval.py": "16cede9813fba2fad5c8b28435d2f83e0bc80f571f2b794b91944e159fad394e",
+          "backend/experience/retrieval_evidence.py": "1b6c7baaf9fb3b36f4c02941b116320315ea675aaf6bb229ded91a9d6eded5c5",
+          "backend/experience/recovery.py": "bb0494c24054c08624a9f737172245b5a1df4f68ce711fa6c200679fdea757a1",
+          "backend/experience/automation.py": "5a00c4a0db1ef082ca44017f34448053deaae4276ed3a217cfafde4aa2ad0524",
+          "backend/experience/automatic_resolution.py": "245eff66f3bb3efb6b7f9cd0a125623faef78a7862a94cb2760020299dc6fbfd"
+        }
+      },
+      "model_config_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+      "created_at": "2026-11-15T17:11:13.964331+00:00",
+      "limitation": "This supplementary run is excluded from the original 20-trial comparison. It seeds the current after1 database without editing experience or paused records. Later unknown relations already block the earlier 7ada source; therefore this run can verify the current repair flow and actual injected constraints, but does not reproduce the earlier c82 constraint leak or establish a controlled patch effect."
+    },
+    "request_safety_audit": {
+      "created_at": "2026-11-15T17:14:43.207040+00:00",
+      "task_id": "bf53e089-ba3a-4965-b5b8-5c42c47544c0",
+      "task_status": "succeeded",
+      "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\runs\\safety1\\app.db",
+      "database_access": "SQLite mode=ro, query_only=ON, one read transaction; no ExperienceStore or schema initialization",
+      "persisted_task_audit_sha256": "dae490a14bdb11e5a4d4ccd6b2f52644d56358e58f633ed7cdfae15f707fa85c",
+      "persisted_task_status_sha256": "a7c5f16163b49b747ef678c230cf872ec4210e2c4ea4cb30f3292dee3fcced54",
+      "task_start": "2026-11-15T17:11:26.818198Z",
+      "task_finish": "2026-11-15T17:14:05.450900Z",
+      "project_configuration": {
+        "origin": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "source": "explicit_file",
+        "source_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+        "key_present": true,
+        "identity": "4f003362858407b3c4f55d13",
+        "transport": "direct"
+      },
+      "service_provenance": {
+        "runtime_label": "当前修复·补充安全回归",
+        "code_revision": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+        "comparison_group": "补充安全回归",
+        "variant": "after",
+        "task_public_base_url": "http://127.0.0.1:5189",
+        "adapter": null,
+        "initial_baseline": "ordinary-upload-preflight",
+        "initial_baseline_in_model_context": true,
+        "kernel": {
+          "git_head": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+          "source_sha256": {
+            "backend/agent/core.py": "a216cf34fd584f8603c4b9a1dc5f5f1c99ac93d09a2a510e230d3988c1c9c4c5",
+            "backend/experience/retrieval.py": "16cede9813fba2fad5c8b28435d2f83e0bc80f571f2b794b91944e159fad394e",
+            "backend/experience/recovery.py": "bb0494c24054c08624a9f737172245b5a1df4f68ce711fa6c200679fdea757a1",
+            "backend/experience/automation.py": "5a00c4a0db1ef082ca44017f34448053deaae4276ed3a217cfafde4aa2ad0524",
+            "backend/experience/automatic_resolution.py": "245eff66f3bb3efb6b7f9cd0a125623faef78a7862a94cb2760020299dc6fbfd"
+          }
+        },
+        "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\runs\\safety1\\app.db",
+        "workspace_root": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\runs\\safety1\\workspaces",
+        "model_config_file": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+        "model": "deepseek-flash",
+        "base_url": "https://api.deepseek.com",
+        "task_timeout": 900.0,
+        "llm_timeout": 90.0,
+        "automatic_knowledge_workers": true,
+        "service_started_at": "2026-11-15T17:11:14.847944+00:00"
+      },
+      "registered_core": {
+        "git_head": "4ed926a33dd5c2d923852ae482136857fbaf7bd8",
+        "source_sha256": {
+          "backend/agent/core.py": "a216cf34fd584f8603c4b9a1dc5f5f1c99ac93d09a2a510e230d3988c1c9c4c5",
+          "backend/agent/context.py": "b38334bb60a52bb9cb34830185478c572ff6ca342f62dcd14fdac2cb1b526903",
+          "backend/experience/store.py": "9c97c82df990453212620742baf35a23ce4b3228c46e7b1c42964895664dc287",
+          "backend/experience/knowledge.py": "6b3295c8898045d8aba49063ad6d1a11d2a793314bb2b206aab01b7ef2918865",
+          "backend/experience/library.py": "2dd9026b2b26f6386fa183dd11357eac2ee643f37db9c6006e81cda82dad6139",
+          "backend/experience/retrieval.py": "16cede9813fba2fad5c8b28435d2f83e0bc80f571f2b794b91944e159fad394e",
+          "backend/experience/retrieval_evidence.py": "1b6c7baaf9fb3b36f4c02941b116320315ea675aaf6bb229ded91a9d6eded5c5",
+          "backend/experience/recovery.py": "bb0494c24054c08624a9f737172245b5a1df4f68ce711fa6c200679fdea757a1",
+          "backend/experience/automation.py": "5a00c4a0db1ef082ca44017f34448053deaae4276ed3a217cfafde4aa2ad0524",
+          "backend/experience/automatic_resolution.py": "245eff66f3bb3efb6b7f9cd0a125623faef78a7862a94cb2760020299dc6fbfd"
+        }
+      },
+      "source_hash_verification": {
+        "service_recorded_file_count": 5,
+        "registered_file_count": 10,
+        "current": {
+          "backend/agent/core.py": "a216cf34fd584f8603c4b9a1dc5f5f1c99ac93d09a2a510e230d3988c1c9c4c5",
+          "backend/agent/context.py": "b38334bb60a52bb9cb34830185478c572ff6ca342f62dcd14fdac2cb1b526903",
+          "backend/experience/store.py": "9c97c82df990453212620742baf35a23ce4b3228c46e7b1c42964895664dc287",
+          "backend/experience/knowledge.py": "6b3295c8898045d8aba49063ad6d1a11d2a793314bb2b206aab01b7ef2918865",
+          "backend/experience/library.py": "2dd9026b2b26f6386fa183dd11357eac2ee643f37db9c6006e81cda82dad6139",
+          "backend/experience/retrieval.py": "16cede9813fba2fad5c8b28435d2f83e0bc80f571f2b794b91944e159fad394e",
+          "backend/experience/retrieval_evidence.py": "1b6c7baaf9fb3b36f4c02941b116320315ea675aaf6bb229ded91a9d6eded5c5",
+          "backend/experience/recovery.py": "bb0494c24054c08624a9f737172245b5a1df4f68ce711fa6c200679fdea757a1",
+          "backend/experience/automation.py": "5a00c4a0db1ef082ca44017f34448053deaae4276ed3a217cfafde4aa2ad0524",
+          "backend/experience/automatic_resolution.py": "245eff66f3bb3efb6b7f9cd0a125623faef78a7862a94cb2760020299dc6fbfd"
+        }
+      },
+      "seed": {
+        "database": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\runs\\after1\\app.db",
+        "method": "SQLite online backup, source read-only; no row edits",
+        "backup_sha256": "5d001e09850079eea5742d1a59af21ba3721f6810ed093b6e2edc90fc145ab2a"
+      },
+      "findings": {
+        "real_provider_responses": true,
+        "successful_requests": 7,
+        "failed_requests": 0,
+        "request_count": 7,
+        "all_requests_match_this_project_configuration": true,
+        "reported_usage": {
+          "prompt_tokens": 49592,
+          "completion_tokens": 13512,
+          "total_tokens": 63104
+        },
+        "usage_complete": true,
+        "complete_total_tokens": 63104,
+        "all_request_reference_ids_and_hashes_empty": true,
+        "all_injection_events_match_empty_reference_list": true,
+        "historical_individual_leak_hash_present": false,
+        "historical_list_leak_hash_present": false,
+        "loaded_service_hashes_match_registered_safety_core": true,
+        "current_registered_10_core_files_unchanged": true,
+        "seed_provenance_core_matches": true
+      },
+      "model_requests": [
+        {
+          "phase": "decision",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 1683,
+          "response_id": "740b8774-32ae-447c-a610-5cdeb97272e8",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "tool_calls",
+          "usage": {
+            "prompt_tokens": 3072,
+            "completion_tokens": 119,
+            "total_tokens": 3191
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 1,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        },
+        {
+          "phase": "decision",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 1326,
+          "response_id": "e8bd54c2-64fc-4e22-801e-6817475501ab",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "tool_calls",
+          "usage": {
+            "prompt_tokens": 5308,
+            "completion_tokens": 160,
+            "total_tokens": 5468
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 2,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        },
+        {
+          "phase": "decision",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 5269,
+          "response_id": "952fe22e-965d-49d8-8b8c-19028b9ef3ab",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "tool_calls",
+          "usage": {
+            "prompt_tokens": 6868,
+            "completion_tokens": 957,
+            "total_tokens": 7825
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 3,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        },
+        {
+          "phase": "decision",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 3198,
+          "response_id": "3e551f6f-4a77-4dc8-b5bf-a18611a13ed6",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "tool_calls",
+          "usage": {
+            "prompt_tokens": 8076,
+            "completion_tokens": 725,
+            "total_tokens": 8801
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 4,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        },
+        {
+          "phase": "decision",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 987,
+          "response_id": "a85c143a-5a8c-4213-94ab-d2da6222a8b0",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "tool_calls",
+          "usage": {
+            "prompt_tokens": 9125,
+            "completion_tokens": 127,
+            "total_tokens": 9252
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 5,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        },
+        {
+          "phase": "decision",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 1647,
+          "response_id": "aae91cc4-a3c7-48bc-9fd5-2ab9631ba34f",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "stop",
+          "usage": {
+            "prompt_tokens": 9543,
+            "completion_tokens": 143,
+            "total_tokens": 9686
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 6,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        },
+        {
+          "phase": "extraction",
+          "attempt": 1,
+          "success": true,
+          "http_status": 200,
+          "duration_ms": 52147,
+          "response_id": "54f45767-37d5-4ab2-b9e5-a88967e1f350",
+          "requested_model": "deepseek-flash",
+          "returned_model": "deepseek-flash",
+          "finish_reason": "stop",
+          "usage": {
+            "prompt_tokens": 7600,
+            "completion_tokens": 11281,
+            "total_tokens": 18881
+          },
+          "transport_policy": "direct",
+          "request_experience_ids": [],
+          "request_experience_hashes": [],
+          "index_1based": 7,
+          "api_identity_matches_project_file": true,
+          "historical_leak_reference_hash_present": false
+        }
+      ],
+      "injection_events": [
+        {
+          "decision": 1,
+          "experience_ids": [],
+          "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "decision": 2,
+          "experience_ids": [],
+          "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "decision": 3,
+          "experience_ids": [],
+          "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "decision": 4,
+          "experience_ids": [],
+          "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "decision": 5,
+          "experience_ids": [],
+          "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        {
+          "decision": 6,
+          "experience_ids": [],
+          "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        }
+      ],
+      "retrieval_events": [
+        {
+          "error_types": [],
+          "experience_ids": [],
+          "reason": "no_failure_evidence"
+        },
+        {
+          "error_types": [
+            "AssertionError"
+          ],
+          "experience_ids": [],
+          "reason": "test_failure"
+        },
+        {
+          "error_types": [
+            "AssertionError"
+          ],
+          "experience_ids": [],
+          "reason": "test_failure"
+        },
+        {
+          "error_types": [
+            "AssertionError"
+          ],
+          "experience_ids": [],
+          "reason": "test_failure"
+        },
+        {
+          "error_types": [
+            "AssertionError"
+          ],
+          "experience_ids": [],
+          "reason": "test_failure"
+        },
+        {
+          "error_types": [
+            "AssertionError"
+          ],
+          "experience_ids": [],
+          "reason": "test_failure"
+        },
+        {
+          "error_types": [
+            "AssertionError"
+          ],
+          "experience_ids": [],
+          "reason": "test_failure"
+        },
+        {
+          "error_types": [],
+          "experience_ids": [],
+          "reason": "tests_passed"
+        }
+      ],
+      "actual_final_test_observations": [
+        {
+          "call_id": "6d46d35d-9ec8-40ff-a7bf-cb3df625dd28",
+          "tool_name": "run_tests",
+          "success": true,
+          "error_code": null,
+          "metadata": {
+            "exit_code": 0,
+            "duration_ms": 30571,
+            "truncated": false,
+            "changed_files": [
+              "src/_pytest/mark/structures.py"
+            ],
+            "runner": "pytest",
+            "tests": 275,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "error_types": [],
+            "test_failures": [],
+            "retrieved_experience_ids": [],
+            "final_verification": true
+          }
+        }
+      ],
+      "excluded_from_primary": true,
+      "limitation": "This supplementary run is excluded from the original 20-trial comparison. It seeds the current after1 database without editing experience or paused records. Later unknown relations already block the earlier 7ada source; therefore this run can verify the current repair flow and actual injected constraints, but does not reproduce the earlier c82 constraint leak or establish a controlled patch effect.",
+      "traceability_limits": [
+        "The current real after1 seed already blocks the earlier source through later reviews; this is not a recreation of the historical leak state or a controlled patch-effect estimate.",
+        "The request audit establishes provider responses and the reference_experiences field, not a provider-side billing statement or the model internal use of text.",
+        "Only registered product core files were hashed; uploaded project test integrity is audited separately by the case agent.",
+        "Service provenance records five loaded kernel source hashes; the safety record and unchanged current files cover ten registered source files. No in-process bytecode inspection was performed."
+      ]
+    },
+    "test_integrity": {
+      "state": "verified",
+      "checked": 1,
+      "unchanged": 1,
+      "records": [
+        {
+          "key": "safety1",
+          "task_id": "bf53e089-ba3a-4965-b5b8-5c42c47544c0",
+          "state": "verified",
+          "unchanged": true,
+          "source_manifest_matches": true,
+          "expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+          "actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+          "expected_test_files": 165,
+          "actual_test_files": 165,
+          "changed": [],
+          "added": [],
+          "removed": [],
+          "full_fixture_expected_files": 165,
+          "full_fixture_actual_files": 165,
+          "full_fixture_expected_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+          "full_fixture_actual_digest": "ea74d1e2e1f414882ef3852735b900be52af575afbd524b401410be7dc5cd951",
+          "full_fixture_changed": [],
+          "full_fixture_added": [],
+          "full_fixture_removed": []
+        }
+      ],
+      "method": "匹配上传manifest的inventory摘要；另以完整相对路径遍历tests/与testing/，补核target等fixture子目录，忽略缓存。"
+    }
+  },
+  "frozen_reference_integrity": [
+    {
+      "repetition": 1,
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\after1-retrieval-reference.db",
+      "actual_sha256": "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2",
+      "expected_sha256": [
+        "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2",
+        "b2d3f78b5a1150922aebd9e4aed570fd9a023f1df0626aa55c895fbf8fd018c2"
+      ],
+      "matches": true
+    },
+    {
+      "repetition": 2,
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\.cache\\real-update-comparison\\after2-retrieval-reference.db",
+      "actual_sha256": "9054735cad0762c6dc869f1114c99fe3ca54cd1e15e070fa6ce9875bd3430c1e",
+      "expected_sha256": [
+        "9054735cad0762c6dc869f1114c99fe3ca54cd1e15e070fa6ce9875bd3430c1e",
+        "9054735cad0762c6dc869f1114c99fe3ca54cd1e15e070fa6ce9875bd3430c1e"
+      ],
+      "matches": true
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\docs\\reports\\real-update-comparison-2026-11-15-assets\\after2-merge-before-conflict.png",
+      "caption": "第 2 轮：pytest 与 Sphinx 独立经验自动归纳共同原则；冲突发生前",
+      "sha256": "20a5954d8cc3338dacea49d9a0fab52e443993a9b51630f2cae3b774863f50eb"
+    },
+    {
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\docs\\reports\\real-update-comparison-2026-11-15-assets\\after2-merge-after-conflict.png",
+      "caption": "同一第 2 轮：后续冲突使上述共同原则 invalidated，暂停复用",
+      "sha256": "83e57759ad2db890b0a244d493a0be0a79225375bb4c37db0a60f132b3daa8d8"
+    },
+    {
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\docs\\reports\\real-update-comparison-2026-11-15-assets\\after1-conflict-matrix.png",
+      "caption": "第 1 轮：双方各自通过，四次交叉测试复现原始失败，系统自动隔离",
+      "sha256": "789aa5aa6d86b066684713a8fe7ac73a81a0bd48f40b54dac3afc3cf735c1f03"
+    },
+    {
+      "path": "D:\\中级实训\\self-evolving-coding-agent\\docs\\reports\\real-update-comparison-2026-11-15-assets\\after2-conflict-confirmation-reason.png",
+      "caption": "第 2 轮：函数接口无法可靠移植，交叉测试未运行，交用户确认",
+      "sha256": "50270eed4bcaafb29a66cd2a404acb45501887f6e71f87cfaf706bd272faf00f"
+    }
+  ],
+  "model_provenance_audit": {
+    "created_at": "2026-11-15T16:53:57.100532+00:00",
+    "formal_tasks": 20,
+    "all_tasks_observed": true,
+    "request_count": 377,
+    "background_requests": 7,
+    "configuration_source": "D:\\中级实训\\self-evolving-coding-agent\\.env",
+    "expected_origin": "https://api.deepseek.com",
+    "expected_model": "deepseek-flash",
+    "configuration_evidence": {
+      "request_configuration": 194,
+      "legacy_task_configuration": 183,
+      "unverified": 0
+    },
+    "all_available_configuration_matches": true,
+    "mismatches": [],
+    "usage_reported_requests": 377,
+    "reported_total_tokens": 10472460,
+    "provider_response_ids": 377,
+    "limitation": "Legacy requests do not contain per-request api_configuration. Their unchanged worker records the explicitly loaded project profile and validates URL/model; request audits independently record the requested/returned model and direct transport. No missing metadata is fabricated."
+  },
+  "main_comparison": {
+    "url": "http://127.0.0.1:5173/#/tasks/c8878919-c276-429f-89ef-0c561bc4cff7?compare=4339f2cc-79d4-4a9b-ae72-73ec864e5154,b1e243a0-8bd9-40b9-9934-d9e35942824b,7cca8258-685f-4409-8351-ce5e4edd56f8,35ee39ad-a773-4ffe-9a5c-4e162e95a526,0d51c7a7-642f-41f5-b243-37d335e75ec2,ca35c4eb-ca0e-47ee-aeb6-a08248bea7ac,39aff23b-7c4f-4a2f-89b5-dc824c57373a,f391fd5e-eacd-4488-b573-ec5ac498a18f,41b474fd-b443-4508-8ed9-9bca90a456f7,60d9c732-175f-4337-9151-3ff5e8cb4826,8a4b87b6-6ce8-49ec-9946-2947d48bd474,e1de3efe-715c-4655-8565-860c5b9ceb90",
+    "selected_task_ids": [
+      "4339f2cc-79d4-4a9b-ae72-73ec864e5154",
+      "b1e243a0-8bd9-40b9-9934-d9e35942824b",
+      "7cca8258-685f-4409-8351-ce5e4edd56f8",
+      "35ee39ad-a773-4ffe-9a5c-4e162e95a526",
+      "0d51c7a7-642f-41f5-b243-37d335e75ec2",
+      "ca35c4eb-ca0e-47ee-aeb6-a08248bea7ac",
+      "39aff23b-7c4f-4a2f-89b5-dc824c57373a",
+      "f391fd5e-eacd-4488-b573-ec5ac498a18f",
+      "41b474fd-b443-4508-8ed9-9bca90a456f7",
+      "60d9c732-175f-4337-9151-3ff5e8cb4826",
+      "8a4b87b6-6ce8-49ec-9946-2947d48bd474",
+      "e1de3efe-715c-4655-8565-860c5b9ceb90"
+    ],
+    "container_task_id": "c8878919-c276-429f-89ef-0c561bc4cff7",
+    "container_counted": false
+  },
+  "supplemental_updated_at": "2026-11-15T17:15:49.892488+00:00"
+}

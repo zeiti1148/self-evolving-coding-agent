@@ -14,6 +14,7 @@
   --nav-hover: #234654; --nav-active: #254e59; --nav-selected: #9be3df; --nav-line: #32515e;
   --code-bg: #192e3c; --code-ink: #e1edf3; --code-muted: #b0c3ce; --code-line: #38515f; --code-warning: #efd39b;
   --panel-shadow: 0 4px 18px #213f5110; --button-shadow: #087e8726;
+  --source-existing-bg: #f0f4fb; --source-existing-border: #bdcde4; --source-existing-ink: #365b88;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
@@ -28,6 +29,7 @@
   --nav-hover: #1d3541; --nav-active: #24454e; --nav-selected: #9be3df; --nav-line: #304651;
   --code-bg: #11212c; --code-ink: #e1edf3; --code-muted: #b0c3ce; --code-line: #354b59; --code-warning: #efd39b;
   --panel-shadow: 0 5px 20px #0000001f; --button-shadow: #00000026;
+  --source-existing-bg: #223247; --source-existing-border: #4c6686; --source-existing-ink: #b5d1f3;
 }
 
 /* Project uploads and test environment configuration. */
@@ -175,6 +177,12 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--focus); out
 .step-detail { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; }
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
+summary .disclosure-chevron { flex: 0 0 auto; transition: transform 180ms ease; }
+details[open] > summary .disclosure-chevron { transform: rotate(180deg); }
+details > summary .when-open { display: none; }
+details[open] > summary .when-open { display: inline; }
+details[open] > summary .when-closed { display: none; }
+@media (prefers-reduced-motion: reduce) { summary .disclosure-chevron { transition: none; } }
 .step-detail summary { padding: 18px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .step-detail summary > div { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .step-detail summary strong { font-size: 14px; }

@@ -15,9 +15,14 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
         matches=lambda s: (not language or s.language==language) and (not repository_id or s.repository_id==repository_id) and (not scope or s.scope==scope)
         visible=dict(sources)
         blocked=effective_rules(connection)
+        from .recovery import grant_snapshot, prerequisite_grants, public as recovery_public
+        grant_state=grant_snapshot(connection)
+        _,grants=grant_state
+        blocked -= grants.keys()
         groups=archive_groups(connection)
         archived={i for group in groups for i in group['source_ids']}
         rows=connection.execute(f'SELECT * FROM knowledge_rules WHERE id IN ({CURRENT_RULES}) ORDER BY created_at DESC,id').fetchall()
+        current_ids={row['id'] for row in rows}
         relations={(r[0],r[1]):r[2] for r in connection.execute('SELECT left_rule,right_rule,kind FROM knowledge_relations')}
         dependencies={}
         for parent,child in connection.execute('SELECT parent_id,child_id FROM knowledge_prerequisites'):
@@ -27,11 +32,12 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
         source_links={}
         for rule,identity in connection.execute('SELECT DISTINCT rule_id,experience_id FROM knowledge_sources'):
             if identity in sources:source_links.setdefault(rule,set()).add(identity)
-        cards=[];seen=set()
+        cards=[];seen=set();aliases={}
         for row in rows:
             identities=equivalents.get(row['id'],{row['id']})
             if identities & seen:continue
             seen.update(identities)
+            aliases.update({identity:row['id'] for identity in identities})
             ids=sorted(set().union(*(source_links.get(i,set()) for i in identities)))
             if not set(ids)&visible.keys() or set(ids)<=archived:continue
             data=json.loads(row['data']); issue=data['issue']
@@ -77,13 +83,12 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
                     reason='共同原则已通过来源引证与独立复核；只在列明条件下适用，目标项目仍须测试。'))
         # A scoped grant changes only target-bound retrieval. Broad conflicting
         # rules and their original decision history remain isolated.
-        from .recovery import active_grants, public as recovery_public
-        grants=active_grants(connection)
         restricted={r[0] for r in connection.execute('SELECT rule_id FROM knowledge_reuse_grants')}
         for card in cards:
             if card['id'] in restricted and card['id'] not in grants:
                 card.update(state='paused',reason='补充验证授权已失效或正在重新验证，当前暂停复用。')
         by_id={c['id']:c for c in cards};hidden=set()
+        by_id.update({identity:by_id[representative] for identity,representative in aliases.items() if representative in by_id})
         for rule_id,grant in grants.items():
             card=by_id.get(grant['card_id'])
             if not card:continue
@@ -95,9 +100,15 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
                 ids=sorted(set(card['source_ids']+replacement['source_ids']),key=lambda identifier:(sources[identifier].created_at,identifier))
                 card.update({k:v for k,v in replacement.items() if k not in {'id','kind','source_ids','sources','source_count','merged'}})
                 card.update(kind='validated',source_ids=ids,sources=[sources[i].model_dump(mode='json') for i in ids],source_count=len(ids),merged=True)
-                hidden.add(rule_id)
+                hidden.add(replacement['id'])
             card.update(state='active',reuse_mode='scoped',reuse_scope=recovered['scope'],
-                        reason=recovered['reason'],evidence_count=card['evidence_count']+len(recovered['runs']))
+                        reason=recovery_public(job,connection,grant_state=grant_state)['reason'],evidence_count=card['evidence_count']+len(recovered['runs']))
+        for rule_id,grant in prerequisite_grants(connection,grants).items():
+            card=by_id.get(rule_id)
+            if card:
+                card.update(state='active',reuse_mode='scoped',
+                    reuse_scope={key:grant[key] for key in ('project_id','project_label','repository_id','compatibility_key','source_revision','runner_hash')},
+                    reason='仅在相关补证授权的项目、版本与测试配置内，作为已验证规则的必要前置规则复用。')
         cards=[c for c in cards if c['id'] not in hidden]
         project_labels={p.repository_id:p.label for p in projects or []}
         for card in cards:
@@ -112,7 +123,7 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
             card['files']=issue.get('files',[]);card['symbols']=issue.get('symbols',[])
             job=connection.execute('SELECT * FROM knowledge_recoveries WHERE card_id=? ORDER BY created_at DESC LIMIT 1',(card['id'],)).fetchone()
             if job:
-                value=recovery_public(job,connection)
+                value=recovery_public(job,connection,grant_state=grant_state)
                 card['recovery']={k:value[k] for k in ('id','state','reason','version','task_id','created_at','updated_at')}
         all_cards=cards
         from collections import Counter
@@ -135,7 +146,8 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
         visible={i:s for i,s in sources.items() if i in visible_ids and matches(s)}
         latest=connection.execute('SELECT * FROM experience_history_scans ORDER BY created_at DESC LIMIT 1').fetchone()
         pending_reviews=sum(1 for r in connection.execute("SELECT * FROM knowledge_relations WHERE status='pending' AND kind IN ('unknown','conflict')")
-            if not {r['left_rule'],r['right_rule']} & {v[0] for v in connection.execute('SELECT rule_id FROM knowledge_pauses')}
+            if {r['left_rule'],r['right_rule']} <= current_ids
+            and not {r['left_rule'],r['right_rule']} & {v[0] for v in connection.execute('SELECT rule_id FROM knowledge_pauses')}
             and any(source_links.get(i,set())&visible.keys() for i in (r['left_rule'],r['right_rule'])))
         return dict(items=cards[offset:offset+limit] if limit is not None else cards,summary=dict(original_records=len(visible),knowledge_cards=len(summary_cards),
             active=sum(c['state']=='active' for c in summary_cards),paused=sum(c['state']=='paused' for c in summary_cards),

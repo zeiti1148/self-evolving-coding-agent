@@ -22,9 +22,29 @@ async function setup(api=client(),parent=false){
   const router=createRouter({history:createMemoryHistory(),routes:[{path:'/experiences',component:ExperiencesView},{path:'/',component:{template:'<div />'}}]})
   await router.push('/experiences');await router.isReady()
   const wrapper=mount(parent?ExperiencesView:ExperienceLibrary,{props:parent?{}:{filters:{},refreshKey:0},global:{plugins:[router],provide:{[apiContextKey as symbol]:{api,mock:false}}}})
-  await flushPromises();return{wrapper,api}
+  await flushPromises();return{wrapper,api,router}
 }
 describe('searchable knowledge catalog',()=>{
+  it('switches recovery identity when a normal card deep link changes in the same page',async()=>{
+    const api=client(),second={...structuredClone(data.items[0]!),id:ids[1]!,summary:'保持父类优先级顺序',title:'继承顺序修复',
+      source_ids:[ids[1]!],source_count:1,sources:[{...sources[1]!,task_summary:'继承顺序修复'}]}
+    vi.mocked(api.getExperienceLibrary!).mockResolvedValue({...structuredClone(data),items:[data.items[0]!,second]})
+    api.listExperienceRecovery=vi.fn().mockResolvedValue([])
+    const {wrapper,router}=await setup(api)
+    try{
+      await router.push({path:'/experiences',query:{view:'knowledge',card:data.items[0]!.id}});await flushPromises()
+      expect(wrapper.get('#knowledge-detail-title').text()).toBe(sources[0]!.task_summary)
+      expect(api.listExperienceRecovery).toHaveBeenLastCalledWith(data.items[0]!.id,expect.any(AbortSignal))
+      await router.push({path:'/experiences',query:{view:'knowledge',card:second.id}});await flushPromises()
+      expect(wrapper.get('#knowledge-detail-title').text()).toBe(second.sources[0]!.task_summary)
+      expect(wrapper.get('#knowledge-detail-title').text()).not.toContain(sources[0]!.task_summary)
+      expect(api.listExperienceRecovery).toHaveBeenLastCalledWith(second.id,expect.any(AbortSignal))
+      await router.push({path:'/experiences',query:{view:'knowledge'}});await flushPromises()
+      expect(wrapper.find('[data-testid="experience-recovery"]').exists()).toBe(false)
+      expect(api.createTask).not.toHaveBeenCalled()
+      expect(api.scanExperienceHistory).not.toHaveBeenCalled()
+    }finally{wrapper.unmount()}
+  })
   it('shows consolidated knowledge first and retains both original sources behind an explicit comparison',async()=>{
     const {wrapper,api}=await setup(client(),true)
     try{

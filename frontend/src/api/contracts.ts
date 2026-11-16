@@ -125,6 +125,21 @@ export interface TaskStatusResponse {
   started_at: string | null; finished_at: string | null; result: AgentResult | null; error_message: string | null
 }
 export interface TaskStepsResponse { task_id: string; status: TaskStatus; steps: TaskStep[] }
+export interface TokenUsageSummary {
+  total_tokens: number | null; reported_total_tokens: number; reported_requests: number; total_requests: number | null
+}
+export interface TaskMetrics {
+  task_id: string; task_url: string | null; status: TaskStatus; project_label: string | null
+  runtime_label: string | null; code_revision: string | null; comparison_group: string | null
+  repair_verified: boolean; final_tests_passed?: boolean | null
+  elapsed_ms: number | null; model_requests: number | null; token_usage: TokenUsageSummary
+  retrieval: { strategy: string | null; injected_requests: number | null; reference_count: number | null
+    events: { reason: string; error_types: string[]; experience_ids: string[] }[] }
+  experience: { state: string; elapsed_ms: number | null; model_requests: number | null; token_usage: TokenUsageSummary
+    before_count: number | null; after_count: number | null; merged_count: number | null
+    conflict_count: number | null; resolved_count: number | null; pending_confirmation_count: number | null
+    experience_ids: string[]; notice: string }
+}
 export interface TestRunEvidence {
   tool_call_id: string; sequence: number; runner: 'maven' | 'pytest' | 'go' | 'ctest'; tests: number
   passed: number; failures: number; errors: number; skipped: number
@@ -158,6 +173,8 @@ export interface AgentApi {
 
   createTask(request: TaskCreateRequest, signal?: AbortSignal): Promise<TaskCreateResponse>
   getTask(taskId: string, signal?: AbortSignal): Promise<TaskStatusResponse>
+  listTaskMetrics?(limit?: number, signal?: AbortSignal): Promise<TaskMetrics[]>
+  getTaskMetrics?(taskId: string, signal?: AbortSignal): Promise<TaskMetrics>
   getExperienceRetry?(taskId: string, signal?: AbortSignal): Promise<ExperienceRetryState>
   retryExperience?(taskId: string, signal?: AbortSignal): Promise<ExperienceRetryState>
   getSteps(taskId: string, signal?: AbortSignal): Promise<TaskStepsResponse>

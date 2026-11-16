@@ -29,6 +29,8 @@ class Settings:
     task_timeout: float = 600.0
     use_experience: bool = True
     enable_knowledge_models: bool = False
+    knowledge_automation_enabled: bool = True
+    task_metrics_registry: Path | None = None
     experience_retrieval_strategy: str = "contextual"
     python_executable: Path = field(default_factory=lambda: Path(sys.executable))
     project_definitions: dict[str, ProjectDefinition] = field(default_factory=dict)
@@ -116,6 +118,7 @@ class Settings:
             task_timeout=float(os.environ.get("TASK_TIMEOUT_SECONDS", "600")),
             use_experience=experience == "true",
             enable_knowledge_models=os.environ.get("KNOWLEDGE_MODELS_ENABLED", "true").lower() == "true",
+            task_metrics_registry=path("TASK_METRICS_REGISTRY", Path(os.environ["TASK_METRICS_REGISTRY"])) if os.environ.get("TASK_METRICS_REGISTRY") else None,
             experience_retrieval_strategy=os.environ.get("EXPERIENCE_RETRIEVAL_STRATEGY", "contextual").strip().lower(),
             python_executable=path("PYTHON_EXECUTABLE", Path(sys.executable)),
             project_definitions=definitions,

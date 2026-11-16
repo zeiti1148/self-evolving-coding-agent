@@ -64,18 +64,22 @@ def _retired(connection, identifier):
 
 
 def _plan(path, job):
+    from backend.projects import same_source_revision
+    from .local_equivalence import same_domain
     from .retrieval import lexical_candidates
     from .store import COLUMNS, decode_row, SUPERSEDED, RETIRED
     with connect(path) as connection:
         source = _source(connection, job['id'])
+        connection.create_function('same_source_revision', 2, same_source_revision, deterministic=True)
         # A strict ordering gives every pair one owner, including concurrent repairs.
-        where = ("json_extract(details,'$.language')=? AND json_extract(details,'$.repository_id')!=? "
+        where = ("json_extract(details,'$.language')=? AND (json_extract(details,'$.repository_id')!=? "
+                 "OR same_source_revision(json_extract(details,'$.source_revision'),?)) "
                  "AND json_extract(details,'$.schema_version')>=4 AND json_extract(details,'$.reuse_status')='active' "
                  "AND json_extract(details,'$.scope')='project' AND source_task_id!=? "
                  "AND (created_at<? OR (created_at=? AND id<?)) "
                  f"AND id NOT IN ({SUPERSEDED} UNION {RETIRED})")
         stamp = source.created_at.isoformat(timespec='microseconds')
-        params = (source.language, source.repository_id, source.source_task_id, stamp, stamp, source.id)
+        params = (source.language, source.repository_id, source.source_revision, source.source_task_id, stamp, stamp, source.id)
         total = connection.execute('SELECT count(*) FROM experiences WHERE '+where, params).fetchone()[0]
         rows = connection.execute(f'SELECT {COLUMNS} FROM experiences WHERE '+where+
                                   ' ORDER BY created_at DESC,id DESC LIMIT 200', params).fetchall()
@@ -97,6 +101,7 @@ def _plan(path, job):
             1/(60+ranks[item.id]) if item.id in ranks else 0,
             bool(errors.intersection(i.error_type for i in item.issues)), item.created_at, item.id), reverse=True)
         chosen = [item for item in ordered if item.source_task_id and not item.derived_from and not item.merged_from
+                  and (item.repository_id != source.repository_id or same_domain(source, item))
                   and item.evidence and all(e.tests > 0 and not (e.failures or e.errors or e.skipped)
                                            for e in item.evidence)][:MAX_CANDIDATES]
         connection.execute('BEGIN IMMEDIATE')
@@ -113,6 +118,19 @@ def _plan(path, job):
             connection.execute('INSERT OR IGNORE INTO experience_auto_links VALUES(?,?)', (job['id'], pair_id))
         connection.execute('UPDATE experience_auto_jobs SET candidates=?,candidate_total=? WHERE id=?',
                            (canonical([e.id for e in chosen]), total, job['id']))
+
+
+def reschedule_local_comparisons(path):
+    """One policy migration; keep completed pair results and all raw sources intact."""
+    from .local_equivalence import POLICY
+    with connect(path) as connection:
+        connection.execute('BEGIN IMMEDIATE')
+        previous = connection.execute("SELECT value FROM knowledge_meta WHERE key='automatic_candidate_policy'").fetchone()
+        if previous and previous[0] == POLICY:
+            return
+        connection.execute("UPDATE experience_auto_jobs SET state='pending',candidates=NULL,available_at=0,updated_at=? "
+                           "WHERE state='succeeded'", (now(),))
+        connection.execute("INSERT OR REPLACE INTO knowledge_meta VALUES('automatic_candidate_policy',?)", (POLICY,))
 
 
 def claim(path):
@@ -163,12 +181,21 @@ def process(path, job, llm_factory, conflict_verifier=None):
             _pair_result(path, job, pair, 'failed', '上次比较中断；请重试，已完成的比较不会重复调用模型。')
             continue
         identifiers = [pair['left_id'], pair['right_id']]
+        local = False
         with connect(path) as connection:
             if any(_retired(connection, identifier) for identifier in identifiers):
                 _pair_result(path, job, pair, 'rejected', '来源已被替代或停用，保留原始比较记录。')
                 continue
+            originals = [_source(connection, identifier) for identifier in identifiers]
+            local = originals[0].repository_id == originals[1].repository_id
+            pending = local and connection.execute("SELECT 1 FROM knowledge_rules r JOIN knowledge_sources s ON r.id=s.rule_id "
+                "WHERE s.experience_id IN (?,?) AND r.state='pending' LIMIT 1", identifiers).fetchone()
+            if pending or local and conflict_verifier and not conflict_verifier.ready([s.model_dump(mode='json') for s in originals]):
+                _pair_result(path, job, pair, 'waiting', '等待来源任务快照冻结与同项目规则整理。')
+                continue
             try:
-                _sources(connection, identifiers)
+                if not local:
+                    _sources(connection, identifiers)
             except ValueError:
                 paused = connection.execute('SELECT 1 FROM knowledge_pauses p JOIN knowledge_sources s ON p.rule_id=s.rule_id '
                                             'WHERE s.experience_id IN (?,?) LIMIT 1', identifiers).fetchone()
@@ -180,6 +207,11 @@ def process(path, job, llm_factory, conflict_verifier=None):
         model = None
         try:
             model = llm_factory()
+            if local:
+                from .local_equivalence import compare
+                result = compare(path, job, pair, model, conflict_verifier)
+                _pair_result(path, job, pair, result['state'], result['reason'], result)
+                break
             from .cross_conflicts import detect
             conflict_check = detect(path, job, pair, model)
             if conflict_check['conflict_ids']:
@@ -218,7 +250,7 @@ def process(path, job, llm_factory, conflict_verifier=None):
              'waiting' if 'waiting' in states or pending_review else 'failed' if 'failed' in states else 'succeeded')
     notice = {'pending': '继续比较已有经验。', 'waiting': '等待后台整理或冲突审阅，处理后自动继续。',
               'failed': '部分比较未完成，可单独重试经验比较。',
-              'succeeded': '比较完成。' if states else '暂无可比较的其他项目经验；同仓库规则仍自动整理。'}[state]
+              'succeeded': '比较完成。' if states else '当前没有更早且符合比较条件的经验；后续修复会自动与本条比较。'}[state]
     _finish(path, job, state, notice)
 
 
@@ -258,39 +290,48 @@ def review_changed(connection, rule_ids):
             (now(), identifier, identifier, identifier))
 
 
-def _local_changes(path, identifier):
+def _local_changes(path, identifier, *, connection, blocked):
     from .knowledge import source_status, provenance_page
     from .reviews import read, history
     changes, seen = [], set()
-    status = source_status(path, identifier)
-    with connect(path) as connection:
-        for rule in status['rules']:
-            if rule['state'] != 'ready' or rule['effective_status'] != 'active':
+    status = source_status(path, identifier, connection=connection, blocked=blocked)
+    for rule in status['rules']:
+        if rule['state'] != 'ready' or rule['effective_status'] != 'active':
+            continue
+        provenance = provenance_page(path, rule['id'], limit=20, connection=connection, blocked=blocked)
+        ids = provenance['source_ids']
+        if len(ids) < 2 or tuple(ids) in seen:
+            continue
+        seen.add(tuple(ids))
+        sources = [_source(connection, i).model_dump(mode='json') for i in ids]
+        changes.append(dict(id=rule['id'], kind='equivalent_rules', state='merged', before=sources,
+            after=dict(title='共同修复规则', **rule['data']), reason='相同或已验证等价的规则已合并引用，原始记录和独立验证证据保留。',
+            evidence_count=provenance['evidence_count'], more_sources=provenance['next_offset'] is not None))
+    rows = connection.execute("SELECT DISTINCT r.* FROM knowledge_relations r JOIN knowledge_sources s "
+        "ON s.rule_id IN (r.left_rule,r.right_rule) WHERE s.experience_id=? "
+        "AND (r.kind IN ('unknown','conflict') OR r.status='resolved') ORDER BY r.created_at DESC LIMIT 20",
+        (identifier,)).fetchall()
+    for row in rows:
+        if json.loads(row['details']).get('policy') == 'same-project-evidence-equivalence-v1' and row['kind']=='equivalent':
+            merged = next((c for c in changes if c['kind']=='equivalent_rules'
+                           and {s.id for s in read(connection, row).sources} <= {s['id'] for s in c['before']}), None)
+            if merged:
+                merged['history'] = history(path, row['id'], connection=connection)
+                merged['reason'] = row['note'] or merged['reason']
                 continue
-            provenance = provenance_page(path, rule['id'], limit=20)
-            ids = provenance['source_ids']
-            if len(ids) < 2 or tuple(ids) in seen:
-                continue
-            seen.add(tuple(ids))
-            sources = [_source(connection, i).model_dump(mode='json') for i in ids]
-            changes.append(dict(id=rule['id'], kind='equivalent_rules', state='merged', before=sources,
-                after=dict(title='共同修复规则', **rule['data']), reason='相同或已验证等价的规则已合并引用，原始记录和独立验证证据保留。',
-                evidence_count=provenance['evidence_count'], more_sources=provenance['next_offset'] is not None))
-        rows = connection.execute("SELECT DISTINCT r.* FROM knowledge_relations r JOIN knowledge_sources s "
-            "ON s.rule_id IN (r.left_rule,r.right_rule) WHERE s.experience_id=? "
-            "AND (r.kind IN ('unknown','conflict') OR r.status='resolved') ORDER BY r.created_at DESC LIMIT 20",
-            (identifier,)).fetchall()
-        for row in rows:
-            review = read(connection, row)
-            changes.append(dict(id=row['id'], kind='review', state=review.status,
-                before=[s.model_dump(mode='json') for s in review.sources], after=None,
-                reason=json.loads(row['details']).get('reason', ''), review=review.model_dump(mode='json'),
-                history=history(path, row['id'])))
+        review = read(connection, row)
+        changes.append(dict(id=row['id'], kind='review', state=review.status,
+            before=[s.model_dump(mode='json') for s in review.sources], after=None,
+            reason=json.loads(row['details']).get('reason', ''), review=review.model_dump(mode='json'),
+            history=history(path, row['id'], connection=connection)))
     return changes, any(r['state'] == 'pending' for r in status['rules'])
 
 
 def feed(path, *, limit=5, offset=0, language=None, repository_id=None, scope=None, experience_id=None):
     from .principles import current_principle
+    from .database import read_only
+    from .knowledge import effective_rules
+    from .recovery import active_grants
     if scope == 'global':
         return {'items': [], 'next_offset': None}
     clauses, params = [], []
@@ -300,31 +341,42 @@ def feed(path, *, limit=5, offset=0, language=None, repository_id=None, scope=No
     if experience_id:
         clauses.append('j.id=?'); params.append(experience_id)
     where = ' WHERE '+' AND '.join(clauses) if clauses else ''
-    with connect(path) as connection:
+    with read_only(path) as connection:
+        connection.execute('BEGIN')
         jobs = connection.execute('SELECT j.* FROM experience_auto_jobs j JOIN experiences e ON e.id=j.id'+where+
                                   ' ORDER BY j.created_at DESC,j.id DESC LIMIT ? OFFSET ?', (*params, limit+1, offset)).fetchall()
-    result = []
-    for job in jobs[:limit]:
-        changes, local_pending = _local_changes(path, job['id'])
-        with connect(path) as connection:
+        # Check evidence once for this response, on the same database snapshot.
+        # Do not reuse this result across requests or on the repair retrieval path.
+        blocked = effective_rules(connection) - active_grants(connection).keys() if jobs[:limit] else set()
+        result = []
+        for job in jobs[:limit]:
+            changes, local_pending = _local_changes(path, job['id'], connection=connection, blocked=blocked)
             source = _source(connection, job['id'])
             pairs = connection.execute('SELECT p.* FROM experience_auto_pairs p JOIN experience_auto_links l ON p.id=l.pair_id '
                                        'WHERE l.job_id=? ORDER BY p.id', (job['id'],)).fetchall()
-        for pair in pairs:
-            value = json.loads(pair['result']) if pair['result'] else {}
-            if value.get('conflict_check', {}).get('conflict_ids'):
-                continue  # The normal review above is the single source of displayed resolution state.
-            principle = current_principle(path, value['id']) if pair['state'] == 'succeeded' else None
-            state = ('merged' if principle else 'invalidated') if pair['state'] == 'succeeded' else pair['state']
-            changes.append(dict(id=pair['id'], kind='shared_principle', state=state, before=json.loads(pair['inputs']),
-                after=principle, reason=pair['notice'] if state != 'invalidated' else '来源已变更、停用或有待审阅规则；历史合并当前不可复用。',
-                proposal=value.get('proposal'), review_result=value.get('review')))
-        selected = len(json.loads(job['candidates'])) if job['candidates'] else 0
-        result.append(dict(id=job['id'], source=source.model_dump(mode='json'), state=job['state'],
-            notice=job['notice'], created_at=job['created_at'], updated_at=job['updated_at'],
-            local_pending=local_pending, candidate_total=job['candidate_total'], selected_candidates=selected,
-            deferred_candidates=max(0, job['candidate_total']-selected), changes=changes))
-    return {'items': result, 'next_offset': offset+limit if len(jobs)>limit else None}
+            for pair in pairs:
+                value = json.loads(pair['result']) if pair['result'] else {}
+                inputs = json.loads(pair['inputs'])
+                if inputs[0]['repository_id'] == inputs[1]['repository_id']:
+                    already_merged = any(c['state']=='merged' and {s['id'] for s in inputs} <= {s['id'] for s in c['before']}
+                                         for c in changes)
+                    if not value.get('relation_ids') and not already_merged:
+                        changes.append(dict(id=pair['id'], kind='equivalent_rules', state=pair['state'],
+                            before=inputs, after=None, reason=pair['notice']))
+                    continue  # Canonical provenance and normal decision history above are authoritative.
+                if value.get('conflict_check', {}).get('conflict_ids'):
+                    continue  # The normal review above is the single source of displayed resolution state.
+                principle = current_principle(path, value['id'], connection=connection) if pair['state'] == 'succeeded' else None
+                state = ('merged' if principle else 'invalidated') if pair['state'] == 'succeeded' else pair['state']
+                changes.append(dict(id=pair['id'], kind='shared_principle', state=state, before=json.loads(pair['inputs']),
+                    after=principle, reason=pair['notice'] if state != 'invalidated' else '来源已变更、停用或有待审阅规则；历史合并当前不可复用。',
+                    proposal=value.get('proposal'), review_result=value.get('review')))
+            selected = len(json.loads(job['candidates'])) if job['candidates'] else 0
+            result.append(dict(id=job['id'], source=source.model_dump(mode='json'), state=job['state'],
+                notice=job['notice'], created_at=job['created_at'], updated_at=job['updated_at'],
+                local_pending=local_pending, candidate_total=job['candidate_total'], selected_candidates=selected,
+                deferred_candidates=max(0, job['candidate_total']-selected), changes=changes))
+        return {'items': result, 'next_offset': offset+limit if len(jobs)>limit else None}
 
 
 class AutomaticMergeWorker:
@@ -336,6 +388,7 @@ class AutomaticMergeWorker:
         self.thread = threading.Thread(target=self.run, name='experience-auto-merge', daemon=True)
 
     def start(self):
+        reschedule_local_comparisons(self.path)
         self.thread.start()
 
     def close(self):
