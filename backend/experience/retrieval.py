@@ -76,9 +76,9 @@ def retrieve(path, query='', *, language, repository_id, error_types, capabiliti
             entries.append((dict(row),data))
     vector_scores={}
     if query and embedding_rows:
-        import numpy as np
         vector=semantic.embed([query],query=True)
         if vector is not None:
+            import numpy as np
             vector_scores={r[0]:float(np.frombuffer(r[1],dtype='float32') @ vector[0]) for r in embedding_rows}
     vector_rank={key:i for i,(key,_) in enumerate(sorted(vector_scores.items(),key=lambda v:v[1],reverse=True)[:50])}
     lexical_rank={key:i for i,key in enumerate(lexical)}

@@ -1,4 +1,5 @@
 """Temporary rule/grant fixtures exercise isolation, never live experiment data."""
+import builtins
 import hashlib
 import json
 from pathlib import Path
@@ -222,7 +223,37 @@ def test_shared_context_grant_rejects_changed_dependency_provenance(bundle,tmp_p
     with connect(store.database_path) as db:assert safe not in active_grants(db)
 
 
-def test_new_pause_between_retrieval_snapshots_cannot_leak_a_sibling(bundle):
+@pytest.fixture
+def without_numpy(monkeypatch):
+    original_import=builtins.__import__
+    def unavailable(name,*args,**kwargs):
+        if name=='numpy' or name.startswith('numpy.'):
+            raise ModuleNotFoundError("No module named 'numpy'",name='numpy')
+        return original_import(name,*args,**kwargs)
+    monkeypatch.setattr(builtins,'__import__',unavailable)
+
+
+def test_unavailable_embedding_keeps_lexical_results_without_numpy(bundle,without_numpy):
+    store,original,_,_=bundle
+    safe,_=rules(store,original)
+    class UnavailableEmbedding:
+        available=True
+        version='unit-unavailable'
+        calls=0
+        def embed(self,*args,**kwargs):
+            self.calls+=1
+            return None
+    semantic=UnavailableEmbedding()
+    expected=reference(store,query='marks')
+    assert expected
+    with connect(store.database_path) as db:
+        db.execute('INSERT INTO knowledge_embeddings VALUES(?,?,?)',(safe,semantic.version,b''))
+    assert retrieve(store.database_path,'marks',language='python',repository_id=original.repository_id,
+                    error_types=[],semantic=semantic)==expected
+    assert semantic.calls==1
+
+
+def test_new_pause_between_retrieval_snapshots_cannot_leak_a_sibling(bundle,without_numpy):
     store,original,opposing,_=bundle
     safe,order=rules(store,original);review=relation(store,order,rules(store,opposing)[0],'compatible')
     class PauseDuringEmbedding:
