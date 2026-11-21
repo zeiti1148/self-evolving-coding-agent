@@ -38,7 +38,12 @@ def accepts_path(language, relative):
 
 def changed(before_text, after_text, language, qualified):
     """True when the named target exists in both versions with a different body."""
-    return declaration(before_text, language, qualified) != declaration(after_text, language, qualified)
+    if language == 'python':
+        return (body_identity(function(ast.parse(before_text), qualified))
+                != body_identity(function(ast.parse(after_text), qualified)))
+    before = _locate(before_text, language, qualified)
+    after = _locate(after_text, language, qualified)
+    return _body_text(before_text, before) != _body_text(after_text, after)
 
 
 def transplant(target_text, donor_text, language, qualified):
@@ -162,6 +167,11 @@ def _declaration(text, node):
     body = node.child_by_field_name('body')
     end = body.start_byte if body is not None else node.end_byte
     return ' '.join(text[node.start_byte:end].split())
+
+
+def _body_text(text, node):
+    body = node.child_by_field_name('body')
+    return text[body.start_byte:body.end_byte] if body is not None else ''
 
 
 def _enclosing(node):

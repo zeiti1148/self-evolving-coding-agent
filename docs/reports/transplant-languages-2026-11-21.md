@@ -35,12 +35,33 @@
 - C++：成员函数拼接成功；模板成员明确拒绝，转人工。
 - 命名一致：同一份源码在 `qualified_names()` 与 `grounding.symbols()` 下结果相同；无法解析时都返回空集合（文件范围）。
 
+## 2026-11-21 追加：真实 Maven 交叉验证（Java）
+
+新增 `backend/tests/test_java_conflict_verification.py`，默认跳过（`RUN_MAVEN_CONFLICT=1` 才执行），避免拖慢 CI。它构造两个真实 Maven 项目，各自修好同一个方法但行为相反：
+
+- 项目 0：`Converter.convert` 返回 1，测试断言 `convert(1) == 1`。
+- 项目 1：`Converter.convert` 返回 2，测试断言 `convert(1) == 2`。
+- 修复前两者都不通过实测，修复后各自通过；随后用 `ConflictVerifier.verify` 对 `src/main/java/demo/Converter.java#Converter.convert` 做 2 次自测 + 4 次交叉移植。
+
+本机实测（41.9 秒，全部为真实 Maven 执行）：
+
+| 结果 | 次数 | 说明 |
+| --- | ---: | --- |
+| 自测通过 | 2 | 各自实现通过自己的完整测试 |
+| 交叉失败 | 4 | 交换实现后失败 1 项、无错误、无跳过，且复现了来源的原始失败 |
+| 用例总数 | 每轮 1 项 | 与项目测试配置一致 |
+
+过程中修掉了两个真实缺陷：
+
+1. `transplant.changed()` 原先比较的是**签名**而不是函数体，导致"经验声称的目标没有对应实际源码修改"被误判。现在 Python 比较函数体身份，其他语言比较 body 字节区间。
+2. Windows `MAX_PATH`：pytest 的 `tmp_path` 加上任务 UUID 后，Maven 的 `target/surefire-reports` 路径超过 260 字符，`rglob` 抛错。测试改用短工作目录；**这是测试夹具的规避，生产环境的 workspace_root 仍是配置项，长路径场景尚未处理**。
+
 ## 限制
 
-- 没有 Java/Go/C++ 的真实工程冲突样例。当前证据只到"受控片段能定位、能拼接、能拒绝"，不能推断真实项目的冲突检出率。
+- 真实样例目前只有 Java 且是受控小项目；Go/C++ 仍只有单元级片段证据，不能推断真实项目的冲突检出率。
 - 宏展开、跨文件声明不在支持范围内。
 - 语法包属于可选依赖（`requirements-semantic.txt`）。未安装时这些语言一律走人工确认，功能降级但不会崩溃。
-- 本轮没有真实模型调用。
+- Windows 长路径问题只在测试夹具里规避，未在生产路径上解决。
 
 ## 2026-11-21 追加：重载消歧
 
