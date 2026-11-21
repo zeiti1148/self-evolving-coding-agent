@@ -66,12 +66,22 @@
 
 本机实测：**16.6 秒通过**，2 次自测通过、4 次交叉失败（各失败 1 项、无错误、无跳过），且全部复现来源的原始失败。Go 不需要额外构建工具，因此比 Java 快约 25 秒。
 
+## 2026-11-21 追加：C++ 原生运行链路修复
+
+装上 `requirements-native.txt` 里的 `cmake` / `ninja` 之后，此前一直失败（缺工具链）的 C++ 用例暴露出三个真实缺陷，均已修复：
+
+1. **生成器选择错误**：运行器只要发现 `ninja` 就用 Ninja 生成器，但 Ninja 不会像 Visual Studio 生成器那样自行发现已安装的工具链，于是 `No CMAKE_CXX_COMPILER could be found`。现在只有 PATH 上确实存在 `g++` / `clang++` / `cl` 时才用 Ninja。
+2. **环境变量过滤过严**：`run_process` 的白名单缺少 `SYSTEMDRIVE`，CMake 因此无法识别 MSVC 工具集；表现为 configure 成功但"编译器未识别"。已把 `SYSTEMDRIVE` 加入白名单，并补回归（同时确认 `LLM_API_KEY` 仍不会传给项目进程）。
+3. **Windows 深路径**：pytest 的 `tmp_path` 加上工作副本后，MSBuild 编译中间产物路径超限。测试改用短工作目录；**生产环境的长路径仍未处理**，这条已写进限制。
+
+修复后 `test_real_native_runner_failure_then_fix[cpp]` 通过（此前每轮全量回归都带 1 个失败）：2 项测试、1 失败为基线、ctest 正确返回 `TEST_FAILED` 而不是 `COMMAND_FAILED`。
+
 ## 限制
 
-- 真实样例覆盖 Java 与 Go；C++ 仍只有单元级片段证据（本机缺 `cmake`），不能推断真实项目的冲突检出率。
+- 真实冲突交叉验证覆盖 Java 与 Go；C++ 的原生**测试运行**已跑通，但还没有构造 C++ 的"同符号不同行为"交叉验证样例，因此不能推断 C++ 的冲突检出率。
 - 宏展开、跨文件声明不在支持范围内。
 - 语法包属于可选依赖（`requirements-semantic.txt`）。未安装时这些语言一律走人工确认，功能降级但不会崩溃。
-- Windows 长路径问题只在 Java 测试夹具里规避（Go 路径更短，未触发），生产路径未处理。
+- Windows 长路径问题只在测试夹具里规避（Java、C++ 用例），生产路径未处理。
 
 ## 2026-11-21 追加：重载消歧
 

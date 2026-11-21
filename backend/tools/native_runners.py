@@ -73,9 +73,13 @@ def run_native_tests(service, record, cwd, timeout, runner):
         except ApplicationError:
             ninja = None
         if ninja:
-            configure += ['-G', 'Ninja', '-DCMAKE_MAKE_PROGRAM=' + ninja]
-            if shutil.which('g++') and not shutil.which('cl'):
-                configure += ['-DCMAKE_CXX_COMPILER=' + shutil.which('g++')]
+            # Ninja does not discover an installed toolchain on its own: without a
+            # compiler on PATH it fails before the default generator would.
+            compiler = next((shutil.which(name) for name in ('g++', 'clang++', 'cl') if shutil.which(name)), None)
+            if compiler:
+                configure += ['-G', 'Ninja', '-DCMAKE_MAKE_PROGRAM=' + ninja]
+                cxx = compiler if not compiler.endswith('cl.exe') else compiler
+                configure += ['-DCMAKE_CXX_COMPILER=' + cxx]
                 if shutil.which('gcc'):
                     configure += ['-DCMAKE_C_COMPILER=' + shutil.which('gcc')]
     commands = [configure, [cmake, '--build', str(build), '--config', 'Debug', '--parallel', '2'],
