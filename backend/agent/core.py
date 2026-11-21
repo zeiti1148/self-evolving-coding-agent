@@ -37,7 +37,7 @@ literal values, file paths, exception names, tool arguments and identifiers exac
 class Agent:
     def __init__(self, llm: LLM, execute_tool: Callable, experience_store, *, use_experience: bool = True,
                  timeout_seconds: float = 600, verify_before: bool = False,
-                 experience_format="full", retrieval_strategy="contextual"):
+                 experience_format="full", retrieval_strategy="contextual", compact_after_first=False):
         validate_reference_options(experience_format, retrieval_strategy)
         self.llm = llm
         self.execute_tool = execute_tool
@@ -45,8 +45,16 @@ class Agent:
         self.use_experience = use_experience
         self.timeout_seconds = timeout_seconds
         self.experience_format, self.retrieval_strategy = experience_format, retrieval_strategy
+        # Contextual retrieval re-sends the same rules every round; compact drops
+        # supporting metadata from round two onward without changing conditions.
+        self.compact_after_first = compact_after_first
         self.last_run_audit: dict = {}
         self.verify_before = verify_before
+
+    def representation(self, decisions: int) -> str:
+        if self.compact_after_first and decisions > 1:
+            return 'compact'
+        return self.experience_format
 
     def run(self, request: AgentRequest, *, on_step: Callable[[TaskStep], None] | None = None) -> AgentResult:
         calls: list[ToolCall] = []
@@ -69,10 +77,11 @@ class Agent:
             if value <= 0:
                 raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
             return value
-        def retrieve() -> list[dict]:
+        def retrieve(representation: str | None = None) -> list[dict]:
             nonlocal retrieved_ids, retrieval_error
             if not self.use_experience:
                 return []
+            representation = representation or self.experience_format
             try:
                 # The flag describes the latest attempt: a later success must not be
                 # read as "the last retrieval failed".
@@ -86,7 +95,7 @@ class Agent:
                         retrieval_events.append({"error_types": current_errors, "experience_ids": [], "reason": reason})
                         return []
                 if hasattr(self.experiences, "retrieve_model_references"):
-                    references = [format_model_reference(entry, self.experience_format)
+                    references = [format_model_reference(entry, representation)
                         for entry in self.experiences.retrieve_model_references(
                             query, language=request.language, repository_id=request.repository_id,
                             error_types=current_errors, limit=reference_limit, character_budget=character_budget,
@@ -94,7 +103,7 @@ class Agent:
                             compatibility_key=request.experience_contract, source_revision=request.source_revision,
                             runner_hash=request.runner_hash)]
                 else:
-                    references = [to_model_reference(entry, self.experience_format)
+                    references = [to_model_reference(entry, representation)
                         for entry in self.experiences.retrieve_experiences(
                             query, language=request.language, repository_id=request.repository_id,
                             error_types=current_errors, limit=reference_limit, capabilities=request.capabilities)]
@@ -190,7 +199,8 @@ class Agent:
                 decisions += 1
                 # Recheck eligibility at each model boundary; a concurrent merge/publication can supersede references.
                 payload = json.loads(messages[1]["content"])
-                refreshed = retrieve()
+                representation = self.representation(decisions)
+                refreshed = retrieve(representation)
                 # A failed retrieval is not a withdrawal: keep what the model already
                 # saw. A successful retrieval always decides the eligible set.
                 if not (retrieval_error and not refreshed):
@@ -199,6 +209,7 @@ class Agent:
                 messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
                 injected = json.dumps(payload["reference_experiences"], ensure_ascii=False)
                 injection_events.append({"decision": decisions,
+                                         "representation": representation,
                                          "experience_ids": [entry["id"] for entry in payload["reference_experiences"]],
                                          "reference_limit": reference_limit,
                                          "character_budget": character_budget,

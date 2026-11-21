@@ -81,7 +81,7 @@ def wait_ready(port, deadline):
     return False
 
 
-def run_arm(arm, dry, revision):
+def run_arm(arm, dry, revision, compact=False):
     folder = OUT / arm
     database = folder / 'app.db'
     if dry:
@@ -92,6 +92,7 @@ def run_arm(arm, dry, revision):
     ids, rules = seed(database, revision)
     env = dict(os.environ, DATABASE_URL='sqlite:///' + str(database).replace('\\', '/'),
                EXPERIENCE_RETRIEVAL_STRATEGY=arm, LLM_CONFIG_SOURCE='project',
+               EXPERIENCE_COMPACT_AFTER_FIRST='true' if compact else 'false',
                LLM_CONFIG_FILE=str(ROOT / '.env'), PYTHONIOENCODING='utf-8', PYTHONUNBUFFERED='1')
     log = open(folder / 'server.log', 'ab')
     server = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'backend.api.main:app', '--host', '127.0.0.1',
@@ -144,6 +145,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--live', action='store_true')
     parser.add_argument('--project', default=PROJECT, help='registered project id to repair')
+    parser.add_argument('--arms', default='contextual,adaptive', help='comma separated arms to run')
+    parser.add_argument('--compact-after-first', action='store_true',
+                        help='enable EXPERIENCE_COMPACT_AFTER_FIRST for the arm services')
     options = parser.parse_args()
     PROJECT = options.project
     OUT.mkdir(parents=True, exist_ok=True)
@@ -156,9 +160,9 @@ def main():
         print('dry run: no service started, no model call made')
         return 0
     results = []
-    for arm in ('contextual', 'adaptive'):
+    for arm in [value.strip() for value in options.arms.split(',') if value.strip()]:
         print(f'running {arm} ...', flush=True)
-        value = run_arm(arm, dry=False, revision=revision)
+        value = run_arm(arm, dry=False, revision=revision, compact=options.compact_after_first)
         results.append(value)
         (OUT / f'{arm}.json').write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding='utf-8')
         print(json.dumps({k: value[k] for k in ('arm', 'status', 'elapsed_ms', 'token_usage')}, ensure_ascii=False))

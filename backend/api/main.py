@@ -136,7 +136,8 @@ def create_app(settings: Settings | None = None, *, llm_factory=None, agent_fact
                 agent = agent_factory(task_tools, experiences) if agent_factory else Agent(
                     factory(), task_tools.execute_tool, experiences, use_experience=settings.use_experience,
                     timeout_seconds=settings.task_timeout, verify_before=project.origin == 'upload',
-                    retrieval_strategy=settings.experience_retrieval_strategy)
+                    retrieval_strategy=settings.experience_retrieval_strategy,
+                    compact_after_first=settings.experience_compact_after_first)
             callbacks = {"on_step": lambda step: tasks.append(task_id, step)}
             if request.execution_mode == "multi":
                 callbacks["on_event"] = lambda event: tasks.append_agent_event(task_id, event)

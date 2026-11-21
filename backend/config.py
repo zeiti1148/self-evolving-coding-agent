@@ -32,6 +32,10 @@ class Settings:
     knowledge_automation_enabled: bool = True
     task_metrics_registry: Path | None = None
     experience_retrieval_strategy: str = "contextual"
+    # Contextual retrieval re-sends the same rules every round; when enabled, only
+    # the first decision carries the full reference and later ones drop supporting
+    # metadata. Off by default so existing behaviour is unchanged.
+    experience_compact_after_first: bool = False
     python_executable: Path = field(default_factory=lambda: Path(sys.executable))
     project_definitions: dict[str, ProjectDefinition] = field(default_factory=dict)
     projects: dict[str, Path] = field(default_factory=lambda: {
@@ -120,6 +124,7 @@ class Settings:
             enable_knowledge_models=os.environ.get("KNOWLEDGE_MODELS_ENABLED", "true").lower() == "true",
             task_metrics_registry=path("TASK_METRICS_REGISTRY", Path(os.environ["TASK_METRICS_REGISTRY"])) if os.environ.get("TASK_METRICS_REGISTRY") else None,
             experience_retrieval_strategy=os.environ.get("EXPERIENCE_RETRIEVAL_STRATEGY", "contextual").strip().lower(),
+        experience_compact_after_first=os.environ.get("EXPERIENCE_COMPACT_AFTER_FIRST", "false").strip().lower() == "true",
             python_executable=path("PYTHON_EXECUTABLE", Path(sys.executable)),
             project_definitions=definitions,
             projects=projects,
