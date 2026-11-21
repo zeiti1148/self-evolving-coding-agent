@@ -66,27 +66,33 @@ def evaluate(cases, root):
             build(store, spec)
         source = build(store, case['source'])
         scan(store)
+        # Same error type or not: the two groups answer different questions.
+        group = 'same-type' if case['source']['error_type'] == case['partner']['error_type'] else 'cross-type'
         for strategy, lexical in (('production', True), ('no-lexical', False)):
             started = time.perf_counter()
             order = [item.id for item in rank(store.database_path, source, lexical=lexical)]
             elapsed = (time.perf_counter() - started) * 1000
-            rows.append(dict(case=case['id'], strategy=strategy, candidates=len(order),
+            rows.append(dict(case=case['id'], group=group, strategy=strategy, candidates=len(order),
                              rank=order.index(partner.id) + 1 if partner.id in order else None,
                              expected_top=case['expect'].get('top'), ms=round(elapsed, 1)))
     return rows
 
 
 def summary(rows):
+    """Per group and strategy: mixed averages hide the effect of the error-type signal."""
     result = {}
-    for strategy in sorted({row['strategy'] for row in rows}):
-        subset = [row for row in rows if row['strategy'] == strategy]
-        hit = [row for row in subset if row['rank'] is not None]
-        result[strategy] = dict(
-            cases=len(subset), eligible=len(hit),
-            recall_at_1=sum(row['rank'] <= 1 for row in hit),
-            recall_at_5=sum(row['rank'] <= min(5, MAX_CANDIDATES) for row in hit),
-            mean_rank=round(sum(row['rank'] for row in hit) / len(hit), 2) if hit else None,
-            median_ms=round(sorted(row['ms'] for row in subset)[len(subset) // 2], 1))
+    for group in sorted({row['group'] for row in rows}):
+        for strategy in sorted({row['strategy'] for row in rows}):
+            subset = [row for row in rows if row['strategy'] == strategy and row['group'] == group]
+            if not subset:
+                continue
+            hit = [row for row in subset if row['rank'] is not None]
+            result[f'{group}/{strategy}'] = dict(
+                group=group, strategy=strategy, cases=len(subset), eligible=len(hit),
+                recall_at_1=sum(row['rank'] <= 1 for row in hit),
+                recall_at_5=sum(row['rank'] <= min(5, MAX_CANDIDATES) for row in hit),
+                mean_rank=round(sum(row['rank'] for row in hit) / len(hit), 2) if hit else None,
+                median_ms=round(sorted(row['ms'] for row in subset)[len(subset) // 2], 1))
     return result
 
 
@@ -98,18 +104,18 @@ def main():
     cases = load(options.cases)
     with tempfile.TemporaryDirectory() as root:
         rows = evaluate(cases, root)
-    print('| 案例 | 策略 | 候选数 | 真实伙伴名次 | 期望上限 | 排序耗时(ms) |')
-    print('| --- | --- | ---: | ---: | ---: | ---: |')
+    print('| 案例 | 分组 | 策略 | 候选数 | 真实伙伴名次 | 期望上限 | 排序耗时(ms) |')
+    print('| --- | --- | --- | ---: | ---: | ---: | ---: |')
     for row in rows:
-        print(f"| {row['case']} | {row['strategy']} | {row['candidates']} | "
+        print(f"| {row['case']} | {row['group']} | {row['strategy']} | {row['candidates']} | "
               f"{row['rank'] if row['rank'] is not None else '未纳入'} | "
               f"{row['expected_top'] if row['expected_top'] is not None else '不限'} | {row['ms']} |")
     print()
-    print('| 策略 | 案例数 | 仍可比较 | recall@1 | recall@5 | 平均名次 | 中位耗时(ms) |')
-    print('| --- | ---: | ---: | ---: | ---: | ---: | ---: |')
-    for strategy, value in summary(rows).items():
-        print(f"| {strategy} | {value['cases']} | {value['eligible']} | {value['recall_at_1']} | "
-              f"{value['recall_at_5']} | {value['mean_rank']} | {value['median_ms']} |")
+    print('| 分组 | 策略 | 案例数 | 仍可比较 | recall@1 | recall@5 | 平均名次 | 中位耗时(ms) |')
+    print('| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |')
+    for value in summary(rows).values():
+        print(f"| {value['group']} | {value['strategy']} | {value['cases']} | {value['eligible']} | "
+              f"{value['recall_at_1']} | {value['recall_at_5']} | {value['mean_rank']} | {value['median_ms']} |")
     if options.json:
         Path(options.json).write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
     return 0
