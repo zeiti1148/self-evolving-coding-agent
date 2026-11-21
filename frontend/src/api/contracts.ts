@@ -133,7 +133,7 @@ export interface TaskMetrics {
   runtime_label: string | null; code_revision: string | null; comparison_group: string | null
   repair_verified: boolean; final_tests_passed?: boolean | null
   elapsed_ms: number | null; model_requests: number | null; token_usage: TokenUsageSummary
-  retrieval: { strategy: string | null; injected_requests: number | null; reference_count: number | null
+  retrieval: { strategy: string | null; reference_limit?: number | null; character_budget?: number | null; repeated_ratio?: number | null; injected_requests: number | null; reference_count: number | null
     events: { reason: string; error_types: string[]; experience_ids: string[] }[] }
   experience: { state: string; elapsed_ms: number | null; model_requests: number | null; token_usage: TokenUsageSummary
     before_count: number | null; after_count: number | null; merged_count: number | null

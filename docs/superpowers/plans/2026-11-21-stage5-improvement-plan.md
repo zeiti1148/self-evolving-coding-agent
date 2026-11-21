@@ -142,33 +142,35 @@
 
 ### 任务 4.1 证据清单
 
-**文件：** `backend/experience/reviews.py`、`backend/api/experience_routes.py`、`frontend/src/components/ConflictAutomation.vue`
+**文件：** `backend/experience/automation.py`、`backend/experience/reviews.py`、`frontend/src/components/ConflictAutomation.vue`
 
-- [ ] 自动决定附带可读证据清单（来源任务、最终测试数、原始失败、交叉测试轮次）。
-- [ ] 页面展示清单与覆盖缺口提示，不生成新测试。
+- [x] 核查：`feed()` 已返回 `review.automatic_resolution`（策略、理由、目标、逐次交叉测试与证据哈希），页面已渲染测试矩阵并区分自动/待确认。
+- [x] 未新增重复展示；本轮把注入预算与重复注入比例接入任务指标面板（见 5.1）。
 
 ### 任务 4.2 误合并撤销
 
-- [ ] 撤销入口复用 `reopen` 与依赖失效传播；原始经验与历史记录不变。
-- [ ] 回归：撤销后检索不再返回该规则，相关授权全部失效。
+- [x] 机制已存在：`reviews.reopen()` + `POST /api/experiences/conflicts/{id}/reopen`。
+- [x] 新增 `backend/tests/test_merge_withdrawal.py`（2 项）：确认等价 → 检索 1 条；撤销 → 立即为空；原始记录不变；历史为 `resolve → reopen`。
+- [x] 断言撤销不是开关：没有新决定时复用不会自动恢复。
 
 ### 任务 4.3 失效重验
 
-- [ ] 源码/测试配置/来源关系变化 → 授权标记需重验并进入补证队列。
-- [ ] 回归：重验前不会被注入。
+- [x] 核查：失效判定与"失效不注入"由 `recovery.grant_valid()` 与既有 `test_experience_recovery.py`（47/76/149/190 行）覆盖，无需新增代码。
+- [x] **未实现自动排队**：`recovery.enqueue()` 必须绑定修复任务才能重跑测试，没有任务时排队无法执行。理由写入报告，不留空入口。
 
 ## 阶段五：体验与资料
 
 ### 任务 5.1 页面
 
-- [ ] 候选盘点与补查进度（接 1.1/1.2）。
-- [ ] 批量补证入口、失败原因与重试状态。
-- [ ] 大规模检索的分页与筛选回归。
+- [x] 候选盘点与补查进度（阶段一 1.1/1.2，页面已显示"候选 N 条 · 已比较 M · 其余 K 条未比较"）。
+- [x] 批量补证入口（既有 `frontend/src/components/ExperienceRecovery.vue`，本轮核查确认可用，未重做）。
+- [x] 任务指标面板新增"本次注入上限 N 条 / M 字符"与"同一规则重复注入 x%"，数据来自任务审计。
 
 ### 任务 5.2 文档与汇报
 
-- [ ] 阶段五进展写入 `docs/`；实验明细、源码说明、汇报材料分开保存。
-- [ ] 更新 `README.md` 更新日志（当前停在 2026-11-14）。
+- [x] 阶段五进展写入 `docs/reports/`：候选排序、注入、冲突语言适配、撤销与重验四份报告。
+- [x] 计划文档逐项勾选并保留未完成项与理由。
+- [ ] `README.md` 更新日志：**暂缓**。README 同时带着手机工作台的未提交改动，混提交会误标归属；待手机工作台单独提交后再补一行。
 
 ## 执行顺序
 
@@ -211,3 +213,11 @@
 实测：`test_transplant.py` 13 项、`test_injection_summary.py` 3 项、冲突验证相关 4 个文件 53 项通过；全量后端 1020 通过 / 1 失败（缺 cmake）/ 1 跳过。
 
 已知未完成：没有 Java/Go/C++ 真实工程冲突样例，不能推断真实检出率；模板与重载一律转人工。详见 `docs/reports/transplant-languages-2026-11-21.md`。
+
+### 2026-11-21 阶段四与阶段五
+
+核查结论：撤销、失效判定、证据展示这三项**机制已经存在**，缺的是证据而不是功能。因此本轮以验证与说明为主，不新增重复入口。
+
+新增 `test_merge_withdrawal.py`（2 项）：确认等价后检索 1 条、撤销后立即为空、原始记录不变、撤销不是开关。任务指标面板补注入上限与重复注入比例。
+
+明确未实现：自动排队重验（`recovery.enqueue()` 需要绑定修复任务，没有任务时无法执行）；README 更新日志（与手机工作台未提交改动冲突，待其单独提交后补）。详见 `docs/reports/merge-withdrawal-2026-11-21.md`。
