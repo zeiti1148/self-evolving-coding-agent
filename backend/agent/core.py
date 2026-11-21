@@ -12,7 +12,8 @@ from uuid import uuid4
 from backend.shared import (AgentRequest, AgentResult, ApplicationError, ErrorCode,
                             ExperienceCreate, TaskStep, ToolCall, ToolResult)
 from .llm import LLM, TOOLS, parse_arguments, validate_message
-from backend.experience.policy import format_model_reference, to_model_reference, validate_reference_options
+from backend.experience.policy import (format_model_reference, retrieval_budget,
+                                       to_model_reference, validate_reference_options)
 from backend.experience.retrieval_evidence import (adaptive_retrieval_evidence, build_retrieval_query,
                                         error_types_in, normalize_error_type)
 from .extraction import extract_and_save_experiences, verification_passed
@@ -56,6 +57,7 @@ class Agent:
         deadline = started + self.timeout_seconds
         decisions = 0
         observed_errors = error_types_in(request.task_description, request.language)
+        reference_limit, character_budget = retrieval_budget(self.retrieval_strategy)
         retrieval_events: list[dict] = []
         injection_events: list[dict] = []
         if hasattr(self.llm, "set_deadline"):
@@ -71,6 +73,9 @@ class Agent:
             if not self.use_experience:
                 return []
             try:
+                # The flag describes the latest attempt: a later success must not be
+                # read as "the last retrieval failed".
+                retrieval_error = None
                 query = build_retrieval_query(request.task_description, results) if self.retrieval_strategy == "contextual" else ""
                 current_errors, reason = observed_errors, None
                 if self.retrieval_strategy == "adaptive":
@@ -83,14 +88,15 @@ class Agent:
                     references = [format_model_reference(entry, self.experience_format)
                         for entry in self.experiences.retrieve_model_references(
                             query, language=request.language, repository_id=request.repository_id,
-                            error_types=current_errors, limit=5, capabilities=request.capabilities,
+                            error_types=current_errors, limit=reference_limit, character_budget=character_budget,
+                            capabilities=request.capabilities,
                             compatibility_key=request.experience_contract, source_revision=request.source_revision,
                             runner_hash=request.runner_hash)]
                 else:
                     references = [to_model_reference(entry, self.experience_format)
                         for entry in self.experiences.retrieve_experiences(
                             query, language=request.language, repository_id=request.repository_id,
-                            error_types=current_errors, limit=5, capabilities=request.capabilities)]
+                            error_types=current_errors, limit=reference_limit, capabilities=request.capabilities)]
                 ids = [entry["id"] for entry in references]
                 retrieved_ids = list(dict.fromkeys([*retrieved_ids, *ids]))
                 event = {"error_types": list(current_errors), "experience_ids": ids}
@@ -123,10 +129,9 @@ class Agent:
             added = [value for value in dict.fromkeys(discovered) if value not in observed_errors]
             if added:
                 observed_errors.extend(added[:max(0, 20 - len(observed_errors))])
-                refreshed = retrieve()
-                payload = json.loads(messages[1]["content"])
-                payload["reference_experiences"] = refreshed
-                messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
+                # Record what the new failure evidence selects. The next model boundary
+                # re-applies it, so writing the payload here would be discarded.
+                retrieve()
 
         def execute(call: ToolCall, *, final: bool = False) -> ToolResult:
             nonlocal changed
@@ -184,11 +189,19 @@ class Agent:
                 decisions += 1
                 # Recheck eligibility at each model boundary; a concurrent merge/publication can supersede references.
                 payload = json.loads(messages[1]["content"])
-                payload["reference_experiences"] = retrieve()
+                refreshed = retrieve()
+                # A failed retrieval is not a withdrawal: keep what the model already
+                # saw. A successful retrieval always decides the eligible set.
+                if not (retrieval_error and not refreshed):
+                    payload["reference_experiences"] = refreshed
                 payload["experience_usage_rule"] = "逐项核对经验适用条件与当前项目的业务要求，不得直接照搬来源项目的默认值。是否修复成功以当前项目的最终测试为准。"
                 messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
+                injected = json.dumps(payload["reference_experiences"], ensure_ascii=False)
                 injection_events.append({"decision": decisions,
                                          "experience_ids": [entry["id"] for entry in payload["reference_experiences"]],
+                                         "reference_limit": reference_limit,
+                                         "character_budget": character_budget,
+                                         "injected_characters": len(injected),
                                          "content_sha256": hashlib.sha256(json.dumps(payload["reference_experiences"], sort_keys=True).encode()).hexdigest()})
                 message = validate_message(self.llm.complete(messages, tools=TOOLS))
                 messages.append(message)
@@ -262,6 +275,7 @@ class Agent:
         events = list(getattr(self.llm, "audit", []))
         self.last_run_audit = {"task_id": request.task_id, "experience_enabled": self.use_experience,
                               "experience_format": self.experience_format, "retrieval_strategy": self.retrieval_strategy,
+                              "reference_limit": reference_limit, "character_budget": character_budget,
                               "decision_rounds": decisions, "tool_calls": len(calls),
                               "elapsed_ms": round((time.monotonic() - started) * 1000),
                               "retrieved_experience_ids": retrieved_ids, "model_requests": events,

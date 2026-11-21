@@ -103,17 +103,24 @@
 
 ### 任务 3.1 注入去重
 
-**文件：** `backend/agent/core.py`、`backend/agent/orchestrator.py`、`backend/tests/test_retrieval_dedupe.py`（新）
+**文件：** `backend/agent/core.py`、`backend/agent/orchestrator.py`、`backend/tests/test_retrieval_withdrawal.py`（新）
 
-- [ ] 跨轮次按 `rule_id` 去重，只追加新规则。
-- [ ] 单测：连续两轮发现新错误类型时，第二轮只含新增规则。
+- [x] 核查后放弃"跨轮累积"：每轮重核资格是安全不变量，累积会让失效规则继续注入。
+- [x] 改为"失败不撤出、成功才替换"：`retrieval_error` 只描述最近一次检索，失败时保留已注入参考。
+- [x] 移除 `update_references()` 中被下一轮覆盖的无效 payload 写入。
+- [x] 单 Agent 与多 Agent 两条路径都修正。
+
+**验收：** 失败夹具保留参考经验；成功且无匹配时撤出；恢复后仍能撤出。
 
 ### 任务 3.2 预算参数化与审计
 
-**文件：** `backend/experience/retrieval.py`、`backend/agent/core.py`、`backend/api/task_metrics.py`
+**文件：** `backend/experience/policy.py`、`backend/agent/core.py`、`backend/tests/test_retrieval_budget.py`（新）
 
-- [ ] `limit` / `character_budget` 按策略取值（baseline/contextual/adaptive 各一组明确常量）。
-- [ ] 审计补充：注入规则数、注入字符数、逐轮变化。
+- [x] `RETRIEVAL_BUDGETS`：baseline/contextual = 5 条 / 16000 字符，adaptive = 3 条 / 8000 字符，未知策略回退。
+- [x] 单 Agent 按策略传 `limit` 与 `character_budget`；未知策略不会放大预算。
+- [x] 审计补充 `reference_limit`、`character_budget`、`injected_characters`。
+
+**验收：** 两种策略的检索参数与审计字段一致；预算取值仍待 3.4 实测确认。
 
 ### 任务 3.3 引用追踪
 
@@ -180,3 +187,11 @@
 阶段一实测：自动合并相关后端 35 项通过；新增 `test_automation_batch.py` 3 项、`test_missed_merge_cases.py` 2 项；前端 202 项通过，生产构建通过。12 条候选分 3 批全部比较；预算 3 时比较 3 对并披露剩余 4 对。
 
 已知未完成：案例集只有 2 条，排序评测的结论仅限方向性；阶段一没有真实模型调用。详见 `docs/reports/candidate-ranking-2026-11-21.md`。
+
+### 2026-11-21 阶段三 3.1–3.2
+
+计划调整：原定"跨轮累积去重"与代码中的安全不变量冲突（每个决策轮重核资格、并发合并必须能撤出），改为"失败不撤出、成功才替换"，成本治理交给预算参数化。
+
+实测：新增 `test_retrieval_withdrawal.py` 3 项、`test_retrieval_budget.py` 4 项；Agent / 多 Agent / 经验策略 / 检索配置相关 8 个文件共 86 项通过。
+
+已知未完成：多 Agent 失败保留无独立回归；预算取值待 3.4 实测；3.3 引用追踪未做。详见 `docs/reports/retrieval-injection-2026-11-21.md`。

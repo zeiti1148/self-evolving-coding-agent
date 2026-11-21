@@ -52,6 +52,21 @@ def validate_reference_options(experience_format, retrieval_strategy):
         raise ValueError("Invalid experience representation or retrieval strategy.")
 
 
+# Rules and rule-text characters allowed per injection, by retrieval strategy.
+# Adaptive waits for current failure evidence, so a smaller payload is enough;
+# baseline and contextual keep the historical budget.
+RETRIEVAL_BUDGETS = {
+    "baseline": (5, 16000),
+    "contextual": (5, 16000),
+    "adaptive": (3, 8000),
+}
+
+
+def retrieval_budget(strategy):
+    """Budget for one injection; unknown strategies fall back to contextual."""
+    return RETRIEVAL_BUDGETS.get(strategy, RETRIEVAL_BUDGETS["contextual"])
+
+
 def to_model_reference(entry: Experience, representation="full") -> dict:
     return format_model_reference(_full_reference(entry), representation)
 
