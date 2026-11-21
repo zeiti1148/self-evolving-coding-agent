@@ -242,7 +242,7 @@ def test_paused_source_hides_a_previously_accepted_merge(tmp_path):
     assert change['state']=='invalidated' and change['after'] is None
 
 
-def test_bounded_candidates_are_disclosed_and_failed_pairs_are_not_counted_as_merges(tmp_path):
+def test_candidates_beyond_the_first_batch_are_compared_and_failed_pairs_are_not_merges(tmp_path):
     store = local_store(tmp_path)
     for index in range(7):
         save(store, record(repository_id=f'old-{index}'))
@@ -251,12 +251,16 @@ def test_bounded_candidates_are_disclosed_and_failed_pairs_are_not_counted_as_me
     current = save(store, record(repository_id='new')); scan(store)
     class Rejecting(WorkflowModel):
         reject = True
+    WorkflowModel.comparisons = 0
     worker = AutomaticMergeWorker(store.database_path, Rejecting)
     while worker.run_once():
         pass
     job = feed(store.database_path, experience_id=current.id)['items'][0]
-    assert job['candidate_total']==7 and job['selected_candidates']==5 and job['deferred_candidates']==2
-    assert len(job['changes'])==5 and all(c['state']=='rejected' for c in job['changes'])
+    # Seven candidates exceed one batch of five; the remainder must not be dropped.
+    assert job['candidate_total']==7 and job['selected_candidates']==7
+    assert job['compared_candidates']==7 and job['deferred_candidates']==0
+    assert WorkflowModel.comparisons==7
+    assert len(job['changes'])==7 and all(c['state']=='rejected' for c in job['changes'])
 
 
 def test_conflict_resolution_automatically_resumes_eligible_comparisons(tmp_path):

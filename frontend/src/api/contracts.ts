@@ -222,7 +222,7 @@ export interface AutomaticMergeChange {
 export interface AutomaticMergeJob {
   id: string; source: Experience; state: 'pending' | 'running' | 'waiting' | 'succeeded' | 'failed'
   notice: string; created_at: string; updated_at: string; local_pending: boolean
-  candidate_total: number; selected_candidates: number; deferred_candidates: number
+  candidate_total: number; selected_candidates: number; compared_candidates: number; deferred_candidates: number
   changes: AutomaticMergeChange[]
 }
 export interface AutomaticMergePage { items: AutomaticMergeJob[]; next_offset: number | null }

@@ -1,0 +1,130 @@
+{
+  "schema": 1,
+  "note": "已确认的漏合并案例。重放只走 candidate_ranking 的确定性排序，不调用模型。top 为该来源在排序中的最差可接受名次（1 起）；top 为 null 表示只要求仍被纳入比较、不承诺名次。",
+  "cases": [
+    {
+      "id": "greeting-null-guard",
+      "found": "2026-11-16",
+      "channel": "user_reported",
+      "fixed": true,
+      "history": "两份 GreetingService 空值修复表述不同（提前返回 vs 条件表达式），早期自动比较只取了前 5 条，未包含对方。",
+      "source": {
+        "repository_id": "benchmark/greeting-conditional",
+        "task_summary": "GreetingService 空指针修复",
+        "root_cause": "姓名为空时直接拼接导致空指针",
+        "solution": "姓名缺失时用条件表达式选择 guest，非空分支保留 trim",
+        "error_type": "NullPointerException",
+        "files": ["src/main/java/GreetingService.java"]
+      },
+      "partner": {
+        "repository_id": "benchmark/greeting-early-return",
+        "task_summary": "GreetingService 空值返回默认问候",
+        "root_cause": "空值未判断直接拼接姓名",
+        "solution": "空值时提前返回 Hello, guest!，其余情况保持原有拼接",
+        "error_type": "NullPointerException",
+        "files": ["src/main/java/GreetingService.java"]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/stock-count",
+          "task_summary": "库存数量缺失时转换失败",
+          "root_cause": "缺失文本直接转整数抛出 TypeError",
+          "solution": "转换前识别缺失并按业务默认值 0 处理",
+          "error_type": "TypeError",
+          "files": ["app.py"]
+        },
+        {
+          "repository_id": "benchmark/seat-booking",
+          "task_summary": "预订人数缺失时默认值错误",
+          "root_cause": "缺失人数被当作 0",
+          "solution": "缺失人数使用预订默认值 1",
+          "error_type": "TypeError",
+          "files": ["seats.py"]
+        },
+        {
+          "repository_id": "benchmark/pagination",
+          "task_summary": "分页偏移越界",
+          "root_cause": "页码为 0 时偏移为负",
+          "solution": "页码下限设为 1 并校验偏移",
+          "error_type": "IndexError",
+          "files": ["paging.py"]
+        },
+        {
+          "repository_id": "benchmark/date-format",
+          "task_summary": "日期解析失败",
+          "root_cause": "输入使用非 ISO 分隔符",
+          "solution": "解析前规范化分隔符",
+          "error_type": "ValueError",
+          "files": ["dates.py"]
+        },
+        {
+          "repository_id": "benchmark/encoding",
+          "task_summary": "文件读取编码错误",
+          "root_cause": "按系统默认编码读取",
+          "solution": "显式使用 UTF-8 读取",
+          "error_type": "UnicodeDecodeError",
+          "files": ["io_utils.py"]
+        },
+        {
+          "repository_id": "benchmark/permission",
+          "task_summary": "权限校验遗漏角色",
+          "root_cause": "只校验登录未校验角色",
+          "solution": "读取角色并校验可访问范围",
+          "error_type": "PermissionError",
+          "files": ["auth.py"]
+        }
+      ],
+      "expect": {"eligible": true, "top": 5}
+    },
+    {
+      "id": "rounding-wording-gap",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "两条金额舍入规则语义等价，但用词几乎不重叠（精度误差 / HALF_UP）；当前词法排序无法保证进入首批，仅保证不被丢弃。",
+      "source": {
+        "repository_id": "benchmark/invoice-rounding",
+        "task_summary": "发票金额出现精度误差",
+        "root_cause": "使用浮点累加后直接输出",
+        "solution": "输出前按分位四舍五入并转成十进制字符串",
+        "error_type": "AssertionError",
+        "files": ["invoice.py"]
+      },
+      "partner": {
+        "repository_id": "benchmark/payroll-rounding",
+        "task_summary": "工资条数值结构不一致",
+        "root_cause": "二进制浮点表示带来尾数偏差",
+        "solution": "统一以 Decimal 的 HALF_UP 策略量化到两位",
+        "error_type": "AssertionError",
+        "files": ["payroll.py"]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/grade-rounding",
+          "task_summary": "成绩排序结果不稳定",
+          "root_cause": "相同分数未定义次序",
+          "solution": "按学号做稳定排序",
+          "error_type": "AssertionError",
+          "files": ["grades.py"]
+        },
+        {
+          "repository_id": "benchmark/tax-rounding",
+          "task_summary": "税额汇总偏差",
+          "root_cause": "逐行取整后累加",
+          "solution": "先累加再统一取整",
+          "error_type": "AssertionError",
+          "files": ["tax.py"]
+        },
+        {
+          "repository_id": "benchmark/shipping-rounding",
+          "task_summary": "运费计算误差",
+          "root_cause": "重量单位换算精度不足",
+          "solution": "换算时保留三位小数再取整",
+          "error_type": "AssertionError",
+          "files": ["shipping.py"]
+        }
+      ],
+      "expect": {"eligible": true, "top": null}
+    }
+  ]
+}
