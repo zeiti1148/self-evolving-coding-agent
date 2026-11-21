@@ -7,7 +7,8 @@ from uuid import uuid4
 
 import pytest
 
-from backend.api.conflict_verification import ConflictVerifier, transplant
+from backend.api.conflict_verification import ConflictVerifier
+from backend.experience.transplant import transplant
 from backend.api.store import TaskStore
 from backend.config import Settings
 from backend.experience import ExperienceStore
@@ -141,10 +142,10 @@ def test_unreliable_evidence_never_selects_a_rule(bad):
 def test_transplant_preserves_target_interface_and_surrounding_code():
     target='FLAG = 1\ndef f(x: object):\n    return 1\n\ndef other(): return FLAG\n'
     donor='def f(x: str):\n    return 2\n'
-    changed=transplant(target,donor,'f')
+    changed=transplant(target,donor,'python','f')
     assert changed=='FLAG = 1\ndef f(x: object):\n    return 2\n\ndef other(): return FLAG\n'
-    with pytest.raises(ValueError):transplant(target,'def f(x, y):\n    return 2\n','f')
-    with pytest.raises(ValueError):transplant(target,'def f(x):\n    return external(x)\n','f')
+    with pytest.raises(ValueError):transplant(target,'def f(x, y):\n    return 2\n','python','f')
+    with pytest.raises(ValueError):transplant(target,'def f(x):\n    return external(x)\n','python','f')
 
 
 def test_automatic_decision_cannot_overwrite_a_concurrent_human_choice(prepared):

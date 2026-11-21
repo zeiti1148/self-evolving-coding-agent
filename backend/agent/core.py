@@ -12,8 +12,9 @@ from uuid import uuid4
 from backend.shared import (AgentRequest, AgentResult, ApplicationError, ErrorCode,
                             ExperienceCreate, TaskStep, ToolCall, ToolResult)
 from .llm import LLM, TOOLS, parse_arguments, validate_message
-from backend.experience.policy import (format_model_reference, retrieval_budget,
-                                       to_model_reference, validate_reference_options)
+from backend.experience.policy import (format_model_reference, injection_summary,
+                                       retrieval_budget, to_model_reference,
+                                       validate_reference_options)
 from backend.experience.retrieval_evidence import (adaptive_retrieval_evidence, build_retrieval_query,
                                         error_types_in, normalize_error_type)
 from .extraction import extract_and_save_experiences, verification_passed
@@ -283,6 +284,7 @@ class Agent:
                               "source_revision": request.source_revision, "observed_error_types": observed_errors,
                               "retrieval_events": retrieval_events,
                               "injection_events": injection_events,
+                              "injection_summary": injection_summary(injection_events),
                               "experience_extraction": extraction_diagnostic,
                               "final_verification_attempts": sum(bool(r.metadata.get("final_verification")) for r in results)}
         if hasattr(self.llm, "close"):

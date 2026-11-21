@@ -71,33 +71,34 @@
 
 **文件：** `backend/experience/transplant.py`（新）、`backend/api/conflict_verification.py`
 
-- [ ] 把 `function()`、`signature()`、`body_identity()`、`transplant()` 迁入新模块，Python 行为逐行等价。
-- [ ] `conflict_verification.py` 改为调用新模块，现有测试全绿。
+- [x] Python 定位/签名/函数体身份/拼接逐行迁入新模块，AST 行为不变。
+- [x] `conflict_verification.py` 改为调用新模块，语言与扩展名按能力判断。
 
-**验收：** `pytest backend/tests/test_real_comparison_protocol.py backend/tests/test_real_safety_verification.py` 不变。
+**验收：** `test_real_comparison_protocol.py`、`test_real_safety_verification.py`、`test_automatic_conflict_resolution.py` 全部通过（53 项）。
 
 ### 任务 2.2 Java 目标映射
 
-**文件：** `backend/experience/transplant.py`、`backend/experience/grounding.py`
+**文件：** `backend/experience/transplant.py`、`backend/tests/test_transplant.py`（新）
 
-- [ ] tree-sitter-java 定位方法节点，校验参数与修饰符一致，按字节区间拼接。
-- [ ] 定位不唯一或签名不同 → `VerificationUnavailable`。
+- [x] tree-sitter-java 定位方法/构造器，只替换函数体，声明保持目标原文。
+- [x] 目标缺失、声明不同、实现相同均拒绝。
 
-**验收：** Java 方法级等价/冲突对可自动判定；错误目标被明确拒绝。
+**验收：** Java 方法级拼接成功；缺失目标与相同实现被明确拒绝。
 
 ### 任务 2.3 Go / C++ 目标映射
 
-**文件：** `backend/experience/transplant.py`、`requirements-semantic.txt`
+**文件：** `backend/experience/transplant.py`、`backend/experience/grounding.py`、`requirements-semantic.txt`
 
-- [ ] 新增 `tree-sitter-go`、`tree-sitter-cpp`（可选依赖）。
-- [ ] 未安装语法包时保持"需人工确认"，不报错崩溃。
+- [x] 新增 `tree-sitter-go`、`tree-sitter-cpp` 到可选依赖。
+- [x] Go 方法与 C++ 成员函数按"接收者/类名 + 方法名"限定；`qualified_names()` 与 `grounding.symbols()` 共用命名。
+- [x] 语法包未安装时抛 `VerificationUnavailable`（转人工），不崩溃。
 
-**验收：** 本机缺 cmake 时 C++ 用例 skip 并记录原因；Go 用例在已装 Go 的环境通过。
+**验收：** Go 函数与 C++ 成员函数可拼接；只写方法名、模板成员被拒绝；未装语法包时降级为人工确认。
 
 ### 任务 2.4 反例与回归
 
-- [ ] 每语言一条"必须拒绝"反例（辅助函数不同、宏/模板不可解析、跨文件接口）。
-- [ ] 报告记录拒绝理由分布。
+- [x] 每语言一条"必须拒绝"反例（目标缺失、方法缺少接收者、模板成员）。
+- [x] 报告记录拒绝口径与未覆盖范围（无真实工程样例，不推断检出率）。
 
 ## 阶段三：自适应检索成本
 
@@ -124,8 +125,13 @@
 
 ### 任务 3.3 引用追踪
 
-- [ ] 从模型审计消息解析实际引用的 `rule_id`，计算"注入未使用"比例。
-- [ ] 指标进入任务对比面板。
+**文件：** `backend/experience/policy.py`、`backend/agent/core.py`、`backend/tests/test_injection_summary.py`（新）
+
+- [x] 核查后改口径：模型回复不含规则 ID，无法解析"是否引用"。
+- [x] 改为确定性的重复注入统计（同一规则在多轮被重复注入的比例），由审计事件直接计算。
+- [x] 审计新增 `injection_summary`，不依赖模型输出。
+
+**验收：** `injection_summary` 在多次注入同一规则时给出 unique/total/repeated/ratio；无注入时全为 0。
 
 ### 任务 3.4 小样本对照
 
@@ -195,3 +201,13 @@
 实测：新增 `test_retrieval_withdrawal.py` 3 项、`test_retrieval_budget.py` 4 项；Agent / 多 Agent / 经验策略 / 检索配置相关 8 个文件共 86 项通过。
 
 已知未完成：多 Agent 失败保留无独立回归；预算取值待 3.4 实测；3.3 引用追踪未做。详见 `docs/reports/retrieval-injection-2026-11-21.md`。
+
+### 2026-11-21 阶段三 3.3 与阶段二 2.1–2.4
+
+3.3 改口径：模型回复不含规则 ID，"是否引用"无法解析；改为确定性重复注入统计（同一规则跨轮重复注入的比例），由审计事件直接计算。
+
+阶段二：`transplant.py` 统一 Python/Java/Go/C++ 的定位与拼接；Python 行为不变；Go/C++ 语法包进入 `requirements-semantic.txt`；`grounding` 与移植共用命名。
+
+实测：`test_transplant.py` 13 项、`test_injection_summary.py` 3 项、冲突验证相关 4 个文件 53 项通过；全量后端 1020 通过 / 1 失败（缺 cmake）/ 1 跳过。
+
+已知未完成：没有 Java/Go/C++ 真实工程冲突样例，不能推断真实检出率；模板与重载一律转人工。详见 `docs/reports/transplant-languages-2026-11-21.md`。

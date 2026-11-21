@@ -1,12 +1,10 @@
 """Run immutable, real repair implementations against both original test contracts.
 
-No model writes a candidate or a test here. Python AST ranges select existing
-function bodies; isolated WorkspaceManager copies and the regular ToolService
-execute the registered complete suites. Unsupported mappings require review.
+No model writes a candidate or a test here. Language-specific location and splice
+live in backend.experience.transplant; isolated WorkspaceManager copies and the
+regular ToolService execute the registered complete suites. Unsupported mappings
+and missing grammars require review.
 """
-import ast
-import builtins
-import copy
 import hashlib
 import json
 from contextlib import ExitStack, contextmanager
@@ -15,6 +13,7 @@ from uuid import uuid4
 from xml.etree import ElementTree as ET
 
 from backend.agent.extraction import verification_passed
+from backend.experience import transplant as code_transplant
 from backend.experience.automatic_resolution import VerificationUnavailable
 from backend.experience.knowledge import digest
 from backend.shared import ErrorCode, ToolCall
@@ -22,64 +21,6 @@ from backend.tools import ToolService, WorkspaceManager
 from backend.tools.code_changes import code_path, read_snapshot
 from backend.tools.workspace import inventory
 from .task_evidence import _baseline
-
-
-def function(tree, qualified):
-    nodes = [tree]
-    for name in qualified.split('.'):
-        nodes = [child for parent in nodes for child in getattr(parent, 'body', [])
-                 if isinstance(child, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and child.name == name]
-    if len(nodes) != 1 or not isinstance(nodes[0], (ast.FunctionDef, ast.AsyncFunctionDef)):
-        raise VerificationUnavailable('无法唯一定位双方相同的函数。')
-    return nodes[0]
-
-
-def signature(node):
-    args = copy.deepcopy(node.args)
-    for value in ast.walk(args):
-        if isinstance(value, ast.arg):
-            value.annotation = None
-            value.type_comment = None
-    return type(node).__name__, ast.dump(args), [ast.dump(v) for v in node.decorator_list]
-
-
-def body_identity(node):
-    body = node.body
-    if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) and isinstance(body[0].value.value, str):
-        body = body[1:]
-    return ast.dump(ast.Module(body=body, type_ignores=[]))
-
-
-def transplant(target_text, donor_text, qualified):
-    target_tree, donor_tree = ast.parse(target_text), ast.parse(donor_text)
-    target, donor = function(target_tree, qualified), function(donor_tree, qualified)
-    if signature(target) != signature(donor):
-        raise VerificationUnavailable('函数调用接口或装饰器不同，不能可靠移植。')
-    if body_identity(target) == body_identity(donor):
-        raise VerificationUnavailable('双方真实函数实现相同，无法用此测试区分措辞冲突。')
-    # Direct helper calls must retain their implementation. Incompatibility is
-    # not allowed to masquerade as a failure of the competing repair rule.
-    local = {n.arg for n in ast.walk(donor.args) if isinstance(n, ast.arg)}
-    local.update(n.id for n in ast.walk(donor) if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Store))
-    for call in [n for n in ast.walk(donor) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]:
-        name = call.func.id
-        if name in {'eval', 'exec', 'globals', 'locals', '__import__'}:
-            raise VerificationUnavailable('动态函数依赖不支持自动交叉验证。')
-        if name in local or hasattr(builtins, name):
-            continue
-        try:
-            left, right = function(target_tree, name), function(donor_tree, name)
-        except VerificationUnavailable:
-            raise VerificationUnavailable('存在无法核对的外部函数依赖。') from None
-        if signature(left) != signature(right) or body_identity(left) != body_identity(right):
-            raise VerificationUnavailable('双方依赖的辅助函数不同，无法隔离单条规则的作用。')
-    target_lines, donor_lines = target_text.splitlines(keepends=True), donor_text.splitlines(keepends=True)
-    a, b = target.body[0].lineno-1, donor.body[0].lineno-1
-    if target.body[0].col_offset != donor.body[0].col_offset:
-        raise VerificationUnavailable('函数所在作用域不同，无法可靠移植。')
-    output = ''.join(target_lines[:a] + donor_lines[b:donor.end_lineno] + target_lines[target.end_lineno:])
-    ast.parse(output)
-    return output
 
 
 class ConflictVerifier:
@@ -102,8 +43,8 @@ class ConflictVerifier:
                 or source['id'] not in (result.experience_ids or [])):
             raise VerificationUnavailable('来源缺少成功修复与经验保存的完整关联。')
         project = self.settings.project(request.source_project)
-        if project.language != source['language'] or not general and project.language != 'python':
-            raise VerificationUnavailable('当前自动交叉验证支持可定位的 Python 函数；此语言需用户确认。')
+        if project.language != source['language'] or not (general or code_transplant.supports(project.language)):
+            raise VerificationUnavailable('当前自动交叉验证不支持该语言；需用户确认。')
         final = result.tool_results[-1]
         if (result.steps[-1].name != 'run_tests' or final.call_id != result.steps[-1].id
                 or final.metadata.get('final_verification') is not True or not verification_passed(final, project.language)
@@ -152,23 +93,25 @@ class ConflictVerifier:
             values = {}
             for target in targets:
                 relative, _, qualified = target.partition('#')
-                if not qualified or not code_path(relative) or not relative.endswith('.py') or relative not in changed:
+                language = context['project'].language
+                if (not qualified or not code_path(relative)
+                        or not code_transplant.accepts_path(language, relative) or relative not in changed):
                     raise VerificationUnavailable('目标不是双方已验证修改的生产函数。')
                 change = changed[relative]
                 if change.before_content is None or change.after_content is None:
                     raise VerificationUnavailable('新增或删除函数暂不支持自动交叉验证。')
-                before = function(ast.parse(change.before_content), qualified)
-                after = function(ast.parse(change.after_content), qualified)
-                if body_identity(before) == body_identity(after):
+                if not code_transplant.changed(change.before_content, change.after_content, language, qualified):
                     raise VerificationUnavailable('经验声称的冲突目标没有对应实际源码修改。')
                 values[relative] = change.after_content
             texts.append(values)
         grafts = []
         for index in range(2):
             replacement = dict(texts[index])
+            language = contexts[index]['project'].language
             for target in targets:
                 relative, qualified = target.split('#', 1)
-                replacement[relative] = transplant(replacement[relative], texts[1-index][relative], qualified)
+                replacement[relative] = code_transplant.transplant(
+                    replacement[relative], texts[1-index][relative], language, qualified)
             grafts.append(replacement)
         runs = []
         bindings = [c['binding'] for c in contexts]

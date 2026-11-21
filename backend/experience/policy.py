@@ -67,6 +67,22 @@ def retrieval_budget(strategy):
     return RETRIEVAL_BUDGETS.get(strategy, RETRIEVAL_BUDGETS["contextual"])
 
 
+def injection_summary(events):
+    """Deterministic reuse statistics for the references actually injected.
+
+    Re-sending a rule the model already saw is the measurable part of repeated
+    experience injection; it is derived from the audit, not from model output.
+    """
+    counts = {}
+    for event in events or []:
+        for identifier in event.get('experience_ids', []):
+            counts[identifier] = counts.get(identifier, 0) + 1
+    total = sum(counts.values())
+    repeated = sum(count - 1 for count in counts.values())
+    return dict(unique=len(counts), total=total, repeated=repeated,
+                repeated_ratio=round(repeated / total, 3) if total else 0.0)
+
+
 def to_model_reference(entry: Experience, representation="full") -> dict:
     return format_model_reference(_full_reference(entry), representation)
 
