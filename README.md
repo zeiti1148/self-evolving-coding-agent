@@ -37,6 +37,8 @@ Python 项目需有 `pyproject.toml`，解释器中已安装 pytest 及项目依
 
 2026-11-14 增加[经验合并建议](docs/reports/merge-suggestions-2026-11-14.md)：经验页自动发现同范围内相关且兼容的记录，展示共同规则、去重后的验证数、版本提示及未推荐原因。点击建议进入原有预览，确认后才保存；新建议接口严格只读。当前库的 174 个同范围配对全部因适用条件不同而未推荐，原始经验保持不变。[详细设计](docs/superpowers/specs/2026-11-14-merge-suggestions-design.md)与[实施计划](docs/superpowers/plans/2026-11-14-merge-suggestions.md)记录了规则和验证范围。
 
+2026-11-21 阶段五改进（经验覆盖与成本、注入预算、多语言冲突验证）：[自动比较分批补查](docs/reports/candidate-ranking-2026-11-21.md)让超出首批的候选继续被比较并披露剩余对数；[经验注入](docs/reports/retrieval-injection-2026-11-21.md)修正“检索暂时失败会清空已注入经验”，并把注入预算按策略显式化（adaptive 3 条 / 8000 字符）；[冲突交叉验证](docs/reports/transplant-languages-2026-11-21.md)从只支持 Python 扩展到 Java/Go/C++，模板与重载仍转人工确认；[撤销与重验](docs/reports/merge-withdrawal-2026-11-21.md)补充等价合并撤销的证据，自动排队重验因缺少执行任务而未实现；[注入侧测量](docs/reports/retrieval-budget-measurement-2026-11-21.md)显示条数上限并非限制因素，任务侧对照因缺前置快照未执行。本轮全部改动带回归，没有真实模型调用。
+
 ## 已合并的第二阶段基线
 
 已实现同步 Agent 循环、受控工具、FastAPI 四个业务接口、SQLite 经验模块及 Vue 工作台。两个 Java 样例已通过脚本模型回归与真实模型 `deepseek-flash` 验收，均运行真实文件工具、Maven 和 SQLite。
