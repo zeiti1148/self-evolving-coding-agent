@@ -60,7 +60,8 @@ def run_native_tests(service, record, cwd, timeout, runner):
         metadata['changed_files'] = service.manager.changed_files(record.path)
         return go_verdict(output, metadata, code)
 
-    root = service.manager.root / '.native-builds' / record.path.name
+    # Short directory names keep MSBuild's TryCompile paths under the Windows limit.
+    root = service.manager.root / '.nb' / record.path.name
     reject_links(root)
     root.mkdir(parents=True, exist_ok=True)
     report = root / (str(uuid4()) + '.xml')

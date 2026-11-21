@@ -76,14 +76,21 @@
 
 修复后 `test_real_native_runner_failure_then_fix[cpp]` 通过（此前每轮全量回归都带 1 个失败）：2 项测试、1 失败为基线、ctest 正确返回 `TEST_FAILED` 而不是 `COMMAND_FAILED`。
 
+## 2026-11-21 追加：C++ 真实交叉验证（补齐三种语言）
+
+`backend/tests/test_cpp_conflict_verification.py`（`RUN_CPP_CONFLICT=1` 执行）镜像 Java/Go：两个真实 CMake 项目修同一个函数、行为相反。实测 **49.9 秒通过**：2 次自测通过、4 次交叉失败（各失败 1 项、无错误、无跳过），全部复现来源失败。
+
+为此修掉两个真实缺陷：
+
+1. **路径过长**：实测 MSBuild 的 `TryCompile` 在构建路径超过约 120 字符时抛 `MSB6003 / DirectoryNotFoundException`。把内部目录名缩短（`.native-builds` → `.nb`、验证器的 `workspaces` → `ws`），并在测试夹具里使用盘符根目录下的短路径。缩短后同样的验证可以通过。
+2. **退出码判断错误**：CTest 在有用例失败时返回 **8**，而验证器只接受 `{0,1}`，导致每一次 C++ 交叉运行都被判成 `invalid` 而不是 `failed`。现在对 C++ 接受 `{0,1,8}`，其余语言不变。
+
 ## 限制
 
-- 真实冲突交叉验证覆盖 Java 与 Go；C++ 的**原生测试运行**已跑通，但 C++ 的"同符号不同行为"交叉验证样例**没有做成**，过程记录如下。
-- C++ 交叉验证尝试失败的具体现象：在验证器复制出的嵌套工作目录里，MSBuild 的 `TryCompile` 阶段报 `MSB6003 / System.IO.DirectoryNotFoundException`（找不到 `cmTC_*.dir\Debug\cmTC_*.tlog` 的一部分），configure 失败导致用例被判 `invalid`。同一份项目通过原生运行器（`test_real_native_runner_failure_then_fix[cpp]`）可以正常配置、编译并跑出 2 项测试。已尝试把工作根缩短到 `C:\tempw\w*` 与 `C:\cppw-*`，仍然复现，因此不是单纯的路径长度。
-- 可能方向：改用 MinGW/Ninja 工具链（本机没有 `g++`），或不使用 MSBuild 生成器。两者都未验证，所以 C++ 冲突检出率依然未知。
+- 真实冲突交叉验证覆盖 Java、Go、C++ 三种语言，都是受控小项目；不能据此推断真实工程的冲突检出率。
+- C++ 的路径限制仍未在生产环境根治：验证器与运行器的目录名已缩短，但如果部署在很深的目录下，MSBuild 仍可能失败。这一点只在测试夹具里用短根目录规避。
 - 宏展开、跨文件声明不在支持范围内。
 - 语法包属于可选依赖（`requirements-semantic.txt`）。未安装时这些语言一律走人工确认，功能降级但不会崩溃。
-- Windows 长路径问题只在 Java/C++ 测试夹具里规避，生产路径未处理。
 
 ## 2026-11-21 追加：重载消歧
 

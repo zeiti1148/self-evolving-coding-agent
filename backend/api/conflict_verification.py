@@ -132,7 +132,7 @@ class ConflictVerifier:
 
     def execute(self, review_id, context, implementation_id, replacements, repeat):
         record, project = context['record'], context['project']
-        manager = WorkspaceManager(self.root/review_id/'workspaces', {'verified':record.path})
+        manager = WorkspaceManager(self.root/review_id/'ws', {'verified':record.path})
         with record.lock:
             if digest(inventory(record.path)) != context['binding']['inventory_hash']:
                 raise VerificationUnavailable('来源在复制前发生变化。')
@@ -154,7 +154,7 @@ class ConflictVerifier:
         if project.language=='java':
             reports=list(workspace.rglob('target/surefire-reports/TEST-*.xml'))
         elif project.language=='cpp':
-            reports=list((manager.root/'.native-builds'/run_id).glob('*.xml'))
+            reports=list((manager.root/'.nb'/run_id).glob('*.xml'))
         data = result.metadata
         case_ids, failed = [], []
         if reports and sum(report.stat().st_size for report in reports) <= 2_000_000:
@@ -177,8 +177,12 @@ class ConflictVerifier:
                             cases[event['Package']+'.'+event['Test']]=event['Action']
                 case_ids=sorted(cases);failed=sorted(k for k,v in cases.items() if v=='fail')
             except (ValueError,KeyError):case_ids=[]
+        # CTest reports failed assertions with exit code 8, not 1. Accepting only
+        # {0,1} made every failing C++ cross-run look "invalid" instead of "failed".
+        exit_code = data.get('exit_code')
+        expected_codes = {0, 1, 8} if project.language == 'cpp' else {0, 1}
         valid = (bool(case_ids) and data.get('tests') == len(case_ids) and not data.get('errors')
-                 and not data.get('skipped') and not data.get('truncated') and data.get('exit_code') in {0,1})
+                 and not data.get('skipped') and not data.get('truncated') and exit_code in expected_codes)
         outcome = ('passed' if result.success else 'failed' if result.error_code == ErrorCode.TEST_FAILED and failed
                    else 'invalid') if valid else 'invalid'
         return dict(id=run_id, target_source_id=context['source']['id'], implementation_source_id=implementation_id,
