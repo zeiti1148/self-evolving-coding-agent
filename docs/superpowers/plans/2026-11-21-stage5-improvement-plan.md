@@ -243,4 +243,5 @@
 - 真实 Maven 交叉验证（Java）：`test_java_conflict_verification.py` 默认跳过，`RUN_MAVEN_CONFLICT=1` 时跑 2 次自测 + 4 次交叉移植，41.9 秒通过；过程中修掉 `changed()` 误比较签名、以及测试夹具的 Windows 长路径问题（生产未处理，已记录）。
 - 真实 Go 交叉验证：`test_go_conflict_verification.py`，`RUN_GO_CONFLICT=1` 时 16.6 秒通过，同样 2 次自测 + 4 次交叉失败。
 - C++ 原生链路修复：装 `requirements-native.txt` 后修掉三个缺陷——发现 ninja 就强制 Ninja 生成器（导致找不到编译器）、`run_process` 缺 `SYSTEMDRIVE`（MSVC 无法识别）、测试夹具深路径超限。修复后 `test_real_native_runner_failure_then_fix[cpp]` 通过，全量回归不再带固定失败。
+- C++ 交叉验证样例未做成：验证器嵌套工作目录下 MSBuild `TryCompile` 报 `DirectoryNotFoundException`，缩短路径仍复现；同一项目走原生运行器正常。测试文件已删除，不保留永久失败/永久跳过，细节写入 `docs/reports/transplant-languages-2026-11-21.md`。
 - 评测改为按分组统计：`same-type` 10 条两策略完全一致（8/10、平均 1.5）；`cross-type` 3 条生产排序 1/3、平均 2.67，关闭词法 0/3、3.33。结论是词法只在类型失配时起作用，样本不足以下调阈值结论。

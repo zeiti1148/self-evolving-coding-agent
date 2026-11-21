@@ -78,10 +78,12 @@
 
 ## 限制
 
-- 真实冲突交叉验证覆盖 Java 与 Go；C++ 的原生**测试运行**已跑通，但还没有构造 C++ 的"同符号不同行为"交叉验证样例，因此不能推断 C++ 的冲突检出率。
+- 真实冲突交叉验证覆盖 Java 与 Go；C++ 的**原生测试运行**已跑通，但 C++ 的"同符号不同行为"交叉验证样例**没有做成**，过程记录如下。
+- C++ 交叉验证尝试失败的具体现象：在验证器复制出的嵌套工作目录里，MSBuild 的 `TryCompile` 阶段报 `MSB6003 / System.IO.DirectoryNotFoundException`（找不到 `cmTC_*.dir\Debug\cmTC_*.tlog` 的一部分），configure 失败导致用例被判 `invalid`。同一份项目通过原生运行器（`test_real_native_runner_failure_then_fix[cpp]`）可以正常配置、编译并跑出 2 项测试。已尝试把工作根缩短到 `C:\tempw\w*` 与 `C:\cppw-*`，仍然复现，因此不是单纯的路径长度。
+- 可能方向：改用 MinGW/Ninja 工具链（本机没有 `g++`），或不使用 MSBuild 生成器。两者都未验证，所以 C++ 冲突检出率依然未知。
 - 宏展开、跨文件声明不在支持范围内。
 - 语法包属于可选依赖（`requirements-semantic.txt`）。未安装时这些语言一律走人工确认，功能降级但不会崩溃。
-- Windows 长路径问题只在测试夹具里规避（Java、C++ 用例），生产路径未处理。
+- Windows 长路径问题只在 Java/C++ 测试夹具里规避，生产路径未处理。
 
 ## 2026-11-21 追加：重载消歧
 
