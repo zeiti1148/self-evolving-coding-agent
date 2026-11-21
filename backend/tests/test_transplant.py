@@ -66,6 +66,41 @@ def test_python_signature_mismatch_is_rejected():
         transplant.transplant(PYTHON, "def greet(name, style):\n    return 'x'\n", 'python', 'greet')
 
 
+JAVA_OVERLOADS = """class Greeting {
+    String greet(String name) {
+        return "hi " + name;
+    }
+
+    String greet(String name, String style) {
+        return style + " " + name;
+    }
+}
+"""
+
+
+def test_java_overload_requires_a_signature():
+    pytest.importorskip('tree_sitter')
+    pytest.raises(VerificationUnavailable, transplant.transplant, JAVA_OVERLOADS,
+                  JAVA_OVERLOADS.replace('return "hi " + name;', 'return "hello " + name;'),
+                  'java', 'Greeting.greet')
+
+
+def test_java_overload_signature_selects_one_member():
+    pytest.importorskip('tree_sitter')
+    donor = JAVA_OVERLOADS.replace('return "hi " + name;', 'return "hello " + name;')
+    output = transplant.transplant(JAVA_OVERLOADS, donor, 'java', 'Greeting.greet(String)')
+    assert 'hello' in output
+    # The other overload keeps its own implementation.
+    assert 'style + " " + name' in output
+    assert output.count('String greet(String name)') == 1
+
+
+def test_unknown_signature_is_rejected():
+    pytest.importorskip('tree_sitter')
+    with pytest.raises(VerificationUnavailable):
+        transplant.transplant(JAVA, JAVA_FIX, 'java', 'Greeting.greet(int)')
+
+
 def test_unsupported_language_and_path_are_rejected():
     with pytest.raises(VerificationUnavailable):
         transplant.transplant('x', 'y', 'ruby', 'f')

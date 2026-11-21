@@ -217,8 +217,39 @@ def qualified_names(text, language):
     return names
 
 
+def _split_target(qualified):
+    """`Type.method` or `Type.method(String, int)`; parameters disambiguate overloads."""
+    name, _, rest = qualified.partition('(')
+    parameters = rest.rsplit(')', 1)[0] if rest else None
+    return name.strip(), (parameters.replace(' ', '') if parameters is not None else None)
+
+
+def _parameters(text, node):
+    """Parameter types only: overloads differ by type, not by parameter name."""
+    field = node.child_by_field_name('parameters')
+    declarator = node.child_by_field_name('declarator')
+    while field is None and declarator is not None:
+        if declarator.type == 'function_declarator':
+            field = declarator.child_by_field_name('parameters')
+            break
+        declarator = declarator.child_by_field_name('declarator')
+    if field is None:
+        return None
+    types = []
+    for child in field.named_children:
+        if child.type not in {'formal_parameter', 'spread_parameter', 'parameter_declaration',
+                              'optional_parameter_declaration', 'variadic_parameter_declaration'}:
+            continue
+        type_node = child.child_by_field_name('type')
+        if type_node is None:
+            continue
+        types.append(' '.join(text[type_node.start_byte:type_node.end_byte].split()).replace(' ', ''))
+    return ','.join(types)
+
+
 def _locate(text, language, qualified):
     import tree_sitter
+    name, parameters = _split_target(qualified)
     kinds = GRAMMARS[language][1]
     tree = _parser(language).parse(text.encode('utf-8'))
     if tree.root_node.has_error:
@@ -227,9 +258,11 @@ def _locate(text, language, qualified):
     stack = [tree.root_node]
     while stack:
         node = stack.pop()
-        if node.type in kinds and _qualified(node, language) == qualified:
-            found.append(node)
+        if node.type in kinds and _qualified(node, language) == name:
+            if parameters is None or _parameters(text, node) == parameters:
+                found.append(node)
         stack.extend(node.named_children)
     if len(found) != 1:
-        raise VerificationUnavailable('无法唯一定位双方相同的函数。')
+        raise VerificationUnavailable('无法唯一定位双方相同的函数；存在重载时请写出参数签名。'
+                                      if parameters is None else '该参数签名未能唯一定位函数。')
     return found[0]
