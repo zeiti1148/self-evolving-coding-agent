@@ -25,7 +25,10 @@ const stateLabel: Record<string,string> = {
 function jobOutcome(job: AutomaticMergeJob) {
   if (job.local_pending) return '规则整理中'
   if (job.changes.some(change => change.state === 'merged')) return '已自动合并'
+  if (job.state === 'succeeded' && !job.changes.length && job.deferred_candidates) return '比较完成（部分推迟）'
   if (job.state === 'succeeded' && !job.changes.length) return '暂无比较对象'
+  // Deferred candidates are visible without expanding the record: a budget cap is not "done".
+  if (job.state === 'succeeded' && job.deferred_candidates) return `${stateLabel[job.state]}（另有 ${job.deferred_candidates} 条推迟）`
   return stateLabel[job.state]
 }
 function jobSummary(job: AutomaticMergeJob) {

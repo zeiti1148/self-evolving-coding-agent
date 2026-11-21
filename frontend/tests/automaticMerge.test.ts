@@ -52,6 +52,20 @@ describe('automatic merge in the experience library',()=>{
     } finally {wrapper.unmount();vi.useRealTimers()}
   })
 
+  it('surfaces deferred candidates in the summary instead of calling the job finished',async()=>{
+    const api=client(), capped=structuredClone(merged)
+    Object.assign(capped.items[0]!, {changes:[],state:'succeeded',candidate_total:7,
+      selected_candidates:5,compared_candidates:5,deferred_candidates:2,
+      notice:'已达到单次比较上限 20 对；剩余 2 对候选暂未自动比较。'})
+    vi.mocked(api.listAutomaticMerges!).mockResolvedValue(capped)
+    const {wrapper}=await setup(api)
+    try {
+      // The cap is visible without expanding the record.
+      expect(wrapper.text()).toContain('比较完成（部分推迟）')
+      expect(wrapper.text()).toContain('剩余 2 对候选暂未自动比较')
+    } finally {wrapper.unmount()}
+  })
+
   it('distinguishes no comparison target from a completed merge',async()=>{
     const api=client(), empty=structuredClone(merged)
     Object.assign(empty.items[0]!, {changes:[],candidate_total:0,selected_candidates:0,compared_candidates:0,
