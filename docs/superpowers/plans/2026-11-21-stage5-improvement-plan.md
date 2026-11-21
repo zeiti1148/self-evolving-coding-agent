@@ -142,7 +142,8 @@
 - [x] 计划模式可用：本机实测输出 4 次计划试验、零调用。
 - [x] 零成本补充测量：新增 `scripts/measure_injection_budget.py`，用生产检索函数比较两种预算的实际注入量。
 - [x] 结论：预算上限不是限制因素（同仓库 8 条同错误类型规则时实际注入 0 条，因为未知重叠组合被整体省略；简单场景 1 条）。adaptive 降预算在这些场景下不改变注入量。
-- [ ] 任务侧真实执行：**未完成**，缺前置快照；恢复方式见报告。
+- [x] 任务侧真实执行（**新协议**，非 11-15 复现）：新增 `scripts/minimal_retrieval_pair.py`，2 个项目 × contextual/adaptive 各 1 次真实任务，共 4 次调用。结果：contextual 每轮重复注入同一规则（5–6 次、1196 字符/轮），adaptive 注入 0 条（审计原因 `no_failure_evidence`/`tests_passed`）；成本方向两对相反，不能宣称任一策略更省。详见 `docs/reports/retrieval-pair-2026-11-21.md`。
+- [ ] 11-15 主序列复现：**无法执行**。runner 依赖 `/api/tasks/{id}/metrics`，而协议指定的两个代码版本（`d724266`、`4ed926a`）都没有该端点；第三个用例 `pytest-10447` 不在 SWE-bench 公开数据中；`cases/manifest.json` 的生成器不在仓库里。
 
 **验收：** 注入侧测量可重复执行；任务侧结论明确标注为未执行，不用注入侧数据替代。
 
