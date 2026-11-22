@@ -12,7 +12,9 @@ from uuid import uuid4
 from backend.shared import (AgentRequest, AgentResult, ApplicationError, ErrorCode,
                             ExperienceCreate, TaskStep, ToolCall, ToolResult)
 from .llm import LLM, TOOLS, parse_arguments, validate_message
-from backend.experience.policy import format_model_reference, to_model_reference, validate_reference_options
+from backend.experience.policy import (format_model_reference, injection_summary,
+                                       retrieval_budget, to_model_reference,
+                                       validate_reference_options)
 from backend.experience.retrieval_evidence import (adaptive_retrieval_evidence, build_retrieval_query,
                                         error_types_in, normalize_error_type)
 from .extraction import extract_and_save_experiences, verification_passed
@@ -35,7 +37,7 @@ literal values, file paths, exception names, tool arguments and identifiers exac
 class Agent:
     def __init__(self, llm: LLM, execute_tool: Callable, experience_store, *, use_experience: bool = True,
                  timeout_seconds: float = 600, verify_before: bool = False,
-                 experience_format="full", retrieval_strategy="contextual"):
+                 experience_format="full", retrieval_strategy="contextual", compact_after_first=False):
         validate_reference_options(experience_format, retrieval_strategy)
         self.llm = llm
         self.execute_tool = execute_tool
@@ -43,8 +45,16 @@ class Agent:
         self.use_experience = use_experience
         self.timeout_seconds = timeout_seconds
         self.experience_format, self.retrieval_strategy = experience_format, retrieval_strategy
+        # Contextual retrieval re-sends the same rules every round; compact drops
+        # supporting metadata from round two onward without changing conditions.
+        self.compact_after_first = compact_after_first
         self.last_run_audit: dict = {}
         self.verify_before = verify_before
+
+    def representation(self, decisions: int) -> str:
+        if self.compact_after_first and decisions > 1:
+            return 'compact'
+        return self.experience_format
 
     def run(self, request: AgentRequest, *, on_step: Callable[[TaskStep], None] | None = None) -> AgentResult:
         calls: list[ToolCall] = []
@@ -56,6 +66,7 @@ class Agent:
         deadline = started + self.timeout_seconds
         decisions = 0
         observed_errors = error_types_in(request.task_description, request.language)
+        reference_limit, character_budget = retrieval_budget(self.retrieval_strategy)
         retrieval_events: list[dict] = []
         injection_events: list[dict] = []
         if hasattr(self.llm, "set_deadline"):
@@ -66,11 +77,15 @@ class Agent:
             if value <= 0:
                 raise ApplicationError(ErrorCode.AGENT_STOPPED, "任务时限已用完。")
             return value
-        def retrieve() -> list[dict]:
+        def retrieve(representation: str | None = None) -> list[dict]:
             nonlocal retrieved_ids, retrieval_error
             if not self.use_experience:
                 return []
+            representation = representation or self.experience_format
             try:
+                # The flag describes the latest attempt: a later success must not be
+                # read as "the last retrieval failed".
+                retrieval_error = None
                 query = build_retrieval_query(request.task_description, results) if self.retrieval_strategy == "contextual" else ""
                 current_errors, reason = observed_errors, None
                 if self.retrieval_strategy == "adaptive":
@@ -80,17 +95,18 @@ class Agent:
                         retrieval_events.append({"error_types": current_errors, "experience_ids": [], "reason": reason})
                         return []
                 if hasattr(self.experiences, "retrieve_model_references"):
-                    references = [format_model_reference(entry, self.experience_format)
+                    references = [format_model_reference(entry, representation)
                         for entry in self.experiences.retrieve_model_references(
                             query, language=request.language, repository_id=request.repository_id,
-                            error_types=current_errors, limit=5, capabilities=request.capabilities,
+                            error_types=current_errors, limit=reference_limit, character_budget=character_budget,
+                            capabilities=request.capabilities,
                             compatibility_key=request.experience_contract, source_revision=request.source_revision,
                             runner_hash=request.runner_hash)]
                 else:
-                    references = [to_model_reference(entry, self.experience_format)
+                    references = [to_model_reference(entry, representation)
                         for entry in self.experiences.retrieve_experiences(
                             query, language=request.language, repository_id=request.repository_id,
-                            error_types=current_errors, limit=5, capabilities=request.capabilities)]
+                            error_types=current_errors, limit=reference_limit, capabilities=request.capabilities)]
                 ids = [entry["id"] for entry in references]
                 retrieved_ids = list(dict.fromkeys([*retrieved_ids, *ids]))
                 event = {"error_types": list(current_errors), "experience_ids": ids}
@@ -123,10 +139,9 @@ class Agent:
             added = [value for value in dict.fromkeys(discovered) if value not in observed_errors]
             if added:
                 observed_errors.extend(added[:max(0, 20 - len(observed_errors))])
-                refreshed = retrieve()
-                payload = json.loads(messages[1]["content"])
-                payload["reference_experiences"] = refreshed
-                messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
+                # Record what the new failure evidence selects. The next model boundary
+                # re-applies it, so writing the payload here would be discarded.
+                retrieve()
 
         def execute(call: ToolCall, *, final: bool = False) -> ToolResult:
             nonlocal changed
@@ -184,11 +199,21 @@ class Agent:
                 decisions += 1
                 # Recheck eligibility at each model boundary; a concurrent merge/publication can supersede references.
                 payload = json.loads(messages[1]["content"])
-                payload["reference_experiences"] = retrieve()
+                representation = self.representation(decisions)
+                refreshed = retrieve(representation)
+                # A failed retrieval is not a withdrawal: keep what the model already
+                # saw. A successful retrieval always decides the eligible set.
+                if not (retrieval_error and not refreshed):
+                    payload["reference_experiences"] = refreshed
                 payload["experience_usage_rule"] = "逐项核对经验适用条件与当前项目的业务要求，不得直接照搬来源项目的默认值。是否修复成功以当前项目的最终测试为准。"
                 messages[1]["content"] = json.dumps(payload, ensure_ascii=False)
+                injected = json.dumps(payload["reference_experiences"], ensure_ascii=False)
                 injection_events.append({"decision": decisions,
+                                         "representation": representation,
                                          "experience_ids": [entry["id"] for entry in payload["reference_experiences"]],
+                                         "reference_limit": reference_limit,
+                                         "character_budget": character_budget,
+                                         "injected_characters": len(injected),
                                          "content_sha256": hashlib.sha256(json.dumps(payload["reference_experiences"], sort_keys=True).encode()).hexdigest()})
                 message = validate_message(self.llm.complete(messages, tools=TOOLS))
                 messages.append(message)
@@ -262,6 +287,7 @@ class Agent:
         events = list(getattr(self.llm, "audit", []))
         self.last_run_audit = {"task_id": request.task_id, "experience_enabled": self.use_experience,
                               "experience_format": self.experience_format, "retrieval_strategy": self.retrieval_strategy,
+                              "reference_limit": reference_limit, "character_budget": character_budget,
                               "decision_rounds": decisions, "tool_calls": len(calls),
                               "elapsed_ms": round((time.monotonic() - started) * 1000),
                               "retrieved_experience_ids": retrieved_ids, "model_requests": events,
@@ -269,6 +295,7 @@ class Agent:
                               "source_revision": request.source_revision, "observed_error_types": observed_errors,
                               "retrieval_events": retrieval_events,
                               "injection_events": injection_events,
+                              "injection_summary": injection_summary(injection_events),
                               "experience_extraction": extraction_diagnostic,
                               "final_verification_attempts": sum(bool(r.metadata.get("final_verification")) for r in results)}
         if hasattr(self.llm, "close"):

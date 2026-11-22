@@ -1,0 +1,765 @@
+{
+  "schema": 1,
+  "note": "已确认的漏合并案例。重放只走 candidate_ranking 的确定性排序，不调用模型。top 为该来源在排序中的最差可接受名次（1 起）；top 为 null 表示只要求仍被纳入比较、不承诺名次。",
+  "cases": [
+    {
+      "id": "greeting-null-guard",
+      "found": "2026-11-16",
+      "channel": "user_reported",
+      "fixed": true,
+      "history": "两份 GreetingService 空值修复表述不同（提前返回 vs 条件表达式），早期自动比较只取了前 5 条，未包含对方。",
+      "source": {
+        "repository_id": "benchmark/greeting-conditional",
+        "task_summary": "GreetingService 空指针修复",
+        "root_cause": "姓名为空时直接拼接导致空指针",
+        "solution": "姓名缺失时用条件表达式选择 guest，非空分支保留 trim",
+        "error_type": "NullPointerException",
+        "files": [
+          "src/main/java/GreetingService.java"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/greeting-early-return",
+        "task_summary": "GreetingService 空值返回默认问候",
+        "root_cause": "空值未判断直接拼接姓名",
+        "solution": "空值时提前返回 Hello, guest!，其余情况保持原有拼接",
+        "error_type": "NullPointerException",
+        "files": [
+          "src/main/java/GreetingService.java"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/stock-count",
+          "task_summary": "库存数量缺失时转换失败",
+          "root_cause": "缺失文本直接转整数抛出 TypeError",
+          "solution": "转换前识别缺失并按业务默认值 0 处理",
+          "error_type": "TypeError",
+          "files": [
+            "app.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/seat-booking",
+          "task_summary": "预订人数缺失时默认值错误",
+          "root_cause": "缺失人数被当作 0",
+          "solution": "缺失人数使用预订默认值 1",
+          "error_type": "TypeError",
+          "files": [
+            "seats.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/pagination",
+          "task_summary": "分页偏移越界",
+          "root_cause": "页码为 0 时偏移为负",
+          "solution": "页码下限设为 1 并校验偏移",
+          "error_type": "IndexError",
+          "files": [
+            "paging.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/date-format",
+          "task_summary": "日期解析失败",
+          "root_cause": "输入使用非 ISO 分隔符",
+          "solution": "解析前规范化分隔符",
+          "error_type": "ValueError",
+          "files": [
+            "dates.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/encoding",
+          "task_summary": "文件读取编码错误",
+          "root_cause": "按系统默认编码读取",
+          "solution": "显式使用 UTF-8 读取",
+          "error_type": "UnicodeDecodeError",
+          "files": [
+            "io_utils.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/permission",
+          "task_summary": "权限校验遗漏角色",
+          "root_cause": "只校验登录未校验角色",
+          "solution": "读取角色并校验可访问范围",
+          "error_type": "PermissionError",
+          "files": [
+            "auth.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "rounding-wording-gap",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "两条金额舍入规则语义等价，但用词几乎不重叠（精度误差 / HALF_UP）；当前词法排序无法保证进入首批，仅保证不被丢弃。",
+      "source": {
+        "repository_id": "benchmark/invoice-rounding",
+        "task_summary": "发票金额出现精度误差",
+        "root_cause": "使用浮点累加后直接输出",
+        "solution": "输出前按分位四舍五入并转成十进制字符串",
+        "error_type": "AssertionError",
+        "files": [
+          "invoice.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/payroll-rounding",
+        "task_summary": "工资条数值结构不一致",
+        "root_cause": "二进制浮点表示带来尾数偏差",
+        "solution": "统一以 Decimal 的 HALF_UP 策略量化到两位",
+        "error_type": "AssertionError",
+        "files": [
+          "payroll.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/grade-rounding",
+          "task_summary": "成绩排序结果不稳定",
+          "root_cause": "相同分数未定义次序",
+          "solution": "按学号做稳定排序",
+          "error_type": "AssertionError",
+          "files": [
+            "grades.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/tax-rounding",
+          "task_summary": "税额汇总偏差",
+          "root_cause": "逐行取整后累加",
+          "solution": "先累加再统一取整",
+          "error_type": "AssertionError",
+          "files": [
+            "tax.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/shipping-rounding",
+          "task_summary": "运费计算误差",
+          "root_cause": "重量单位换算精度不足",
+          "solution": "换算时保留三位小数再取整",
+          "error_type": "AssertionError",
+          "files": [
+            "shipping.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": null
+      }
+    },
+    {
+      "id": "java-null-default",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "两条 Java 空值规则实现不同但适用条件相同；此前只测过 Python 路径，Java 未纳入案例集。",
+      "source": {
+        "repository_id": "benchmark/java-profile",
+        "task_summary": "用户资料为空时抛出空指针",
+        "root_cause": "未判空直接读取昵称",
+        "solution": "读取前判断昵称是否为空，为空返回默认昵称",
+        "error_type": "NullPointerException",
+        "files": [
+          "src/main/java/Profile.java"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/java-account",
+        "task_summary": "账号昵称缺失导致崩溃",
+        "root_cause": "空引用参与字符串拼接",
+        "solution": "拼接前用空值判断替换为游客",
+        "error_type": "NullPointerException",
+        "files": [
+          "src/main/java/Account.java"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/java-arg",
+          "task_summary": "参数校验缺失",
+          "root_cause": "未校验枚举取值",
+          "solution": "按白名单校验枚举",
+          "error_type": "IllegalArgumentException",
+          "files": [
+            "src/main/java/Args.java"
+          ]
+        },
+        {
+          "repository_id": "benchmark/py-count",
+          "task_summary": "库存数量解析失败",
+          "root_cause": "缺失文本转整数",
+          "solution": "缺失时使用默认值 0",
+          "error_type": "TypeError",
+          "files": [
+            "app.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/py-page",
+          "task_summary": "分页偏移越界",
+          "root_cause": "页码为 0 时偏移为负",
+          "solution": "页码下限设为 1",
+          "error_type": "IndexError",
+          "files": [
+            "paging.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "go-index-bound",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "Go 规则的描述用英文，另一条用中文描述同一越界问题；按错误类型应能对上。",
+      "source": {
+        "repository_id": "benchmark/go-slice",
+        "task_summary": "Slice read out of range on empty page",
+        "root_cause": "Index computed before length check",
+        "solution": "Check slice length before indexing",
+        "error_type": "IndexError",
+        "files": [
+          "paging.go"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/go-report",
+        "task_summary": "报表空页读取越界",
+        "root_cause": "未判断长度即按下标取值",
+        "solution": "取值前先比较长度",
+        "error_type": "IndexError",
+        "files": [
+          "report.go"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/go-conf",
+          "task_summary": "配置解析失败",
+          "root_cause": "环境变量缺失",
+          "solution": "缺失时使用默认配置",
+          "error_type": "KeyError",
+          "files": [
+            "conf.go"
+          ]
+        },
+        {
+          "repository_id": "benchmark/py-date",
+          "task_summary": "日期解析失败",
+          "root_cause": "非 ISO 分隔符",
+          "solution": "解析前规范化分隔符",
+          "error_type": "ValueError",
+          "files": [
+            "dates.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "long-context-solution",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "伙伴规则正文很长，单条就接近字符预算；排在前面也可能因预算被省略，属于成本风险而非排序失败。",
+      "source": {
+        "repository_id": "benchmark/long-source",
+        "task_summary": "批量导入时字段缺失",
+        "root_cause": "缺失字段未做默认处理",
+        "solution": "导入前补默认值并校验",
+        "error_type": "KeyError",
+        "files": [
+          "import_data.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/long-partner",
+        "task_summary": "导入记录缺少列导致失败",
+        "root_cause": "列不存在时直接取值",
+        "solution": "读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。读取列前先检查是否存在于映射表中，不存在时按业务默认值补齐；该规则还记录了多语言表头、空行、重复列名、大小写差异、前后空白、编码前缀、合并单元格、隐藏列、公式列、日期格式、数字格式、布尔值写法、空值标记、分隔符差异、引号包裹、转义字符、超长行、重复行与列顺序变化的处理方式。",
+        "error_type": "KeyError",
+        "files": [
+          "importer.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/l-d1",
+          "task_summary": "导出文件编码错误",
+          "root_cause": "未指定编码",
+          "solution": "显式使用 UTF-8",
+          "error_type": "UnicodeDecodeError",
+          "files": [
+            "export.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/l-d2",
+          "task_summary": "排序结果不稳定",
+          "root_cause": "相同键未定义次序",
+          "solution": "按主键稳定排序",
+          "error_type": "AssertionError",
+          "files": [
+            "sorting.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "chinese-wording-variant",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "同一仓库内三条同错误类型规则，伙伴用更口语化的中文描述；词法信号弱，可能排在干扰项之后。",
+      "source": {
+        "repository_id": "benchmark/zh-source",
+        "task_summary": "表单提交时字段缺失",
+        "root_cause": "缺失字段直接参与计算",
+        "solution": "计算前检查字段是否存在",
+        "error_type": "KeyError",
+        "files": [
+          "form.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/zh-partner",
+        "task_summary": "填表少一项就报错",
+        "root_cause": "没填的那一项没做默认处理",
+        "solution": "先把没填的项补上默认值再算",
+        "error_type": "KeyError",
+        "files": [
+          "form_v2.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/zh-d1",
+          "task_summary": "表单字段缺少默认值",
+          "root_cause": "缺失字段未初始化",
+          "solution": "初始化缺失字段为默认值",
+          "error_type": "KeyError",
+          "files": [
+            "form_defaults.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/zh-d2",
+          "task_summary": "表单字段映射错误",
+          "root_cause": "映射表键不一致",
+          "solution": "统一映射表键名",
+          "error_type": "KeyError",
+          "files": [
+            "form_map.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": null
+      }
+    },
+    {
+      "id": "encoding-diagnosis",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "两条都定位到读取编码，但一条描述\"乱码\"、一条描述\"解码异常\"，术语不同。",
+      "source": {
+        "repository_id": "benchmark/enc-source",
+        "task_summary": "读取日志出现乱码",
+        "root_cause": "按系统默认编码读取文件",
+        "solution": "显式使用 UTF-8 打开文件",
+        "error_type": "UnicodeDecodeError",
+        "files": [
+          "logs.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/enc-partner",
+        "task_summary": "GBK 与 UTF-8 混读异常",
+        "root_cause": "编码探测失败后仍用默认编码",
+        "solution": "先探测编码再读取，失败时回退 UTF-8",
+        "error_type": "UnicodeDecodeError",
+        "files": [
+          "reader.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/enc-d1",
+          "task_summary": "写入文件缺权限",
+          "root_cause": "目标目录只读",
+          "solution": "写入前检查写权限",
+          "error_type": "PermissionError",
+          "files": [
+            "writer.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/enc-d2",
+          "task_summary": "路径拼接错误",
+          "root_cause": "未使用绝对路径",
+          "solution": "解析为绝对路径后校验边界",
+          "error_type": "FileNotFoundError",
+          "files": [
+            "paths.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "conditional-default",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "两条都描述了\"缺失时用默认值\"，但默认值来源不同（业务常量 vs 配置项），部分可合并。",
+      "source": {
+        "repository_id": "benchmark/def-source",
+        "task_summary": "开关配置缺失导致异常",
+        "root_cause": "配置项不存在时直接使用",
+        "solution": "缺失时使用业务默认常量",
+        "error_type": "KeyError",
+        "files": [
+          "settings.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/def-partner",
+        "task_summary": "阈值读取不到抛错",
+        "root_cause": "配置读取未处理缺省",
+        "solution": "缺省时回退到内置默认值并记录日志",
+        "error_type": "KeyError",
+        "files": [
+          "thresholds.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/def-d1",
+          "task_summary": "权限角色缺失",
+          "root_cause": "未校验角色",
+          "solution": "默认按最小权限处理",
+          "error_type": "PermissionError",
+          "files": [
+            "auth.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/def-d2",
+          "task_summary": "时间戳格式错误",
+          "root_cause": "使用本地时区",
+          "solution": "统一使用 UTC",
+          "error_type": "ValueError",
+          "files": [
+            "time_utils.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "dependency-order",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "两条规则都涉及\"先校验再转换\"的顺序，一条把它写成前置条件，另一条写成正文。",
+      "source": {
+        "repository_id": "benchmark/dep-source",
+        "task_summary": "转换顺序错误导致类型异常",
+        "root_cause": "对未校验的输入直接做类型转换",
+        "solution": "先校验类型再转换",
+        "error_type": "TypeError",
+        "files": [
+          "convert.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/dep-partner",
+        "task_summary": "输入未校验就参与运算",
+        "root_cause": "缺少前置类型检查",
+        "solution": "运算前插入类型检查步骤",
+        "error_type": "TypeError",
+        "files": [
+          "math_ops.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/dep-d1",
+          "task_summary": "除零错误",
+          "root_cause": "未判断分母",
+          "solution": "分母为零时返回 0",
+          "error_type": "ZeroDivisionError",
+          "files": [
+            "divide.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/dep-d2",
+          "task_summary": "集合越界",
+          "root_cause": "未检查索引范围",
+          "solution": "访问前检查范围",
+          "error_type": "IndexError",
+          "files": [
+            "collections_utils.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "abbreviation-variant",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "伙伴使用缩写（NPE、判空），与来源的全称描述词面几乎不重叠；同错误类型下应能对上。",
+      "source": {
+        "repository_id": "benchmark/abbr-source",
+        "task_summary": "用户对象为空引发空指针",
+        "root_cause": "对象为空时调用其方法",
+        "solution": "调用方法前判断对象是否为空",
+        "error_type": "NullPointerException",
+        "files": [
+          "user.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/abbr-partner",
+        "task_summary": "NPE：user 未判空",
+        "root_cause": "NPE 发生在取值处",
+        "solution": "取值前做 null check，为空返回默认对象",
+        "error_type": "NullPointerException",
+        "files": [
+          "user_service.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/abbr-d1",
+          "task_summary": "用户对象属性缺失",
+          "root_cause": "属性不存在",
+          "solution": "使用 getattr 提供默认值",
+          "error_type": "AttributeError",
+          "files": [
+            "user_attrs.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/abbr-d2",
+          "task_summary": "用户输入格式错误",
+          "root_cause": "未校验格式",
+          "solution": "按正则校验后处理",
+          "error_type": "ValueError",
+          "files": [
+            "validators.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": 5
+      }
+    },
+    {
+      "id": "type-mismatch-null",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "同一根因（空值直接转换）被记录成不同异常类型；错误类型交集为零，只有词法信号可能对上。",
+      "source": {
+        "repository_id": "benchmark/tm-source",
+        "task_summary": "空值转换时报空指针",
+        "root_cause": "对空值直接调用转换方法",
+        "solution": "转换前判断是否为空",
+        "error_type": "NullPointerException",
+        "files": [
+          "convert.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/tm-partner",
+        "task_summary": "缺失值转换抛类型错误",
+        "root_cause": "空值被当作字符串传入 int()",
+        "solution": "传入前检查空值并使用默认值",
+        "error_type": "TypeError",
+        "files": [
+          "convert_v2.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/tm-d1",
+          "task_summary": "空指针在渲染处抛出",
+          "root_cause": "模板变量为空",
+          "solution": "渲染前判空",
+          "error_type": "NullPointerException",
+          "files": [
+            "view.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/tm-d2",
+          "task_summary": "空指针在比较时抛出",
+          "root_cause": "比较前未判空",
+          "solution": "比较前判空",
+          "error_type": "NullPointerException",
+          "files": [
+            "compare.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/tm-d3",
+          "task_summary": "空指针在日志处抛出",
+          "root_cause": "日志字段为空",
+          "solution": "日志前判空",
+          "error_type": "NullPointerException",
+          "files": [
+            "logging_utils.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": null
+      }
+    },
+    {
+      "id": "label-mismatch-index",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "同一根因（集合缺键后取值）分别记成 IndexError 与 KeyError；类型交集为零。",
+      "source": {
+        "repository_id": "benchmark/lm-source",
+        "task_summary": "按位置取值越界",
+        "root_cause": "未判断集合长度就取值",
+        "solution": "取值前检查长度",
+        "error_type": "IndexError",
+        "files": [
+          "collect.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/lm-partner",
+        "task_summary": "按名字取值键不存在",
+        "root_cause": "未判断键是否在映射中",
+        "solution": "取值前检查键是否存在",
+        "error_type": "KeyError",
+        "files": [
+          "mapping.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/lm-d1",
+          "task_summary": "切片越界",
+          "root_cause": "切片结束位置超长",
+          "solution": "限制切片上限",
+          "error_type": "IndexError",
+          "files": [
+            "slices.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/lm-d2",
+          "task_summary": "负索引越界",
+          "root_cause": "负索引超出范围",
+          "solution": "归一化负索引",
+          "error_type": "IndexError",
+          "files": [
+            "indexing.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": null
+      }
+    },
+    {
+      "id": "wording-only-rounding",
+      "found": "2026-11-21",
+      "channel": "review",
+      "fixed": false,
+      "history": "同一舍入问题分别被断言失败与取值错误记录；只有正文措辞相近。",
+      "source": {
+        "repository_id": "benchmark/wo-source",
+        "task_summary": "金额断言失败",
+        "root_cause": "累加后取整顺序错误",
+        "solution": "先按分量化再累加",
+        "error_type": "AssertionError",
+        "files": [
+          "amount.py"
+        ]
+      },
+      "partner": {
+        "repository_id": "benchmark/wo-partner",
+        "task_summary": "金额四舍五入结果不符",
+        "root_cause": "逐项取整造成累计偏差",
+        "solution": "逐项保留精度，最终统一取整",
+        "error_type": "ValueError",
+        "files": [
+          "rounding.py"
+        ]
+      },
+      "distractors": [
+        {
+          "repository_id": "benchmark/wo-d1",
+          "task_summary": "断言输出格式",
+          "root_cause": "输出未按格式",
+          "solution": "统一格式化输出",
+          "error_type": "AssertionError",
+          "files": [
+            "format_out.py"
+          ]
+        },
+        {
+          "repository_id": "benchmark/wo-d2",
+          "task_summary": "断言排序顺序",
+          "root_cause": "排序不稳定",
+          "solution": "使用稳定排序",
+          "error_type": "AssertionError",
+          "files": [
+            "order.py"
+          ]
+        }
+      ],
+      "expect": {
+        "eligible": true,
+        "top": null
+      }
+    }
+  ]
+}

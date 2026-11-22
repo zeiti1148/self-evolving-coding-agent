@@ -1,6 +1,7 @@
 import io
 import json
 import stat
+import tempfile
 import time
 import zipfile
 from dataclasses import replace
@@ -124,7 +125,11 @@ def test_native_experience_api_accepts_verified_rules(tmp_path, language, runner
 
 @pytest.mark.parametrize('language',['go','cpp'])
 def test_real_native_runner_failure_then_fix(tmp_path, language):
-    source = tmp_path/'source'; source.mkdir()
+    # MSBuild cannot build under pytest's deep tmp_path on Windows (long object
+    # paths), so the native workspaces use a short parent. The production limit
+    # is documented in docs/reports/transplant-languages-2026-11-21.md.
+    short_root = Path(tempfile.mkdtemp(prefix='native-', dir=tempfile.gettempdir()))
+    source = short_root/'source'; source.mkdir()
     if language == 'go':
         executable('go')
         files = {'go.mod':'module example.org/counter\n\ngo 1.20\n', 'counter.go':'package counter\nfunc Count(x int) int { return x }\n',
@@ -138,9 +143,9 @@ def test_real_native_runner_failure_then_fix(tmp_path, language):
         file, fixed = 'counter.cpp', 'int count(int x) { return x < 0 ? 0 : x; }\n'
     for name, content in files.items():
         path = source/name; path.parent.mkdir(parents=True, exist_ok=True); path.write_text(content)
-    manager = WorkspaceManager(tmp_path/'workspaces', {'project':source})
+    manager = WorkspaceManager(short_root / 'workspaces', {'project':source})
     workspace = manager.create_workspace(source, str(uuid4()))
-    tools = ToolService(manager, tmp_path/'maven', runner_config=RunnerConfig())
+    tools = ToolService(manager, short_root/'maven', runner_config=RunnerConfig())
     def invoke(name, **args): return tools.execute_tool(workspace, ToolCall(id=str(uuid4()), name=name, arguments=args))
     before = invoke('run_tests')
     assert before.error_code == ErrorCode.TEST_FAILED, before.model_dump()

@@ -56,6 +56,7 @@ class MultiAgentCoordinator:
         roles = RoleRunner(self.llm_factory, budget)
         calls, results, events, changed, retrieval_events = [], [], [], [], []
         facts, diagnoses, feedback, observed = [], [], [], error_types_in(request.task_description, request.language)
+        retrieval_failed = False
         lock = RLock()
         coordinator_id = str(uuid4())
         snapshot = None
@@ -104,9 +105,12 @@ class MultiAgentCoordinator:
             return result
 
         def retrieve():
+            nonlocal retrieval_failed
             if not self.use_experience:
                 return []
             try:
+                # The flag describes the latest attempt only.
+                retrieval_failed = False
                 # Read the actual test result stream; role summaries are not test evidence.
                 query = build_retrieval_query(request.task_description, list(results)) if self.retrieval_strategy == "contextual" else ""
                 current_errors, reason = observed, None
@@ -136,6 +140,7 @@ class MultiAgentCoordinator:
                     retrieval_events.append(event)
                 return entries
             except Exception:
+                retrieval_failed = True
                 with lock:
                     retrieval_events.append({"experience_ids": [], "error": "经验检索暂时不可用"})
                 return []
@@ -146,7 +151,10 @@ class MultiAgentCoordinator:
 
         def run_role(role, context, proposal=None):
             agent_id = str(uuid4())
-            context = replace(context, reference_experiences=retrieve())
+            references = retrieve()
+            # A failed retrieval must not blank the context this role already holds.
+            if not (retrieval_failed and not references):
+                context = replace(context, reference_experiences=references)
             emit(role, agent_id, role, "started", f"{ROLE_LABELS[role]}角色已启动，使用独立上下文。", context.snapshot_revision)
             try:
                 if role == "diagnosis": value = roles.diagnose(context, agent_id)

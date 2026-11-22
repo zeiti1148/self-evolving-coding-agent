@@ -3,6 +3,14 @@ from pathlib import Path
 
 
 def symbols(source: str, language: str) -> set[str]:
+    if language in {'go', 'cpp'}:
+        # One implementation of target naming for both scope grounding and
+        # conflict splicing, so the two can never disagree.
+        from .transplant import qualified_names
+        try:
+            return qualified_names(source, language)
+        except Exception:
+            return set()
     from tree_sitter import Language, Parser
     if language == 'python':
         import tree_sitter_python as grammar

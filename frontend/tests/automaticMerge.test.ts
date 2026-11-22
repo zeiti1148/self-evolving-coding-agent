@@ -14,7 +14,7 @@ const sources: Experience[] = ids.slice(0,2).map((id,index) => ({id, created_at:
   task_summary:index ? '预订人数修复' : '库存数量修复', root_cause:'缺失值被直接转换', error_type:'TypeError',
   solution:index ? '解析人数前使用预订默认值' : '在转换库存输入前处理缺失情况', verification:'实际验收通过', tags:['python']}))
 const merged: AutomaticMergePage = {items:[{id:ids[1]!, source:sources[1]!, state:'succeeded', notice:'比较完成。',
-  created_at:stamp, updated_at:stamp, local_pending:false, candidate_total:1, selected_candidates:1, deferred_candidates:0,
+  created_at:stamp, updated_at:stamp, local_pending:false, candidate_total:1, selected_candidates:1, compared_candidates:1, deferred_candidates:0,
   changes:[{id:ids[2]!, kind:'shared_principle', state:'merged', before:sources,
     after:{title:'缺失输入的转换顺序', principle:'转换前识别缺失输入，保留各项目约定的默认行为。', applicability:['可选数值输入'],
       boundaries:['不能跨项目覆盖默认值'], bindings:sources.map(s=>({source_id:s.id,supports:[{issue_index:0,field:'solution',quote:s.solution}]})),
@@ -52,9 +52,23 @@ describe('automatic merge in the experience library',()=>{
     } finally {wrapper.unmount();vi.useRealTimers()}
   })
 
+  it('surfaces deferred candidates in the summary instead of calling the job finished',async()=>{
+    const api=client(), capped=structuredClone(merged)
+    Object.assign(capped.items[0]!, {changes:[],state:'succeeded',candidate_total:7,
+      selected_candidates:5,compared_candidates:5,deferred_candidates:2,
+      notice:'已达到单次比较上限 20 对；剩余 2 对候选暂未自动比较。'})
+    vi.mocked(api.listAutomaticMerges!).mockResolvedValue(capped)
+    const {wrapper}=await setup(api)
+    try {
+      // The cap is visible without expanding the record.
+      expect(wrapper.text()).toContain('比较完成（部分推迟）')
+      expect(wrapper.text()).toContain('剩余 2 对候选暂未自动比较')
+    } finally {wrapper.unmount()}
+  })
+
   it('distinguishes no comparison target from a completed merge',async()=>{
     const api=client(), empty=structuredClone(merged)
-    Object.assign(empty.items[0]!, {changes:[],candidate_total:0,selected_candidates:0,
+    Object.assign(empty.items[0]!, {changes:[],candidate_total:0,selected_candidates:0,compared_candidates:0,
       notice:'当前没有更早且符合比较条件的经验；后续修复会自动与本条比较。'})
     vi.mocked(api.listAutomaticMerges!).mockResolvedValue(empty)
     const {wrapper}=await setup(api)

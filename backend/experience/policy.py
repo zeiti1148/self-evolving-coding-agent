@@ -52,6 +52,37 @@ def validate_reference_options(experience_format, retrieval_strategy):
         raise ValueError("Invalid experience representation or retrieval strategy.")
 
 
+# Rules and rule-text characters allowed per injection, by retrieval strategy.
+# Adaptive waits for current failure evidence, so a smaller payload is enough;
+# baseline and contextual keep the historical budget.
+RETRIEVAL_BUDGETS = {
+    "baseline": (5, 16000),
+    "contextual": (5, 16000),
+    "adaptive": (3, 8000),
+}
+
+
+def retrieval_budget(strategy):
+    """Budget for one injection; unknown strategies fall back to contextual."""
+    return RETRIEVAL_BUDGETS.get(strategy, RETRIEVAL_BUDGETS["contextual"])
+
+
+def injection_summary(events):
+    """Deterministic reuse statistics for the references actually injected.
+
+    Re-sending a rule the model already saw is the measurable part of repeated
+    experience injection; it is derived from the audit, not from model output.
+    """
+    counts = {}
+    for event in events or []:
+        for identifier in event.get('experience_ids', []):
+            counts[identifier] = counts.get(identifier, 0) + 1
+    total = sum(counts.values())
+    repeated = sum(count - 1 for count in counts.values())
+    return dict(unique=len(counts), total=total, repeated=repeated,
+                repeated_ratio=round(repeated / total, 3) if total else 0.0)
+
+
 def to_model_reference(entry: Experience, representation="full") -> dict:
     return format_model_reference(_full_reference(entry), representation)
 

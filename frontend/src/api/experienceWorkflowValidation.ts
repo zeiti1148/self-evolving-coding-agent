@@ -128,7 +128,7 @@ export function readAutomaticMerges(value: unknown): AutomaticMergePage {
     check(uuid(job.id) && source?.id === job.id && date(job.created_at) && date(job.updated_at))
     check(['pending','running','waiting','succeeded','failed'].includes(String(job.state)))
     check(typeof job.notice === 'string' && typeof job.local_pending === 'boolean')
-    for (const key of ['candidate_total','selected_candidates','deferred_candidates']) check(Number.isSafeInteger(job[key]) && Number(job[key]) >= 0)
+    for (const key of ['candidate_total','selected_candidates','compared_candidates','deferred_candidates']) check(Number.isSafeInteger(job[key]) && Number(job[key]) >= 0)
     check(Array.isArray(job.changes))
     for (const rawChange of job.changes) {
       const change = object(rawChange)

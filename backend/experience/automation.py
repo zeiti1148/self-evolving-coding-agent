@@ -13,6 +13,9 @@ from .knowledge import canonical, now
 
 logger = logging.getLogger(__name__)
 MAX_CANDIDATES = 5
+# A single experience must not consume unbounded model calls when many earlier
+# records share its scope. Remaining pairs stay disclosed instead of compared.
+MAX_PAIRS_PER_JOB = 20
 LEASE_SECONDS = 120
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS experience_auto_jobs (
@@ -63,51 +66,67 @@ def _retired(connection, identifier):
     return bool(connection.execute(f'SELECT 1 WHERE ? IN ({SUPERSEDED} UNION {RETIRED})', (identifier,)).fetchone())
 
 
-def _plan(path, job):
+def candidate_ranking(connection, source):
+    """Deterministic, model-free ordering shared by planning and case replay."""
     from backend.projects import same_source_revision
     from .local_equivalence import same_domain
     from .retrieval import lexical_candidates
     from .store import COLUMNS, decode_row, SUPERSEDED, RETIRED
+    connection.create_function('same_source_revision', 2, same_source_revision, deterministic=True)
+    # A strict ordering gives every pair one owner, including concurrent repairs.
+    where = ("json_extract(details,'$.language')=? AND (json_extract(details,'$.repository_id')!=? "
+             "OR same_source_revision(json_extract(details,'$.source_revision'),?)) "
+             "AND json_extract(details,'$.schema_version')>=4 AND json_extract(details,'$.reuse_status')='active' "
+             "AND json_extract(details,'$.scope')='project' AND source_task_id!=? "
+             "AND (created_at<? OR (created_at=? AND id<?)) "
+             f"AND id NOT IN ({SUPERSEDED} UNION {RETIRED})")
+    stamp = source.created_at.isoformat(timespec='microseconds')
+    params = (source.language, source.repository_id, source.source_revision, source.source_task_id, stamp, stamp, source.id)
+    rows = connection.execute(f'SELECT {COLUMNS} FROM experiences WHERE '+where+
+                              ' ORDER BY created_at DESC,id DESC LIMIT 200', params).fetchall()
+    query = '\n'.join([source.task_summary, *(v.root_cause+'\n'+v.solution for v in source.issues)])
+    ranks = {}
+    for rank, rule_id in enumerate(lexical_candidates(connection, query)):
+        if len(ranks) >= 200:
+            break
+        for row in connection.execute('SELECT experience_id FROM knowledge_sources WHERE rule_id=? ORDER BY experience_id LIMIT ?',
+                                      (rule_id, 200-len(ranks))):
+            ranks[row[0]] = min(rank, ranks.get(row[0], rank))
+    if ranks:
+        marks = ','.join('?' for _ in ranks)
+        rows += connection.execute(f'SELECT {COLUMNS} FROM experiences WHERE '+where+
+                                   f' AND id IN ({marks})', (*params, *ranks)).fetchall()
+    candidates = {row['id']: decode_row(row) for row in rows}
+    errors = {i.error_type for i in source.issues}
+    ordered = sorted(candidates.values(), key=lambda item: (
+        1/(60+ranks[item.id]) if item.id in ranks else 0,
+        bool(errors.intersection(i.error_type for i in item.issues)), item.created_at, item.id), reverse=True)
+    # Disclosure and selection must share one predicate; otherwise "其余 N 条未比较"
+    # would count candidates that can never be compared (derived, merged, unverified).
+    return [item for item in ordered if item.source_task_id and not item.derived_from and not item.merged_from
+            and (item.repository_id != source.repository_id or same_domain(source, item))
+            and item.evidence and all(e.tests > 0 and not (e.failures or e.errors or e.skipped)
+                                      for e in item.evidence)]
+
+
+def _plan(path, job):
     with connect(path) as connection:
         source = _source(connection, job['id'])
-        connection.create_function('same_source_revision', 2, same_source_revision, deterministic=True)
-        # A strict ordering gives every pair one owner, including concurrent repairs.
-        where = ("json_extract(details,'$.language')=? AND (json_extract(details,'$.repository_id')!=? "
-                 "OR same_source_revision(json_extract(details,'$.source_revision'),?)) "
-                 "AND json_extract(details,'$.schema_version')>=4 AND json_extract(details,'$.reuse_status')='active' "
-                 "AND json_extract(details,'$.scope')='project' AND source_task_id!=? "
-                 "AND (created_at<? OR (created_at=? AND id<?)) "
-                 f"AND id NOT IN ({SUPERSEDED} UNION {RETIRED})")
-        stamp = source.created_at.isoformat(timespec='microseconds')
-        params = (source.language, source.repository_id, source.source_revision, source.source_task_id, stamp, stamp, source.id)
-        total = connection.execute('SELECT count(*) FROM experiences WHERE '+where, params).fetchone()[0]
-        rows = connection.execute(f'SELECT {COLUMNS} FROM experiences WHERE '+where+
-                                  ' ORDER BY created_at DESC,id DESC LIMIT 200', params).fetchall()
-        query = '\n'.join([source.task_summary, *(v.root_cause+'\n'+v.solution for v in source.issues)])
-        ranks = {}
-        for rank, rule_id in enumerate(lexical_candidates(connection, query)):
-            if len(ranks) >= 200:
-                break
-            for row in connection.execute('SELECT experience_id FROM knowledge_sources WHERE rule_id=? ORDER BY experience_id LIMIT ?',
-                                          (rule_id, 200-len(ranks))):
-                ranks[row[0]] = min(rank, ranks.get(row[0], rank))
-        if ranks:
-            marks = ','.join('?' for _ in ranks)
-            rows += connection.execute(f'SELECT {COLUMNS} FROM experiences WHERE '+where+
-                                       f' AND id IN ({marks})', (*params, *ranks)).fetchall()
-        candidates = {row['id']: decode_row(row) for row in rows}
-        errors = {i.error_type for i in source.issues}
-        ordered = sorted(candidates.values(), key=lambda item: (
-            1/(60+ranks[item.id]) if item.id in ranks else 0,
-            bool(errors.intersection(i.error_type for i in item.issues)), item.created_at, item.id), reverse=True)
-        chosen = [item for item in ordered if item.source_task_id and not item.derived_from and not item.merged_from
-                  and (item.repository_id != source.repository_id or same_domain(source, item))
-                  and item.evidence and all(e.tests > 0 and not (e.failures or e.errors or e.skipped)
-                                           for e in item.evidence)][:MAX_CANDIDATES]
+        eligible = candidate_ranking(connection, source)
+        compared = {row[0] for row in connection.execute(
+            'SELECT CASE WHEN left_id=? THEN right_id ELSE left_id END FROM experience_auto_pairs '
+            'WHERE left_id=? OR right_id=?', (source.id, source.id, source.id))}
+        # The budget counts finished comparisons, not enqueued pairs, so a batch
+        # can never overshoot the configured per-experience model spend.
+        finished = connection.execute('SELECT count(*) FROM experience_auto_pairs p '
+            'JOIN experience_auto_links l ON p.id=l.pair_id WHERE l.job_id=? '
+            "AND p.state IN ('succeeded','rejected','failed')", (job['id'],)).fetchone()[0]
+        batch = max(0, min(MAX_CANDIDATES, MAX_PAIRS_PER_JOB - finished))
+        chosen = [item for item in eligible if item.id not in compared][:batch]
         connection.execute('BEGIN IMMEDIATE')
         active = connection.execute('SELECT lease_token FROM experience_auto_jobs WHERE id=?', (job['id'],)).fetchone()
         if active[0] != job['lease_token']:
-            return
+            return 0
         for candidate in chosen:
             entries = sorted([source, candidate], key=lambda item: item.id)
             pair_id = str(uuid5(NAMESPACE_URL, 'automatic-repair-pair:'+':'.join(e.id for e in entries)))
@@ -117,7 +136,8 @@ def _plan(path, job):
                                 canonical([e.model_dump(mode='json') for e in entries]), now()))
             connection.execute('INSERT OR IGNORE INTO experience_auto_links VALUES(?,?)', (job['id'], pair_id))
         connection.execute('UPDATE experience_auto_jobs SET candidates=?,candidate_total=? WHERE id=?',
-                           (canonical([e.id for e in chosen]), total, job['id']))
+                           (canonical([e.id for e in chosen]), len(eligible), job['id']))
+    return len(chosen)
 
 
 def reschedule_local_comparisons(path):
@@ -169,8 +189,7 @@ def process(path, job, llm_factory, conflict_verifier=None):
         if _retired(connection, job['id']):
             _finish(path, job, 'succeeded', '来源已被替代或停用，不再生成共同规则。')
             return
-    if job['candidates'] is None:
-        _plan(path, job)
+    enqueued = _plan(path, job) if job['candidates'] is None else None
     with connect(path) as connection:
         pairs = connection.execute('SELECT p.* FROM experience_auto_pairs p JOIN experience_auto_links l ON p.id=l.pair_id '
                                    'WHERE l.job_id=? ORDER BY p.id', (job['id'],)).fetchall()
@@ -246,11 +265,29 @@ def process(path, job, llm_factory, conflict_verifier=None):
             "SELECT DISTINCT r.* FROM knowledge_relations r JOIN knowledge_sources s "
             "ON s.rule_id IN (r.left_rule,r.right_rule) WHERE s.experience_id=? "
             "AND r.status='pending' AND r.kind IN ('conflict','unknown')", (job['id'],)))
+    with connect(path) as connection:
+        planned = connection.execute('SELECT candidate_total FROM experience_auto_jobs WHERE id=?',
+                                     (job['id'],)).fetchone()[0] or 0
+    done = sum(1 for state in states if state in {'succeeded', 'rejected', 'failed'})
+    outstanding = max(0, planned - done)
+    if (outstanding and enqueued != 0 and done < MAX_PAIRS_PER_JOB
+            and not any(s in {'pending', 'running', 'waiting'} for s in states)):
+        # Compare the next batch on a later claim so progress stays observable.
+        with connect(path) as connection:
+            if connection.execute("UPDATE experience_auto_jobs SET candidates=NULL,state='pending',available_at=0,notice=?,"
+                                  'lease_token=NULL,lease_until=NULL,updated_at=? WHERE id=? AND lease_token=?',
+                                  (f'已比较 {done} 对，继续比较剩余候选经验。', now(), job['id'],
+                                   job['lease_token'])).rowcount:
+                return
     state = ('pending' if any(s in {'pending', 'running'} for s in states) else
              'waiting' if 'waiting' in states or pending_review else 'failed' if 'failed' in states else 'succeeded')
     notice = {'pending': '继续比较已有经验。', 'waiting': '等待后台整理或冲突审阅，处理后自动继续。',
               'failed': '部分比较未完成，可单独重试经验比较。',
               'succeeded': '比较完成。' if states else '当前没有更早且符合比较条件的经验；后续修复会自动与本条比较。'}[state]
+    if outstanding and state == 'succeeded':
+        notice = (f'已达到单次比较上限 {MAX_PAIRS_PER_JOB} 对；剩余 {outstanding} 对候选暂未自动比较。'
+                  if done >= MAX_PAIRS_PER_JOB else
+                  f'仍有 {outstanding} 对候选无法自动比较（来源已变更或不满足比较条件）。')
     _finish(path, job, state, notice)
 
 
@@ -371,11 +408,14 @@ def feed(path, *, limit=5, offset=0, language=None, repository_id=None, scope=No
                 changes.append(dict(id=pair['id'], kind='shared_principle', state=state, before=json.loads(pair['inputs']),
                     after=principle, reason=pair['notice'] if state != 'invalidated' else '来源已变更、停用或有待审阅规则；历史合并当前不可复用。',
                     proposal=value.get('proposal'), review_result=value.get('review')))
-            selected = len(json.loads(job['candidates'])) if job['candidates'] else 0
+            selected = len(pairs)
+            # Failed attempts were compared too; only pending pairs remain "not compared".
+            compared = sum(1 for pair in pairs if pair['state'] in {'succeeded', 'rejected', 'failed'})
             result.append(dict(id=job['id'], source=source.model_dump(mode='json'), state=job['state'],
                 notice=job['notice'], created_at=job['created_at'], updated_at=job['updated_at'],
                 local_pending=local_pending, candidate_total=job['candidate_total'], selected_candidates=selected,
-                deferred_candidates=max(0, job['candidate_total']-selected), changes=changes))
+                compared_candidates=compared, deferred_candidates=max(0, job['candidate_total']-selected),
+                changes=changes))
         return {'items': result, 'next_offset': offset+limit if len(jobs)>limit else None}
 
 

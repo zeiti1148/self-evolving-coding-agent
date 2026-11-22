@@ -25,7 +25,10 @@ const stateLabel: Record<string,string> = {
 function jobOutcome(job: AutomaticMergeJob) {
   if (job.local_pending) return '规则整理中'
   if (job.changes.some(change => change.state === 'merged')) return '已自动合并'
+  if (job.state === 'succeeded' && !job.changes.length && job.deferred_candidates) return '比较完成（部分推迟）'
   if (job.state === 'succeeded' && !job.changes.length) return '暂无比较对象'
+  // Deferred candidates are visible without expanding the record: a budget cap is not "done".
+  if (job.state === 'succeeded' && job.deferred_candidates) return `${stateLabel[job.state]}（另有 ${job.deferred_candidates} 条推迟）`
   return stateLabel[job.state]
 }
 function jobSummary(job: AutomaticMergeJob) {
@@ -112,7 +115,7 @@ onBeforeUnmount(() => { disposed = true; ++version; controller?.abort(); writeCo
         <div class="job-actions"><span class="auto-merge-state" :class="job.state">{{ jobOutcome(job) }}</span><span class="disclosure-action"><span class="when-closed">展开</span><span class="when-open">收起</span><AppIcon name="chevron-down" class="disclosure-chevron" :size="20" /></span></div>
       </summary>
       <div class="job-content">
-      <div class="auto-merge-context"><RouterLink :to="'/tasks/' + job.source.source_task_id">来源修复任务 ↗</RouterLink><span v-if="job.candidate_total">选取 {{ job.selected_candidates }} / {{ job.candidate_total }} 条候选经验<span v-if="job.deferred_candidates"> · 其余 {{ job.deferred_candidates }} 条未比较</span></span></div>
+      <div class="auto-merge-context"><RouterLink :to="'/tasks/' + job.source.source_task_id">来源修复任务 ↗</RouterLink><span v-if="job.candidate_total">候选 {{ job.candidate_total }} 条 · 已比较 {{ job.compared_candidates }}<span v-if="job.deferred_candidates"> · 其余 {{ job.deferred_candidates }} 条未比较</span></span></div>
       <p v-if="job.local_pending || job.state==='running' || job.state==='pending'" class="field-hint">{{ job.notice || '正在比较经验与测试证据，结果自动更新。' }}</p>
       <p v-if="!job.changes.length && !job.local_pending && job.state === 'succeeded'" class="field-hint">{{ job.notice || '当前没有符合条件的比较对象；后续修复会自动与本条比较。' }}</p>
       <details v-for="(change, changeIndex) in orderedChanges(job.changes)" :key="change.id" :open="changeIndex === 0" class="auto-merge-change" data-testid="auto-merge-change">
