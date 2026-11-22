@@ -2,6 +2,17 @@
 
 三个最小可运行项目，各有**一条初始失败的测试**，用来演示非 Python 语言的修复任务、冲突校验与自动合并。基线失败是刻意的：`Greet("")` / `greet("")` 返回 `Hello, !`，期望 `Hello, guest!`。
 
+## 目录
+
+| 目录 | 语言 | 初始失败 |
+| --- | --- | --- |
+| `python/` | Python | `greet("")` 返回 `Hello, !` |
+| `python-orders/` | Python | `total([])` 返回 `None`，期望 `0` |
+| `go/` | Go | `Greet("")` 返回 `Hello, !` |
+| `go-pagination/` | Go | `LastPageStart(9, 3)` 返回 `9`，期望 `6` |
+| `cpp/` | C++ | `greet("")` 返回 `Hello, !` |
+| `cpp-parse/` | C++ | `to_int("")` 抛异常，期望 `-1` |
+
 ## Go
 
 ```powershell
@@ -19,6 +30,20 @@ ctest --test-dir benchmarks/multilang/cpp/.build -C Debug --output-on-failure   
 
 Windows 上如果 PATH 里没有 CMake，可以用 Visual Studio 自带的：
 `D:\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`。
+
+## 自动合并实测（2026-11-23）
+
+在“项目内容互不相同”的独立副本上，每个项目连跑两次**描述完全一致且把实现写死**的任务，等待后台自动比较：
+
+| 项目 | 语言 | 结果 | 说明 |
+| --- | --- | --- | --- |
+| orders-merge | Python | **合并** | 1 对比较，`equivalent_rules: merged` |
+| cpp-merge | C++ | **合并** | 1 对比较，`equivalent_rules: merged` |
+| go-merge | Go | 未合并 | 该仓库存在第三条同目标规则，其未判定关系挡住了这对候选 |
+
+同一批任务里还产生了 2 条跨项目的“共同处理原则”（`shared_principle`）：Python 的空输入边界默认值、C++ 的空字符串入口替代值，都显示为“2 份来源 · 已归并”。
+
+合并要同时满足：**同一代码目标**（`文件#函数` 一致）、**行为等价**（模型复核 + 真实测试）、**邻域没有未判定关系**。第三条经验如果没有处理完，会连带挡住前两条的合并，这是保守设计。
 
 ## Python（自动合并样例）
 

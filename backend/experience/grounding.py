@@ -52,7 +52,18 @@ def ground_issues(issues, workspace, language):
             except (OSError, UnicodeError, ImportError, ValueError):
                 continue
         requested = set(issue.symbols)
-        if requested and not requested.issubset(actual):
+        resolved = set()
+        for wanted in requested:
+            if wanted in actual:
+                resolved.add(wanted)
+                continue
+            # A hint may arrive without its file prefix, or with a different one.
+            # Accept it only when exactly one parsed symbol carries that name.
+            name = wanted.split('#', 1)[-1]
+            matches = {item for item in actual if item.split('#', 1)[-1] == name}
+            if len(matches) == 1:
+                resolved.add(next(iter(matches)))
+        if requested and not resolved:
             issue.symbols = []
             continue
-        issue.symbols = sorted(requested or (actual if len(actual) == 1 else set()))
+        issue.symbols = sorted(resolved or (actual if len(actual) == 1 else set()))
