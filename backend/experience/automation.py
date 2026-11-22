@@ -429,6 +429,8 @@ class AutomaticMergeWorker:
 
     def start(self):
         reschedule_local_comparisons(self.path)
+        from .jobs import reschedule_relations
+        reschedule_relations(self.path)
         self.thread.start()
 
     def close(self):

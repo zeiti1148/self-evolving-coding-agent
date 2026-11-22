@@ -32,6 +32,19 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
         source_links={}
         for rule,identity in connection.execute('SELECT DISTINCT rule_id,experience_id FROM knowledge_sources'):
             if identity in sources:source_links.setdefault(rule,set()).add(identity)
+        ambiguities={}
+        for left,right,kind in connection.execute(
+                "SELECT left_rule,right_rule,kind FROM knowledge_relations WHERE status='pending' AND kind IN ('conflict','unknown')"):
+            for rule,other in ((left,right),(right,left)):
+                ambiguities.setdefault(rule,[]).append((kind,other))
+        rule_errors={i:json.loads(d)['issue'].get('error_type') for i,d in connection.execute(
+            'SELECT id,data FROM knowledge_rules')} if ambiguities else {}
+        def pause_reason(rule_id):
+            waiting=ambiguities.get(rule_id,[])
+            if not waiting:
+                return '相关规则已隔离或尚未完成检查。'
+            errors=sorted({rule_errors.get(other) or '未知' for _,other in waiting})
+            return f'与 {len(waiting)} 条同类经验的关系尚未判定（{"/".join(errors[:3])}），先不自动注入。'
         cards=[];seen=set();aliases={}
         for row in rows:
             identities=equivalents.get(row['id'],{row['id']})
@@ -52,7 +65,7 @@ def library(path, *, language=None, repository_id=None, scope=None, q='',error_t
                 applicability=data['applicability'],constraints=data['constraints'],source_ids=ids,
                 sources=[sources[i].model_dump(mode='json') for i in ids[:20]],source_count=len(ids),evidence_count=len(evidence),
                 merged=len(ids)>1,reason=('相同内容已归并引用；' if len(ids)>1 else '')+'缺少可核对的测试证据，暂不自动复用。' if unverified else
-                '相关规则已隔离或尚未完成检查。' if rule_state=='paused' else
+                pause_reason(row['id']) if rule_state=='paused' else
                 '仅保留一条规范规则，来源与独立测试分别保存。' if len(ids)>1 else '已验证，可在适用范围内复用。',
                 created_at=row['created_at']))
         for group in groups:

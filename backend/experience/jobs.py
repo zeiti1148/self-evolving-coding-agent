@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from pathlib import Path
 from uuid import uuid4
 
 from backend.shared import ConsolidationReport
@@ -45,6 +46,28 @@ def fail(path, job, exc):
             (state,count,type(exc).__name__,time.time()+RETRY_DELAYS[min(count-1,4)],now(),job['id'],job['lease_token'])).rowcount
         if changed and state == 'failed':
             connection.execute("UPDATE knowledge_rules SET state='failed',version=version+1 WHERE id=?", (job['rule_id'],))
+
+
+def reschedule_relations(path):
+    """One policy migration: re-check every rule after the relation policy changes.
+
+    Existing relations are never deleted; the next pass upserts the recomputed
+    kind. Rules whose relations keep the same verdict simply stay as they are.
+    """
+    from .relations import RELATION_POLICY_VERSION
+    path = Path(path)
+    with connect(path) as connection:
+        connection.execute('BEGIN IMMEDIATE')
+        previous = connection.execute(
+            "SELECT value FROM knowledge_meta WHERE key='relation_policy'").fetchone()
+        if previous and previous[0] == RELATION_POLICY_VERSION:
+            return False
+        connection.execute(
+            "UPDATE knowledge_jobs SET state='pending',cursor='',available_at=0,lease_until=NULL,"
+            "lease_token=NULL,updated_at=? WHERE state='succeeded'", (now(),))
+        connection.execute("INSERT OR REPLACE INTO knowledge_meta VALUES('relation_policy',?)",
+                           (RELATION_POLICY_VERSION,))
+    return True
 
 
 def process_page(path, job, semantic=None):
