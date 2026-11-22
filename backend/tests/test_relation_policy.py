@@ -16,10 +16,10 @@ def rule(error_type, solution, files=('app.py',), conditions=('Optional numeric 
                 task_summary='summary', root_cause='cause', solution=solution, tags=[])
 
 
-def test_different_error_types_in_the_same_scope_are_compatible():
+def test_different_error_types_in_the_same_scope_stay_for_review():
     kind, details = classify(rule('ValueError', 'Reject missing input'), rule('IndexError', 'Clamp the page offset'))
-    assert kind == 'compatible'
-    assert details['method'] == 'error-type-disjoint'
+    assert kind == 'unknown'
+    assert '文字差异不构成矛盾证据' in details['reason']
 
 
 def test_same_error_type_stays_ambiguous_without_a_model():

@@ -4,7 +4,7 @@ import re
 from backend.projects import same_source_revision
 from .knowledge import canonical, rule_text
 
-RELATION_POLICY_VERSION = 'rules-v5-error-type-disjoint'
+RELATION_POLICY_VERSION = 'rules-v4-action-entailment'
 
 
 def overlaps(left, right):
@@ -50,14 +50,11 @@ def classify(left, right, semantic=None, *, verified_source_compatibility=False)
     comparable = left if same_key else left | {'compatibility_key': right['compatibility_key']}
     if canonical(comparable) == canonical(right):
         return 'equivalent', {'reason':'完整规则和条件精确相同', 'method':'exact'}
-    a, b = left['issue'], right['issue']
-    # Different failure classes in the same code scope are independent rules: they
-    # are kept separately and neither blocks the other. Ambiguity is reserved for
-    # pairs that address the same error type, which is where a merge would matter.
-    if a.get('error_type') and b.get('error_type') and a['error_type'] != b['error_type']:
-        return 'compatible', {'reason':'同一代码范围处理不同错误类型', 'method':'error-type-disjoint'}
     if left['required_capabilities'] != right['required_capabilities']:
         return 'unknown', {'reason':'能力要求不同，未证明适用条件相交'}
+    a, b = left['issue'], right['issue']
+    # A different error type is not proof of compatibility: the same target may still
+    # be one root cause described two ways, so the pair stays for review.
     # Identical behavior under identical qualifiers is compatible, even if the explanation differs.
     same_conditions = left['applicability'] == right['applicability'] and left['constraints'] == right['constraints']
     if same_conditions and a['solution'] == b['solution']:
