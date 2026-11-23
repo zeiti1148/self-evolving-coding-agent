@@ -28,7 +28,7 @@ from backend.shared import ExperienceCreate  # noqa: E402
 
 OUT = ROOT / '.cache/minimal-retrieval-pair'
 PROJECT = 'java-null-greeting'
-PORTS = {'contextual': 8017, 'adaptive': 8018}
+PORTS = {'baseline': 8019, 'contextual': 8017, 'adaptive': 8018}
 MAX_STEPS = 12
 TASK_TIMEOUT = 900
 
@@ -150,17 +150,21 @@ def main():
                         help='enable EXPERIENCE_COMPACT_AFTER_FIRST for the arm services')
     options = parser.parse_args()
     PROJECT = options.project
+    arms = [value.strip() for value in options.arms.split(',') if value.strip()]
+    unknown = [arm for arm in arms if arm not in ('baseline', 'contextual', 'adaptive')]
+    if unknown:
+        parser.error('unknown arms: ' + ', '.join(unknown))
     OUT.mkdir(parents=True, exist_ok=True)
     project = Settings.from_env().project(PROJECT)
     revision = source_revision(project.source)
     print('project revision:', revision, flush=True)
     if not options.live:
-        for arm in PORTS:
+        for arm in arms:
             print(json.dumps(run_arm(arm, dry=True, revision=revision)))
         print('dry run: no service started, no model call made')
         return 0
     results = []
-    for arm in [value.strip() for value in options.arms.split(',') if value.strip()]:
+    for arm in arms:
         print(f'running {arm} ...', flush=True)
         value = run_arm(arm, dry=False, revision=revision, compact=options.compact_after_first)
         results.append(value)

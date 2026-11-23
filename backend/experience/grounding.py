@@ -57,10 +57,17 @@ def ground_issues(issues, workspace, language):
             if wanted in actual:
                 resolved.add(wanted)
                 continue
-            # A hint may arrive without its file prefix, or with a different one.
-            # Accept it only when exactly one parsed symbol carries that name.
-            name = wanted.split('#', 1)[-1]
-            matches = {item for item in actual if item.split('#', 1)[-1] == name}
+            file_part, separator, name = wanted.partition('#')
+            if not separator:
+                file_part, name = '', wanted
+            if not name:
+                continue
+            # A hint may arrive without its file prefix. Accept it only when exactly
+            # one parsed symbol carries that name, and never move it to another file
+            # than the one the hint names.
+            matches = {item for item in actual if item.rpartition('#')[2] == name}
+            if separator and not any(item.startswith(file_part + '#') for item in matches):
+                continue
             if len(matches) == 1:
                 resolved.add(next(iter(matches)))
         if requested and not resolved:

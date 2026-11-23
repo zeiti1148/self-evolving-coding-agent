@@ -28,11 +28,11 @@ def test_bare_symbol_hint_is_resolved_to_the_parsed_target(tmp_path):
     assert value.symbols == ['greeting.go#Greet']
 
 
-def test_wrong_file_prefix_is_resolved_by_symbol_name(tmp_path):
+def test_wrong_file_prefix_is_dropped_instead_of_moved(tmp_path):
     (tmp_path / 'greeting.go').write_text(GO, encoding='utf-8')
     value = issue(['other.go#Greet'])
     ground_issues([value], tmp_path, 'go')
-    assert value.symbols == ['greeting.go#Greet']
+    assert value.symbols == []
 
 
 def test_invented_symbol_is_still_dropped(tmp_path):

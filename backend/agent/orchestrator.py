@@ -43,12 +43,21 @@ def client_usage(client, started):
 
 class MultiAgentCoordinator:
     def __init__(self, llm_factory, execute_tool, experience_store, *, use_experience=True, timeout_seconds=600,
-                 experience_format="full", retrieval_strategy="contextual"):
+                 experience_format="full", retrieval_strategy="contextual", compact_after_first=False):
         validate_reference_options(experience_format, retrieval_strategy)
         self.llm_factory, self.execute_tool, self.experiences = llm_factory, execute_tool, experience_store
         self.use_experience, self.timeout_seconds = use_experience, timeout_seconds
         self.experience_format, self.retrieval_strategy = experience_format, retrieval_strategy
+        self.compact_after_first = compact_after_first
+        self.retrievals = 0
         self.last_run_audit = {}
+
+    def representation(self):
+        """First injection keeps full provenance; later ones only need the rule."""
+        self.retrievals += 1
+        if self.compact_after_first and self.retrievals > 1:
+            return 'compact'
+        return self.experience_format
 
     def run(self, request, *, on_step=None, on_event=None):
         started = time.monotonic()
@@ -122,14 +131,16 @@ class MultiAgentCoordinator:
                             retrieval_events.append({"experience_ids": [], "error_types": current_errors, "reason": reason})
                         return []
                 if hasattr(self.experiences, "retrieve_model_references"):
-                    entries = [format_model_reference(entry, self.experience_format)
+                    representation = self.representation()
+                    entries = [format_model_reference(entry, representation)
                         for entry in self.experiences.retrieve_model_references(
                             query, language=request.language, repository_id=request.repository_id,
                             error_types=current_errors, capabilities=request.capabilities, limit=5,
                             compatibility_key=request.experience_contract, source_revision=request.source_revision,
                             runner_hash=request.runner_hash)]
                 else:
-                    entries = [to_model_reference(entry, self.experience_format)
+                    representation = self.representation()
+                    entries = [to_model_reference(entry, representation)
                         for entry in self.experiences.retrieve_experiences(
                             query=query, language=request.language, repository_id=request.repository_id,
                             error_types=current_errors, capabilities=request.capabilities, limit=5)]

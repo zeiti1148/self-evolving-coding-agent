@@ -1,8 +1,6 @@
 """Relation policy migration: a code change must actually re-check old verdicts."""
 import sqlite3
-from dataclasses import replace
 
-from backend.config import Settings
 from backend.experience.jobs import reschedule_relations
 from backend.experience.relations import RELATION_POLICY_VERSION, classify
 from backend.tests.test_experience_consolidation import record, save, scan

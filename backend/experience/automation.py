@@ -428,9 +428,12 @@ class AutomaticMergeWorker:
         self.thread = threading.Thread(target=self.run, name='experience-auto-merge', daemon=True)
 
     def start(self):
-        reschedule_local_comparisons(self.path)
         from .jobs import reschedule_relations
-        reschedule_relations(self.path)
+        for migrate in (reschedule_local_comparisons, reschedule_relations):
+            try:
+                migrate(self.path)
+            except Exception:  # noqa: BLE001 - a stuck migration must not disable the worker
+                logger.exception('experience migration failed: %s', migrate.__name__)
         self.thread.start()
 
     def close(self):

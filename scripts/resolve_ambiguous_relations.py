@@ -33,6 +33,8 @@ def describe(database, rows):
         left, right = rules.get(row['left_rule']), rules.get(row['right_rule'])
         if left is None or right is None:
             summary['missing rule'] += 1
+            details.append(dict(id=row['id'], kind='missing', version=row['version'],
+                                left='?', right='?', file=''))
             continue
         same_type = left['issue'].get('error_type') == right['issue'].get('error_type')
         same_file = bool(set(left['issue'].get('files') or []) & set(right['issue'].get('files') or []))
@@ -49,6 +51,8 @@ def main():
     parser.add_argument('--database', default=str(ROOT / 'data/app.db'))
     parser.add_argument('--confirm-compatible', action='store_true',
                         help='resolve every listed unknown relation as compatible')
+    parser.add_argument('--kind', choices=('all', 'different-type', 'same-type'), default='all',
+                        help='limit the resolution to pairs that share or differ in error type')
     parser.add_argument('--limit', type=int, default=0, help='stop after N resolutions')
     parser.add_argument('--json', help='write the per-relation detail here')
     options = parser.parse_args()
@@ -65,18 +69,25 @@ def main():
         print('dry run only; add --confirm-compatible to resolve them as compatible')
         return 0
     store = ExperienceStore(options.database)
-    resolved, failed = 0, 0
-    for row in (rows[:options.limit] if options.limit else rows):
+    wanted = {'different-type': 'different type', 'same-type': 'same type'}.get(options.kind)
+    kinds = {detail['id']: detail['kind'].replace(' + same file', '') for detail in details}
+    resolved, failed, skipped = 0, 0, 0
+    for row in rows:
+        if options.limit and resolved >= options.limit:
+            break
+        if wanted and kinds.get(row['id'], 'missing') != wanted:
+            skipped += 1
+            continue
         try:
             store.resolve_conflict(row['id'], ConflictResolution(
                 version=row['version'], resolution='confirm_compatible',
-                note='人工复核：两条经验处理同一代码范围内的不同情形，分别保留、互不阻断。'))
+                note='维护者批量确认：两条经验分别保留、互不阻断（批量操作，未逐条人工复核）。'))
             resolved += 1
         except Exception as error:  # noqa: BLE001 - keep going and report the count
             failed += 1
             if failed <= 3:
                 print('  failed:', type(error).__name__, str(error)[:120])
-    print(f'resolved: {resolved}, failed: {failed}')
+    print(f'resolved: {resolved}, failed: {failed}, skipped by kind filter: {skipped}')
     return 0
 
 

@@ -4,9 +4,7 @@ Contextual retrieval re-sends the same rules every round, so the only per-round
 saving available is dropping supporting metadata. Conditions, constraints and
 reuse boundaries must survive, which is what the compact formatter keeps.
 """
-import json
 from uuid import uuid4
-
 from backend.agent.core import Agent
 from backend.shared import AgentRequest, ApplicationError, ErrorCode, ToolResult
 from backend.tests.test_agent import SequenceLLM, tool_message
@@ -58,10 +56,7 @@ def test_disabled_by_default_keeps_full_references(tmp_path):
 
 
 def test_compact_keeps_conditions_and_constraints(tmp_path):
-    agent = run(tmp_path, compact_after_first=True)
-    payload = json.loads(agent.last_run_audit.get('model_requests', [{}])[1].get('content', '{}') or '{}') \
-        if agent.last_run_audit.get('model_requests') else {}
-    # The audit records the representation; the formatter owns which keys survive.
+    run(tmp_path, compact_after_first=True)
     from backend.experience.policy import format_model_reference
     compact = format_model_reference(reference('rule-a'), 'compact')
     assert compact['applicability'] and compact['constraints'] and compact['issues']
